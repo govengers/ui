@@ -8,6 +8,7 @@ you copy the directory you need.
 - [AGENTS.md](AGENTS.md) - what a coding agent reads, by task
 - [MANIFESTO.md](MANIFESTO.md) - what we believe (P1-P9)
 - [docs/design.md](docs/design.md) - every decision, numbered
+- [patterns/](patterns/) - intent guides: building a list page, a form, a settings page, live data, login, uploads and jobs, the in-app agent
 - [demo](https://govengers.github.io/ui/) - every piece under switchable presets, themes and density
 
 ## Why copy instead of import
