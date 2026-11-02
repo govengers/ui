@@ -5,6 +5,7 @@ intent: [facet filter, filter, filters, filter chips, filter bar, add filter, fa
 uses: [Popover, Button, Icon, Badge, Input, Checkbox, Field]
 livewire: true
 status: ready
+laws: []
 ---
 
 # FacetFilter
@@ -15,6 +16,24 @@ becomes one chip ("Status is active, on hold, or 2 more"); the chip's operator s
 "is" and "is not", its values reopen the cascade inside that facet, its cross drops the facet.
 "Add filter" and Clear end the bar. `FacetPanel.vue` in the same directory shows the short facets
 as checkbox lists. OR inside a facet, AND across facets.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `FacetCascade.vue`, `FacetFilter.vue`, `FacetPanel.vue`, `facets.ts`, `useFacetValues.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Popover`, `Button`, `Icon`, `Badge`, `Input`, `Checkbox`, `Field` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `FacetFilter.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

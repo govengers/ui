@@ -5,6 +5,7 @@ intent: [status tile, dashboard tile, kpi, metric, stat card, number card, lamp,
 uses: [Card, Icon, Skeleton, format]
 livewire: false
 status: ready
+laws: []
 ---
 
 # StatusTile
@@ -12,6 +13,24 @@ status: ready
 One number on a dashboard (D34): a label, the value with its unit, the change against the period
 before (arrow and tone), a lamp for its state, and room for a sentence or a sparkline. With `to`
 the whole tile is a link card. It reads nothing itself: the page passes values, live or static.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `StatusTile.vue`, `tile.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Card`, `Icon`, `Skeleton`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `StatusTile.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

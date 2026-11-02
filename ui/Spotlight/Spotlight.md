@@ -5,6 +5,7 @@ intent: [spotlight, guide mode, show me where to click, product tour, onboarding
 uses: [Button, Icon, agent]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Spotlight
@@ -12,6 +13,23 @@ status: ready
 Guide mode's "click here" (D25): a scrim with a cutout and an accent ring around one element, and
 a bubble beside it with the text, "Step x of n", Back, Next and a close button. The overlay lets
 every click through, so the user clicks the real control; only the bubble takes input.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Spotlight.vue`, `spotlight.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon`, `agent` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Spotlight.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

@@ -5,6 +5,7 @@ intent: [menu, dropdown, dropdown menu, row actions, more actions, kebab menu, o
 uses: [Popover, Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Menu
@@ -12,6 +13,23 @@ status: ready
 A dropdown list of actions on `Popover` (role `menu`): a click outside or Escape closes it and
 focus returns to the trigger. The default trigger is a ghost "more" button; bring your own
 through the `trigger` slot. Items are buttons, or router links when they have `to`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Menu.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Popover`, `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Menu.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

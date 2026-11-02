@@ -5,7 +5,9 @@ the skills and templates that keep a project's pages looking like one product. N
 you copy the directory you need.
 
 - [INDEX.md](INDEX.md) - the finder: every piece by intent, generated from the cards
-- [AGENTS.md](AGENTS.md) - what a coding agent reads, by task
+- [CLAUDE.md](CLAUDE.md) - the routing table (ICM L0): task shape to workbook, and the rules
+- [workbooks/](workbooks/) - staged instructions per task (ICM L1 and L2), with a mandatory learn stage
+- [knowledge/laws-of-ux/](knowledge/laws-of-ux/) - the design knowledge base, one note per law, mapped to our pieces
 - [MANIFESTO.md](MANIFESTO.md) - what we believe (P1-P9)
 - [docs/design.md](docs/design.md) - every decision, numbered
 - [patterns/](patterns/) - intent guides: building a list page, a form, a settings page, live data, login, uploads and jobs, the in-app agent

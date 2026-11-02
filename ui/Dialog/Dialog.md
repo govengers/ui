@@ -5,6 +5,7 @@ intent: [dialog, modal, confirm, confirmation, delete confirm, popup, alert dial
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Dialog
@@ -12,6 +13,23 @@ status: ready
 A modal dialog on the native `<dialog>` with `showModal()`: the platform traps focus, closes on
 Escape and returns focus to the opener. Title, optional description, a body and a right-aligned
 actions footer; on phones it sits at the bottom, full width, and the footer stays visible.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Dialog.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Dialog.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

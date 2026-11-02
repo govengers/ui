@@ -5,6 +5,7 @@ intent: [detail drawer, record drawer, detail panel, side panel for a row, previ
 uses: [Sheet, Button, Icon]
 livewire: true
 status: ready
+laws: []
 ---
 
 # DetailDrawer
@@ -13,6 +14,24 @@ One record in a `Sheet`, with previous and next through the rows on screen (PDB'
 AgentDetailDrawer, D34): the header shows the title, "3 of 25" and two arrow buttons, also bound
 to ArrowLeft and ArrowRight. Given an item read as `target` it subscribes to the open record
 while open; otherwise the page passes the record as `item`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `DetailDrawer.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Sheet`, `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `DetailDrawer.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

@@ -5,6 +5,7 @@ intent: [detail form, edit form, edit record, record form, form card, save and c
 uses: [Card, ActionBar, Banner, Button, Icon, Skeleton, LiveForm]
 livewire: false
 status: ready
+laws: []
 ---
 
 # DetailForm
@@ -13,6 +14,24 @@ The card of an edit form over a `useLiveForm` result. While the record loads it 
 and a failed read shows a Banner with Retry. The page's Fields go in the default slot, a save
 failure no field explains shows under them, and the ActionBar with Cancel and Save follows.
 Enter submits through a real `<form>`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `DetailForm.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Card`, `ActionBar`, `Banner`, `Button`, `Icon`, `Skeleton`, `LiveForm` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `DetailForm.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

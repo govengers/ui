@@ -5,12 +5,29 @@ intent: [card, panel, surface, box, section container, link card, tile]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Card
 
 One surface: an optional header with a title and actions, a body, an optional footer. `flush`
 lets a Table fill the body edge to edge; `to` turns the whole card into a router link.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Card.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Card.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

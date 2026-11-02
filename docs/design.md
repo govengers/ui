@@ -220,3 +220,20 @@ switchable style presets.
   bound action says `mutating`) let an unbound mutation run. On tablets and phones the shell
   collapses the dock to a strip while a plan runs (`AppShell dockCollapsed`, bound to
   `AgentDock`'s `running` event) so the plan can reach the page.
+- **D53 ICM structure.** The repository follows the Interpretable Context Methodology used by
+  the Wilde IT devops worker: the root `CLAUDE.md` is the L0 routing table (task shape to
+  workbook, plus the rules that hold everywhere); each `workbooks/<task>/CONTEXT.md` is the L1
+  load and do-not-load table; each `stages/NN-<name>/CONTEXT.md` is an L2 Input, Process,
+  Output, Completion contract under 80 lines; every workbook ends with the shared mandatory
+  learn stage writing `journal/runs/`, and `groom` compiles the reports. Skills are thin entry
+  points naming the workbook. Cards carry a `## Load` table (what to read to use or change the
+  piece, what not to load) so a piece is navigated the same way.
+- **D54 Laws of UX as the design floor.** `knowledge/laws-of-ux/` holds one note per law from
+  lawsofux.com (Jon Yablonski), in our words with attribution, each mapped to the pieces,
+  tokens and rules that embody it and to review questions. The `design-direction`,
+  `build-page` and `review-ui` workbooks load the laws a recipe card names; a card's `laws`
+  front matter lists them.
+- **D55 Project-side workbooks live under `docs/ui/`.** `start-project` copies the project-side
+  workbooks, the knowledge base and the run-report template into the target's `docs/ui/`, and
+  the project's `CLAUDE.md` gets the matching L0 table (`templates/project/CLAUDE.md`), so a
+  project's agent runs the same stages without reaching back into this repository.

@@ -5,6 +5,7 @@ intent: [drive mode, agent cursor, visible automation, agent clicks for me, do i
 uses: [Spotlight, agent]
 livewire: false
 status: ready
+laws: []
 ---
 
 # AgentCursor
@@ -13,6 +14,23 @@ Drive mode made visible (D25, D27): a pointer moves to each target of a `DrivePl
 pace, the Spotlight says what it does, clicks are real `click()`s and values are typed character
 by character. The submit of a mutating action pauses on its button until the user clicks it or
 presses Go. Any press or key outside the agent's own UI stops the plan: the user took over.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `AgentCursor.vue`, `cursor.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Spotlight`, `agent` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `AgentCursor.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

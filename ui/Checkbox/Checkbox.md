@@ -5,6 +5,7 @@ intent: [checkbox, accept terms, opt in, multi select, checkbox group, select al
 uses: [Icon, Field]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Checkbox
@@ -12,6 +13,23 @@ status: ready
 The native checkbox, drawn with CSS, with its own label and an optional muted description. Binds a
 boolean, or toggles `value` in an array like Vue's `v-model` on native checkboxes. The whole row
 is the click target, at least 44 px tall.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Checkbox.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon`, `Field` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Checkbox.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

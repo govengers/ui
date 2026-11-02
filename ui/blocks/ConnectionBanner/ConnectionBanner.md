@@ -5,6 +5,7 @@ intent: [connection banner, connection lost, offline notice, reconnecting notice
 uses: [Banner, Button]
 livewire: true
 status: ready
+laws: []
 ---
 
 # ConnectionBanner
@@ -12,6 +13,24 @@ status: ready
 The shell's connection notice (D34) over `useLiveStatus()`: a warning banner while the socket
 reconnects, a danger banner with Retry once the connection ended, and nothing while it is open,
 connecting for the first time or idle. Put it in `AppShell`'s banner slot.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `ConnectionBanner.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Banner`, `Button` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `ConnectionBanner.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

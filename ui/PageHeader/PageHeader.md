@@ -5,12 +5,30 @@ intent: [page title, page header, heading, page actions, back link, counted tabs
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # PageHeader
 
 The first child of every `Page`: the h1, an optional subtitle and back link, the page's actions
 on the right, and a row for `Tabs` underneath. One primary action per page lives here.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `PageHeader.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `PageHeader.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

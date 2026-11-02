@@ -5,6 +5,7 @@ intent: [app shell, layout, navigation, sidebar, top bar, bottom tabs, main menu
 uses: [Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # AppShell
@@ -12,6 +13,23 @@ status: ready
 The frame of the application: top bar (chrome), navigation, banners, the page and the dock.
 Sidebar on desktop, icon rail on tablets, bottom tabs on phones (the first five items). The
 `AgentDock` block renders in the `dock` slot (D25).
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `AppShell.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `AppShell.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

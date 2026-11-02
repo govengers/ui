@@ -5,6 +5,7 @@ intent: [file upload, upload files, dropzone, drag and drop upload, attachments,
 uses: [Badge, Button, Icon, format]
 livewire: true
 status: ready
+laws: []
 ---
 
 # FileUpload
@@ -13,6 +14,24 @@ A dropzone and the list of files being uploaded and uploaded. The dropzone is a 
 the native file input, so a click, Enter and a drop all work. Each file shows its name, size,
 a progress bar, a status Badge and a remove button. Size and count limits are said inline.
 Uploads go through the pair's `Client.upload`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `FileDropzone.vue`, `FileUpload.vue`, `fileUpload.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Badge`, `Button`, `Icon`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `FileUpload.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

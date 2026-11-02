@@ -5,6 +5,7 @@ intent: [login form, sign in, log in, password login, two-factor, 2fa code, one-
 uses: [Card, Banner, Button, Checkbox, Field, Input]
 livewire: false
 status: ready
+laws: []
 ---
 
 # LoginForm
@@ -13,6 +14,24 @@ Email, password and "Remember me" in a Card. The page passes `login`, and the me
 error it throws shows in a danger Banner. When `login` answers `{ twoFactor: true }`, a second
 step asks for a 6-digit code and calls `login` again with it. Centre it with the `LoginPage`
 recipe.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `LoginForm.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Card`, `Banner`, `Button`, `Checkbox`, `Field`, `Input` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `LoginForm.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

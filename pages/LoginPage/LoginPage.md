@@ -5,6 +5,7 @@ intent: [login page, sign in page, logout page, logged out, signed out, change p
 uses: [AppShell, Page, PageHeader, Card, Banner, Badge, Button, Field, Input, LoginForm]
 livewire: false
 status: ready
+laws: []
 ---
 
 # LoginPage
@@ -13,6 +14,24 @@ The three auth screens of an application in one file, on a bare `AppShell` (no n
 sign in (`LoginForm` with SSO above and "Forgot password?" below), signed out (a sentence and
 "Sign in again") and change password (three password Fields). A centred column of 26rem with
 the imprint link and the app's version under the card. Outside livewire (login-and-session).
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `LoginPage.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `AppShell`, `Page`, `PageHeader`, `Card`, `Banner`, `Badge`, `Button`, `Field`, `Input`, `LoginForm` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `LoginPage.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

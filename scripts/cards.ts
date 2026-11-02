@@ -13,6 +13,8 @@ export interface Card {
   uses: string[]
   livewire: boolean
   status: 'draft' | 'ready'
+  /** Slugs of knowledge/laws-of-ux notes the piece embodies (D54). */
+  laws: string[]
   /** Path of the card relative to the repository root. */
   path: string
   /** Path of the .vue file next to the card, if there is one. */
@@ -42,6 +44,7 @@ export function parseCard(root: string, file: string): Card {
   const name = front['name']
   if (!name) throw new Error(`${file}: name missing`)
   const vue = file.replace(/\.md$/, '.vue')
+  if (tier !== 'pattern' && !/^## Load$/m.test(body)) throw new Error(`${file}: a piece card needs a "## Load" table (D53)`)
   return {
     name,
     tier: tier as Tier,
@@ -49,6 +52,7 @@ export function parseCard(root: string, file: string): Card {
     uses: list(front['uses']),
     livewire: front['livewire'] === 'true',
     status,
+    laws: list(front['laws']),
     path: relative(root, file),
     ...(exists(vue) ? { component: relative(root, vue) } : {}),
     summary: firstParagraph(body),

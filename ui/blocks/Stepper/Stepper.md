@@ -5,6 +5,7 @@ intent: [stepper, wizard, multi-step form, steps, onboarding flow, checkout step
 uses: [ActionBar, Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Stepper
@@ -12,6 +13,24 @@ status: ready
 A multi-step form frame: the step list (numbers, a check on done steps, the current one
 highlighted; a compact vertical list in a narrow container), the current step's content, and a
 Back / Continue / Finish bar. The page owns the current step and decides when it may be left.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Stepper.vue`, `stepper.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `ActionBar`, `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Stepper.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

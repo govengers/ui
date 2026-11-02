@@ -5,12 +5,30 @@ intent: [select, dropdown, choose one, picker, page size select, enum field]
 uses: [Icon, Field]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Select
 
 The native `<select>` with a drawn chevron, no custom listbox. Options carry their own value type:
 a number option emits a number. Put it inside a `Field` for label, hint and error.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Select.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon`, `Field` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Select.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

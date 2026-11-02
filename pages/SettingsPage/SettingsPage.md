@@ -5,6 +5,7 @@ intent: [settings page, preferences, configuration page, profile page, account p
 uses: [Page, PageHeader, Tabs, Card, Field, Input, Select, Switch, Button, Avatar, Banner, Skeleton, Dialog, Toast, DetailForm, LiveForm, FileUpload, theme, agent]
 livewire: true
 status: ready
+laws: []
 ---
 
 # SettingsPage
@@ -12,6 +13,24 @@ status: ready
 The settings of a workspace in four tabs on `?tab=`: General, Profile, Notifications, Danger
 zone. Every Card is its own form with its own save, never one Save for the page
 (building-a-settings-page). Width `content`, the dangerous card last and red only on its button.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `SettingsPage.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Page`, `PageHeader`, `Tabs`, `Card`, `Field`, `Input`, `Select`, `Switch`, `Button`, `Avatar`, `Banner`, `Skeleton`, `Dialog`, `Toast`, `DetailForm`, `LiveForm`, `FileUpload`, `theme`, `agent` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `SettingsPage.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## What it shows
 

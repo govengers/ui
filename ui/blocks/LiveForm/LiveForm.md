@@ -5,6 +5,7 @@ intent: [live form, edit form state, useLiveForm, touched fields, dirty form, un
 uses: []
 livewire: true
 status: ready
+laws: []
 ---
 
 # LiveForm
@@ -13,6 +14,23 @@ status: ready
 one live record (D33). Save sends only the touched fields. A push refills only the untouched
 ones; a touched field keeps the user's text. Field errors come from `ApiError.fields`, and a
 retried save keeps its Idempotency-Key. Render it with `DetailForm` or with your own Field stack.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `liveForm.ts` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `LiveForm.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

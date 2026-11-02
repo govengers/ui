@@ -5,6 +5,7 @@ intent: [job progress, background job, long running task, export progress, impor
 uses: [Badge, Banner, Button, Skeleton, format]
 livewire: true
 status: ready
+laws: []
 ---
 
 # JobProgress
@@ -12,6 +13,24 @@ status: ready
 One background job (D29): what it does, its status badge, a progress bar while it runs, why it
 failed, and an "Open result" button once it succeeded with a result route. Follows the job live
 by id, or shows a job the page already reads; a compact `inline` variant fits a list row.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `JobProgress.vue`, `job.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Badge`, `Banner`, `Button`, `Skeleton`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `JobProgress.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

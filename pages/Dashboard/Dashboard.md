@@ -5,6 +5,7 @@ intent: [dashboard, home page, start page, overview, kpi tiles, metrics, recent 
 uses: [Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, WhatsNew, format]
 livewire: true
 status: ready
+laws: []
 ---
 
 # Dashboard
@@ -13,6 +14,24 @@ The start page after login: a greeting with today's date, four live tiles (activ
 open orders, running jobs, revenue of the last 30 days), the five newest orders, the running
 jobs and a billing card that shows the forbidden state. Everything is live; a push moves a tile
 without a reload. The notes of a new version open once (`WhatsNew`).
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Dashboard.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Page`, `PageHeader`, `Badge`, `Banner`, `Button`, `Card`, `EmptyState`, `Skeleton`, `Table`, `StatusTile`, `JobProgress`, `WhatsNew`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Dashboard.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## What it reads
 

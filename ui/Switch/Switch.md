@@ -5,6 +5,7 @@ intent: [switch, toggle, on off, enable setting, feature flag toggle]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Switch
@@ -12,6 +13,22 @@ status: ready
 An on/off setting that applies at once: a `<button role="switch">` with a track, a thumb and a
 label next to it. Space and Enter toggle natively. For a choice that is saved with a form later,
 use a `Checkbox`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Switch.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Switch.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

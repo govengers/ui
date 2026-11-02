@@ -5,6 +5,7 @@ intent: [search table, live list, live table, list page, searchable list, filter
 uses: [Table, Pagination, Input, Button, Icon, Menu, Banner, EmptyState]
 livewire: true
 status: ready
+laws: []
 ---
 
 # SearchTable
@@ -14,6 +15,24 @@ box, a toolbar and a chip row for the page's filter kit, the `Table` with sort, 
 bulk bar and a row menu, and the pager in offset or cursor mode. Loading, refused, empty and
 stale states are built in. The facet filter is a sibling block: the page passes its document in
 as `filter`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `SearchTable.vue`, `searchTable.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Table`, `Pagination`, `Input`, `Button`, `Icon`, `Menu`, `Banner`, `EmptyState` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `SearchTable.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

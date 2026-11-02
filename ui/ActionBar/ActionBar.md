@@ -5,12 +5,29 @@ intent: [form actions, save bar, sticky bottom bar, cancel and save]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # ActionBar
 
 The row of a form's actions, sticky at the bottom of the viewport while the form scrolls. On
 phones the buttons stretch to full width.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `ActionBar.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `ActionBar.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

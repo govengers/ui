@@ -5,6 +5,7 @@ intent: [tabs, tab list, counted tabs, list tabs, segmented navigation, sub navi
 uses: [Badge]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Tabs
@@ -12,6 +13,23 @@ status: ready
 A row of tabs with an accent underline on the active one and an optional count per tab. Plain
 items make a keyboard-operable tab list; items with `to` make a nav of router links, the counted
 tabs of a list page.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Tabs.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Badge` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Tabs.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

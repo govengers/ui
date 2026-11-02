@@ -5,12 +5,30 @@ intent: [empty state, no results, empty list, not found, nothing here yet, zero 
 uses: [Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # EmptyState
 
 The centred message where a list has nothing to show, a filter matches nothing or a thing was not
 found: an icon, a title, an optional description and an optional action.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `EmptyState.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `EmptyState.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

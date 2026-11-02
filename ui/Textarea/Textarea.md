@@ -5,6 +5,7 @@ intent: [textarea, multi-line text, comment box, notes, description input, autos
 uses: [Field]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Textarea
@@ -12,6 +13,23 @@ status: ready
 Multi-line text that grows with its content through CSS `field-sizing: content`, from `rows`
 lines up to a max height, then scrolls. No JavaScript sizing. Put it inside a `Field` for label,
 hint and error; it looks like `Input`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Textarea.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Field` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Textarea.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

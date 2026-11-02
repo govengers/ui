@@ -5,12 +5,30 @@ intent: [pagination, pager, page size, rows per page, next page, previous page, 
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Pagination
 
 The one pager under a list. Offset mode shows the range, a rows-per-page select and first,
 previous, next and last; cursor mode shows only previous and next, for lists without a total.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Pagination.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Pagination.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

@@ -5,6 +5,7 @@ intent: [agent dock, assistant, chat panel, chatbot, in-app agent, ask the assis
 uses: [AgentCursor, Spotlight, Avatar, Banner, Button, Icon, Skeleton, Textarea, agent, format]
 livewire: true
 status: ready
+laws: []
 ---
 
 # AgentDock
@@ -13,6 +14,24 @@ The in-app agent's panel for the AppShell's `dock` slot (D25, D26): the conversa
 and a mode switch (Chat, Guide, Drive). An agent message with a plan gets "Show me", which walks
 it with the Spotlight while the user clicks, and "Do it", which runs it with the AgentCursor while
 the user watches. A Take over button stops a running plan.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `AgentDock.vue`, `dock.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `AgentCursor`, `Spotlight`, `Avatar`, `Banner`, `Button`, `Icon`, `Skeleton`, `Textarea`, `agent`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `AgentDock.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

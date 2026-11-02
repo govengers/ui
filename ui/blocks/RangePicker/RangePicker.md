@@ -5,6 +5,7 @@ intent: [time range, date range, range picker, time filter, last 7 days, quick r
 uses: [Popover, Button, Icon, Field, Input]
 livewire: false
 status: ready
+laws: []
 ---
 
 # RangePicker
@@ -14,6 +15,24 @@ A Grafana-style time range: a button showing the range ("Any time", "Last 7 days
 days; today, yesterday, this week, this month) and an absolute form with two native date-time
 inputs. The value is livewire time
 values, so a page ANDs `rangeToConditions(field, range)` straight into its filter.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `RangePicker.vue`, `range.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Popover`, `Button`, `Icon`, `Field`, `Input` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `RangePicker.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

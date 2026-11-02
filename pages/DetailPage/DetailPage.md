@@ -5,6 +5,7 @@ intent: [detail page, record page, entity page, customer page, view and edit, in
 uses: [Page, PageHeader, Badge, Banner, Button, Card, Dialog, EmptyState, Field, Icon, Input, Table, Toast, agent, format, DetailForm, LiveForm, WorkflowStatus, SearchTable]
 livewire: true
 status: ready
+laws: []
 ---
 
 # DetailPage
@@ -15,6 +16,24 @@ touched fields; the status lifecycle with its allowed transitions; the customer'
 with a link to the full list. Not found, refused and stale are handled once for the whole page.
 Width `page`: form and status side by side (stacked below about 50rem), the related list below
 at full width.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `DetailPage.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Page`, `PageHeader`, `Badge`, `Banner`, `Button`, `Card`, `Dialog`, `EmptyState`, `Field`, `Icon`, `Input`, `Table`, `Toast`, `agent`, `format`, `DetailForm`, `LiveForm`, `WorkflowStatus`, `SearchTable` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `DetailPage.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Files
 

@@ -5,6 +5,7 @@ intent: [avatar, user picture, profile picture, initials, presence, online statu
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Avatar
@@ -12,6 +13,22 @@ status: ready
 A person's picture, or their initials when there is no picture or it fails to load, in three
 sizes, with an optional presence dot. To assistive technology the whole avatar is one image named
 after the person and their status.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Avatar.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Avatar.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

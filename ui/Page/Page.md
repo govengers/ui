@@ -5,6 +5,7 @@ intent: [page, content column, page width, page root]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Page
@@ -12,6 +13,22 @@ status: ready
 The content column of every page: padding, max width and the vertical rhythm between its
 children. Every page component's root is a `Page` carrying `data-page` (D23); `ui-lint` checks
 both.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Page.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Page.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

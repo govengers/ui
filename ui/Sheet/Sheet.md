@@ -5,6 +5,7 @@ intent: [sheet, side panel, drawer, slide-over, bottom sheet, detail panel, edit
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Sheet
@@ -12,6 +13,23 @@ status: ready
 A panel that slides in from the right (or left) edge on desktop and up from the bottom on phones.
 The native `<dialog>` with `showModal()`, like `Dialog`: focus trap, Escape and focus return come
 from the platform. Use it for content too long for a dialog: an edit form, a detail view, filters.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Sheet.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Sheet.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

@@ -5,12 +5,29 @@ intent: [badge, status label, count, tag, chip, pill, status dot]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Badge
 
 An inline label for a status, a count or a tag. Five soft variants, two sizes, an optional
 leading dot in the variant's strong colour, square or pill corners.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Badge.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Badge.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

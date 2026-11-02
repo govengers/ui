@@ -5,6 +5,7 @@ intent: [workflow, status, lifecycle, state machine, approval, transitions, orde
 uses: [Badge, Banner, Button, Dialog, Icon, format]
 livewire: true
 status: ready
+laws: []
 ---
 
 # WorkflowStatus
@@ -12,6 +13,24 @@ status: ready
 The state of a business object and what may happen to it next (D33): the lifecycle as a track
 (done, current as a Badge in its tone, upcoming), the transitions allowed now as buttons that
 call livewire, confirmed in a dialog first where they say so, and an optional timeline.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `WorkflowStatus.vue`, `workflow.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Badge`, `Banner`, `Button`, `Dialog`, `Icon`, `format` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `WorkflowStatus.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

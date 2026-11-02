@@ -5,6 +5,7 @@ intent: [form field, label, hint, validation error, required]
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Field
@@ -12,6 +13,22 @@ status: ready
 Label, hint and error around one control. The control inside gets its `id`, `aria-describedby`,
 `aria-invalid` and `required` through `useField()` from `field.ts`, so a form is a stack of Fields
 and nothing else.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Field.vue`, `field.ts` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Field.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

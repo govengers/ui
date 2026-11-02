@@ -5,6 +5,7 @@ intent: [table, data table, list, sortable columns, row selection, bulk actions,
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Table
@@ -12,6 +13,23 @@ status: ready
 The one data table: a semantic `<table>` with controlled sorting, a checkbox column with a bulk
 bar, custom cells, a row-actions column, loading rows and an empty state. Below 48rem of its own
 width every row becomes a card that shows each value under its column label.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Table.phone.css`, `Table.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Table.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

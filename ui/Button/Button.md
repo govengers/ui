@@ -5,12 +5,30 @@ intent: [button, action, submit, primary action, icon button, link button, loadi
 uses: [Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Button
 
 The one button. Four variants, three sizes, a loading state, and it becomes a router link or an
 anchor when given `to` or `href`.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Button.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Button.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

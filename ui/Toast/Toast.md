@@ -5,6 +5,7 @@ intent: [toast, snackbar, notification, flash message, saved message, undo, tran
 uses: [Button, Icon]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Toast
@@ -12,6 +13,23 @@ status: ready
 Short feedback after an action ("Saved", "Invoice sent", "Could not delete"). `toast()` in
 `toast.ts` queues a message from anywhere; `Toast.vue` is the host that shows it. **Mount the host
 exactly once, in the app shell** (next to the `RouterView`); a second host shows every toast twice.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Toast.vue`, `toast.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Icon` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Toast.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

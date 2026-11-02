@@ -5,6 +5,7 @@ intent: [columns, column picker, show columns, hide columns, visible columns, ta
 uses: [Popover, Button, Icon, Checkbox]
 livewire: false
 status: ready
+laws: []
 ---
 
 # ColumnsPicker
@@ -12,6 +13,24 @@ status: ready
 Which columns a table shows: a ghost icon button opens a list of checkboxes, one per column, and a
 Reset item. Required columns stay ticked and disabled. With `storageKey` the choice survives a
 reload in localStorage.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `ColumnsPicker.vue`, `columns.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Popover`, `Button`, `Icon`, `Checkbox` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `ColumnsPicker.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

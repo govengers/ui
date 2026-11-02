@@ -5,6 +5,7 @@ intent: [agent actions, action registry, app map, drive plan, drive step, agent 
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # agent
@@ -12,6 +13,22 @@ status: ready
 The agent surface of an application (D23, D24, D48): `types.ts` (AgentAction, AgentPage,
 AppMap, DriveTarget, DriveStep, DrivePlan, `selectorOf`) and `registry.ts` (`useAgentAction`,
 `boundActions`, `findAction`). A module, not a component: `ui-copy` copies the directory as is.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `registry.ts`, `types.ts` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `agent.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Use
 

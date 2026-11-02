@@ -33,10 +33,10 @@ export function render(cards: Card[]): string {
   for (const tier of Object.keys(titles) as Tier[]) {
     const rows = cards.filter(card => card.tier === tier)
     if (rows.length === 0) continue
-    lines.push('', `## ${titles[tier]}`, '', '| Name | Intent | Uses | Livewire | Status | Summary |', '|------|--------|------|----------|--------|---------|')
+    lines.push('', `## ${titles[tier]}`, '', '| Name | Intent | Uses | Livewire | Laws | Status | Summary |', '|------|--------|------|----------|------|--------|---------|')
     for (const card of rows) {
       const link = `[${card.name}](${card.path})`
-      lines.push(`| ${link} | ${card.intent.join(', ')} | ${card.uses.join(', ')} | ${card.livewire ? 'yes' : 'no'} | ${card.status} | ${card.summary.replace(/\|/g, '\\|')} |`)
+      lines.push(`| ${link} | ${card.intent.join(', ')} | ${card.uses.join(', ')} | ${card.livewire ? 'yes' : 'no'} | ${card.laws.join(', ')} | ${card.status} | ${card.summary.replace(/\|/g, '\\|')} |`)
     }
   }
   lines.push('', '## By intent', '', 'Every intent keyword and the pieces that answer it.', '')

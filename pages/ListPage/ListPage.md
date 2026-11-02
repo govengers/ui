@@ -5,6 +5,7 @@ intent: [list page, entity list, customers list, table page, search and filter p
 uses: [Page, PageHeader, Tabs, Badge, Banner, Button, Dialog, Field, Icon, Input, Select, Skeleton, Table, Toast, agent, format, SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer]
 livewire: true
 status: ready
+laws: []
 ---
 
 # ListPage
@@ -13,6 +14,24 @@ Every record of one resource (D32), written for customers: counted tabs, search,
 filter with live counts, a created-at range, a column picker, sort, paging, selection with bulk
 export and delete, a row menu, the detail drawer with previous and next, and the create dialog.
 Every part of the state is in the URL. The per-entity parts live in one config file.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `ListPage.vue`, `actions.ts`, `customers.list.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Page`, `PageHeader`, `Tabs`, `Badge`, `Banner`, `Button`, `Dialog`, `Field`, `Icon`, `Input`, `Select`, `Skeleton`, `Table`, `Toast`, `agent`, `format`, `SearchTable`, `FacetFilter`, `RangePicker`, `ColumnsPicker`, `DetailDrawer` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `ListPage.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Files
 

@@ -5,6 +5,7 @@ intent: [whats new, release notes, changelog dialog, announcement, new version, 
 uses: [Button, Dialog]
 livewire: false
 status: ready
+laws: []
 ---
 
 # WhatsNew
@@ -12,6 +13,24 @@ status: ready
 The release notes dialog, shown once per version: it opens on mount while the version stored in
 `localStorage` differs, and stores the version when it closes, however it closes (Got it, X,
 Escape, backdrop).
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `WhatsNew.vue`, `whatsNew.ts` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Button`, `Dialog` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `WhatsNew.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

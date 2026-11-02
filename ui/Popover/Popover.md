@@ -5,6 +5,7 @@ intent: [popover, dropdown panel, anchored panel, flyout, popup, filter panel, p
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Popover
@@ -13,6 +14,22 @@ A panel anchored to its trigger on the native `popover` attribute: a click outsi
 closes it and focus returns to the trigger. It opens below the trigger, above when only that
 fits, else on the roomier side with a scrolling panel, and follows the trigger while open. The
 base of `Menu` and of every block with custom dropdown content (filters, pickers).
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Popover.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Popover.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

@@ -5,12 +5,30 @@ intent: [text input, email, password, number input, search box, date input, time
 uses: [Icon, Field]
 livewire: false
 status: ready
+laws: []
 ---
 
 # Input
 
 The one text-like input over the native types. A password gets a reveal toggle; a number emits a
 number or `null`. Put it inside a `Field` for label, hint and error.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Input.vue` | to use it: skim; to change it: read | the behaviour |
+| the cards of `Icon`, `Field` | when their props show up here | what the composed pieces do |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Input.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 

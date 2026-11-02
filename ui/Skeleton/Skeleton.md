@@ -5,12 +5,29 @@ intent: [skeleton, loading placeholder, shimmer, loading state, placeholder text
 uses: []
 livewire: false
 status: ready
+laws: []
 ---
 
 # Skeleton
 
 A shimmering placeholder in the shape of the content that is still loading: text bars, a circle
 for an avatar, a rectangle for an image or a chart. Hidden from assistive technology.
+
+## Load
+
+| Read | When | Why |
+|------|------|-----|
+| this card | always | the contract |
+| `Skeleton.vue` | to use it: skim; to change it: read | the behaviour |
+| `ui/tokens.css` | only when changing the look | the tokens it reads |
+
+Do not load:
+
+| Skip | Why |
+|------|-----|
+| `Skeleton.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
+| other pieces | one piece per need |
+
 
 ## Props
 
