@@ -8,6 +8,7 @@ import App from './App.vue'
 import DemoPage from './DemoPage.vue'
 import Home from './Home.vue'
 import './presets'
+import { plugin as live } from './fake/live'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,4 +20,4 @@ const router = createRouter({
 
 const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages })
 
-createApp(App).use(router).use(i18n).mount('#app')
+createApp(App).use(router).use(i18n).use(live).mount('#app')
