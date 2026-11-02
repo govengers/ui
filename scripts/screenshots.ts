@@ -12,14 +12,14 @@ const out = join(root, 'screenshots')
 // A random port so several runs (parallel maintainers) do not collide; the dev server needs no build.
 const port = 5200 + Math.floor(Math.random() * 500)
 
+/** The demo next to the card, if any; a composable has a card and a demo but no .vue. */
 function demoPath(card: Card): string | null {
-  if (!card.component) return null
-  const demo = join(root, card.component.replace(/\.vue$/, '.demo.vue'))
+  const demo = join(root, card.path.replace(/\.md$/, '.demo.vue'))
   return existsSync(demo) ? demo : null
 }
 
 function route(card: Card): string {
-  const dir = card.component!.split('/').slice(0, -2).join('/')
+  const dir = card.path.split('/').slice(0, -2).join('/')
   return `/${dir}/${card.name}`
 }
 

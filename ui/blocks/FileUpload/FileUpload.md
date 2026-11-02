@@ -1,0 +1,79 @@
+---
+name: FileUpload
+tier: block
+intent: [file upload, upload files, dropzone, drag and drop upload, attachments, upload progress, document upload, image upload]
+uses: [Badge, Button, Icon]
+livewire: true
+status: ready
+---
+
+# FileUpload
+
+A dropzone and the list of files being uploaded and uploaded. The dropzone is a `<label>` around
+the native file input, so a click, Enter and a drop all work. Each file shows its name, size,
+a progress bar, a status Badge and a remove button. Size and count limits are said inline.
+Uploads go through the pair's `Client.upload`.
+
+## Props
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `upload` | `UploadTarget<Params, Response, string>` | required | `uploads.uploadFile`; its `contentTypes` are the input's `accept` |
+| `params` | `Params \| undefined` | `{}` | the upload's parameters, `{ customerId }` |
+| `files` | `LiveTarget<Query, ListResponse<Row>> \| undefined` | none | the live list of files; read once |
+| `filter` | `unknown` | none | the filter document of the `files` read, e.g. one customer's files; read once |
+| `maxSize` | `number \| undefined` | none | bytes per file; shown under the dropzone |
+| `maxFiles` | `number \| undefined` | none | files in the list, failed ones excluded; `1` makes the picker single |
+| `remove` | `MutationTarget<{ id }, undefined, unknown> \| undefined` | none | deletes an uploaded file; without it only failed uploads can be removed |
+| `name` | `string` | required | the file input's `name` |
+
+`Row` is any `UploadRow` (`fileUpload.ts`): `id`, `name` and `size`, with optional `status`
+(`'uploading'`, `'ready'`, or another word shown as is) and `progress` (0 to 100).
+
+The directory holds three parts: `FileUpload.vue` (limits, uploads, the list),
+`FileDropzone.vue` (the label around the file input, drag and drop) and `fileUpload.ts` (how
+local uploads and live rows merge, tested in `fileUpload.test.ts`).
+
+## Slots
+
+None.
+
+## Events
+
+| Event | Payload | When |
+|-------|---------|------|
+| `uploaded` | `Response` | one file finished; the upload's JSON answer |
+
+The component exposes `add(files: Iterable<File>)`: it checks the limits and uploads, as a drop
+does. Use it for a paste handler or an agent tool.
+
+## With livewire
+
+- Every file goes up as `client.upload(upload, params, file, { multipart: true, filename })`. A
+  multipart body carries the file name to the handler (`livewire.File.Filename`); a raw body
+  would lose it.
+- `Client.upload` is a `fetch` and reports no progress. With `files`, the block lists the
+  server's rows. A server that writes the file's row first (status `uploading`, `progress`
+  counting up) shows real progress; the demo's fake does. Until a row exists, and without
+  `files`, the bar is indeterminate.
+- A file being uploaded shows as a local row until the list has its row: matched by `id` once
+  the answer is in, before that by name and size among the `uploading` rows.
+- `remove` runs over the socket (`connection.call(remove, { id })`), so a `Removes` effect hides
+  the row at once.
+
+## Agent
+
+The file input carries `name`; the visual driver sets files on it (Playwright `setInputFiles`).
+A remove button of an uploaded file carries `data-action` = the remove call's name and the
+accessible name "Remove {file}".
+
+## Gotchas
+
+- The content type is not checked here: the picker's `accept` filters, but a drop bypasses it,
+  and the server's refusal shows on the file's row ("must be one of ...").
+- An upload cannot be cancelled once started; its row has no remove button until it finished
+  or failed.
+- A multipart part is read into memory on the server up to the upload's `MaximumBytes`; fine for
+  documents and images, not for video.
+- Two files with the same name and size uploading at once both match the first `uploading` row
+  until their answers arrive.

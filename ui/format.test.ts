@@ -10,7 +10,7 @@ describe('format', () => {
   })
 
   test('formatBytes steps through units', () => {
-    expect(formatBytes(512, 'en')).toBe('512 byte')
+    expect(formatBytes(512, 'en')).toBe('512 B')
     expect(formatBytes(1536, 'en')).toBe('1.5 kB')
     expect(formatBytes(5 * 1024 ** 3, 'en')).toBe('5 GB')
   })

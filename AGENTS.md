@@ -33,8 +33,8 @@ Use the `ui-maintain` skill. The rules it enforces:
 - strings the user sees come from `ui.*` keys in `ui/messages.ts` or from props
 - native elements first; keyboard, focus ring, labels and 44 px targets are not optional
 - every mutating control passes `data-action` through to its root
-- primitives import nothing from `@/api`; blocks import only types and composables from
-  `@/api/runtime` and `@/api/vue` and take descriptors as props
+- primitives import nothing from `@/api`; blocks import nothing outside `@/api/runtime` and
+  `@/api/vue` (types, composables, `ApiError`, `prepareCall`) and take descriptors as props
 - after the change: `just check`, `just index`, `just contrast`, `just screenshots --only=<Name>`
 
 ## I want to review UI work in a project

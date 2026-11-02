@@ -52,7 +52,8 @@ export function formatBytes(bytes: number, locale: string): string {
     value /= 1024
     index += 1
   }
-  return new Intl.NumberFormat(locale, { style: 'unit', unit: units[index]!, unitDisplay: 'short', maximumFractionDigits: index === 0 ? 0 : 1 }).format(value)
+  if (index === 0) return `${new Intl.NumberFormat(locale).format(value)} B`
+  return new Intl.NumberFormat(locale, { style: 'unit', unit: units[index]!, unitDisplay: 'short', maximumFractionDigits: 1 }).format(value)
 }
 
 export function formatNumber(value: number, locale: string, options: Intl.NumberFormatOptions = {}): string {

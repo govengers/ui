@@ -39,7 +39,7 @@ function onChange(event: Event) {
       :id="field?.id"
       :name="name"
       :disabled="disabled"
-      :required="field?.required.value || undefined"
+      :required="field?.required.value || Boolean(attrs['required']) || undefined"
       :aria-invalid="field?.invalid.value || undefined"
       :aria-describedby="field?.describedBy.value"
       @change="onChange"
