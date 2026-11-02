@@ -5,7 +5,7 @@ intent: [icon, symbol, glyph, pictogram]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [law-of-pragnanz]
 ---
 
 # Icon

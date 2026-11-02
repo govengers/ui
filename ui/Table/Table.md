@@ -5,7 +5,7 @@ intent: [table, data table, list, sortable columns, row selection, bulk actions,
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [fittss-law, law-of-common-region, law-of-similarity, occams-razor]
 ---
 
 # Table

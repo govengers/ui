@@ -5,7 +5,7 @@ intent: [detail page, record page, entity page, customer page, view and edit, in
 uses: [Page, PageHeader, Badge, Banner, Button, Card, Dialog, EmptyState, Field, Icon, Input, Table, Toast, agent, format, DetailForm, LiveForm, WorkflowStatus, SearchTable]
 livewire: true
 status: ready
-laws: []
+laws: [chunking, pareto-principle]
 ---
 
 # DetailPage

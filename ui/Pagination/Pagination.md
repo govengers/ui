@@ -5,7 +5,7 @@ intent: [pagination, pager, page size, rows per page, next page, previous page, 
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [choice-overload]
 ---
 
 # Pagination

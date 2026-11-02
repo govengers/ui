@@ -5,7 +5,7 @@ intent: [detail drawer, record drawer, detail panel, side panel for a row, previ
 uses: [Sheet, Button, Icon]
 livewire: true
 status: ready
-laws: []
+laws: [cognitive-load, flow, goal-gradient-effect, working-memory]
 ---
 
 # DetailDrawer

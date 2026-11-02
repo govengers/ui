@@ -5,7 +5,7 @@ intent: [spotlight, guide mode, show me where to click, product tour, onboarding
 uses: [Button, Icon, agent]
 livewire: false
 status: ready
-laws: []
+laws: [goal-gradient-effect, law-of-uniform-connectedness, paradox-of-the-active-user]
 ---
 
 # Spotlight

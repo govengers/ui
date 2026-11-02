@@ -5,7 +5,7 @@ intent: [time range, date range, range picker, time filter, last 7 days, quick r
 uses: [Popover, Button, Icon, Field, Input]
 livewire: false
 status: ready
-laws: []
+laws: [choice-overload, hicks-law, jakobs-law, parkinsons-law]
 ---
 
 # RangePicker

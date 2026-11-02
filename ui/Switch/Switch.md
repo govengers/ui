@@ -5,7 +5,7 @@ intent: [switch, toggle, on off, enable setting, feature flag toggle]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [mental-model]
 ---
 
 # Switch

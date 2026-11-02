@@ -5,7 +5,7 @@ intent: [dark mode, light mode, theme toggle, color scheme]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [aesthetic-usability-effect, cognitive-bias, von-restorff-effect]
 ---
 
 # theme

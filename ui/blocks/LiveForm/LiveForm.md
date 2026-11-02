@@ -5,7 +5,7 @@ intent: [live form, edit form state, useLiveForm, touched fields, dirty form, un
 uses: []
 livewire: true
 status: ready
-laws: []
+laws: [peak-end-rule, postels-law, teslers-law, zeigarnik-effect]
 ---
 
 # LiveForm

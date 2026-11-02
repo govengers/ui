@@ -5,7 +5,7 @@ intent: [page title, page header, heading, page actions, back link, counted tabs
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [fittss-law, hicks-law, law-of-proximity, serial-position-effect, von-restorff-effect]
 ---
 
 # PageHeader

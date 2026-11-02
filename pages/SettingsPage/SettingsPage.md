@@ -5,7 +5,7 @@ intent: [settings page, preferences, configuration page, profile page, account p
 uses: [Page, PageHeader, Tabs, Card, Field, Input, Select, Switch, Button, Avatar, Banner, Skeleton, Dialog, Toast, DetailForm, LiveForm, FileUpload, theme, agent]
 livewire: true
 status: ready
-laws: []
+laws: [chunking, law-of-common-region, millers-law, pareto-principle, serial-position-effect, von-restorff-effect]
 ---
 
 # SettingsPage

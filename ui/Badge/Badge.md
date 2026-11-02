@@ -5,7 +5,7 @@ intent: [badge, status label, count, tag, chip, pill, status dot]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [aesthetic-usability-effect, law-of-pragnanz, law-of-similarity, von-restorff-effect]
 ---
 
 # Badge

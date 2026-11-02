@@ -5,7 +5,7 @@ intent: [text input, email, password, number input, search box, date input, time
 uses: [Icon, Field]
 livewire: false
 status: ready
-laws: []
+laws: [jakobs-law, postels-law]
 ---
 
 # Input

@@ -5,7 +5,7 @@ intent: [empty state, no results, empty list, not found, nothing here yet, zero 
 uses: [Icon]
 livewire: false
 status: ready
-laws: []
+laws: [cognitive-load, paradox-of-the-active-user]
 ---
 
 # EmptyState

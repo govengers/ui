@@ -5,7 +5,7 @@ intent: [popover, dropdown panel, anchored panel, flyout, popup, filter panel, p
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [law-of-uniform-connectedness]
 ---
 
 # Popover

@@ -5,7 +5,7 @@ intent: [search table, live list, live table, list page, searchable list, filter
 uses: [Table, Pagination, Input, Button, Icon, Menu, Banner, EmptyState]
 livewire: true
 status: ready
-laws: []
+laws: [cognitive-load, doherty-threshold, flow, parkinsons-law, postels-law, selective-attention]
 ---
 
 # SearchTable

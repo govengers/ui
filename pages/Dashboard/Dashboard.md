@@ -5,7 +5,7 @@ intent: [dashboard, home page, start page, overview, kpi tiles, metrics, recent 
 uses: [Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, WhatsNew, format]
 livewire: true
 status: ready
-laws: []
+laws: [millers-law, pareto-principle]
 ---
 
 # Dashboard

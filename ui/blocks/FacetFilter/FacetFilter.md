@@ -5,7 +5,7 @@ intent: [facet filter, filter, filters, filter chips, filter bar, add filter, fa
 uses: [Popover, Button, Icon, Badge, Input, Checkbox, Field]
 livewire: true
 status: ready
-laws: []
+laws: [choice-overload, hicks-law, law-of-common-region, teslers-law, working-memory, zeigarnik-effect]
 ---
 
 # FacetFilter

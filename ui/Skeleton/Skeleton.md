@@ -5,7 +5,7 @@ intent: [skeleton, loading placeholder, shimmer, loading state, placeholder text
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [doherty-threshold, law-of-pragnanz]
 ---
 
 # Skeleton

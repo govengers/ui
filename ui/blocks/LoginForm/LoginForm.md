@@ -5,7 +5,7 @@ intent: [login form, sign in, log in, password login, two-factor, 2fa code, one-
 uses: [Card, Banner, Button, Checkbox, Field, Input]
 livewire: false
 status: ready
-laws: []
+laws: [parkinsons-law]
 ---
 
 # LoginForm

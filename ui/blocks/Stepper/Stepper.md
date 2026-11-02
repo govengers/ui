@@ -5,7 +5,7 @@ intent: [stepper, wizard, multi-step form, steps, onboarding flow, checkout step
 uses: [ActionBar, Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [chunking, goal-gradient-effect, law-of-uniform-connectedness, zeigarnik-effect]
 ---
 
 # Stepper

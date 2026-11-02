@@ -5,7 +5,7 @@ intent: [file upload, upload files, dropzone, drag and drop upload, attachments,
 uses: [Badge, Button, Icon, format]
 livewire: true
 status: ready
-laws: []
+laws: [doherty-threshold, goal-gradient-effect, paradox-of-the-active-user]
 ---
 
 # FileUpload

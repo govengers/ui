@@ -5,7 +5,7 @@ intent: [list page, entity list, customers list, table page, search and filter p
 uses: [Page, PageHeader, Tabs, Badge, Banner, Button, Dialog, Field, Icon, Input, Select, Skeleton, Table, Toast, agent, format, SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer]
 livewire: true
 status: ready
-laws: []
+laws: [choice-overload, cognitive-bias, jakobs-law, mental-model, pareto-principle, working-memory]
 ---
 
 # ListPage

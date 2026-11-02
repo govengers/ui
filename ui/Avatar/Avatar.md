@@ -5,7 +5,7 @@ intent: [avatar, user picture, profile picture, initials, presence, online statu
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [law-of-pragnanz]
 ---
 
 # Avatar

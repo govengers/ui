@@ -5,7 +5,7 @@ intent: [page, content column, page width, page root]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [aesthetic-usability-effect, law-of-proximity, occams-razor]
 ---
 
 # Page

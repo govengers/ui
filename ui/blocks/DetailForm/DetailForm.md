@@ -5,7 +5,7 @@ intent: [detail form, edit form, edit record, record form, form card, save and c
 uses: [Card, ActionBar, Banner, Button, Icon, Skeleton, LiveForm]
 livewire: false
 status: ready
-laws: []
+laws: [flow, law-of-proximity, parkinsons-law, peak-end-rule, serial-position-effect, zeigarnik-effect]
 ---
 
 # DetailForm

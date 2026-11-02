@@ -5,7 +5,7 @@ intent: [dialog, modal, confirm, confirmation, delete confirm, popup, alert dial
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [fittss-law, flow, jakobs-law, law-of-common-region, occams-razor, serial-position-effect]
 ---
 
 # Dialog

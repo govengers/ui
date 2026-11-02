@@ -5,7 +5,7 @@ intent: [connection banner, connection lost, offline notice, reconnecting notice
 uses: [Banner, Button]
 livewire: true
 status: ready
-laws: []
+laws: [doherty-threshold, selective-attention]
 ---
 
 # ConnectionBanner

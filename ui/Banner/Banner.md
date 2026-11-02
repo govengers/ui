@@ -5,7 +5,7 @@ intent: [banner, notice, connection lost, maintenance notice, impersonation bann
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [cognitive-load, peak-end-rule, selective-attention]
 ---
 
 # Banner

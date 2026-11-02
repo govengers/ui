@@ -5,7 +5,7 @@ intent: [form field, label, hint, validation error, required]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [chunking, law-of-proximity, millers-law, paradox-of-the-active-user, postels-law]
 ---
 
 # Field

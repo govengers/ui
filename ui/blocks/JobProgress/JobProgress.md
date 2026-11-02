@@ -5,7 +5,7 @@ intent: [job progress, background job, long running task, export progress, impor
 uses: [Badge, Banner, Button, Skeleton, format]
 livewire: true
 status: ready
-laws: []
+laws: [doherty-threshold, goal-gradient-effect, peak-end-rule, teslers-law, zeigarnik-effect]
 ---
 
 # JobProgress

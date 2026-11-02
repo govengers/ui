@@ -5,7 +5,7 @@ intent: [tabs, tab list, counted tabs, list tabs, segmented navigation, sub navi
 uses: [Badge]
 livewire: false
 status: ready
-laws: []
+laws: [law-of-similarity, law-of-uniform-connectedness, working-memory]
 ---
 
 # Tabs

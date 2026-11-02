@@ -5,7 +5,7 @@ intent: [select, dropdown, choose one, picker, page size select, enum field]
 uses: [Icon, Field]
 livewire: false
 status: ready
-laws: []
+laws: [jakobs-law, occams-razor, postels-law]
 ---
 
 # Select

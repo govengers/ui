@@ -5,7 +5,7 @@ intent: [card, panel, surface, box, section container, link card, tile]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [aesthetic-usability-effect, chunking, law-of-common-region, law-of-pragnanz]
 ---
 
 # Card

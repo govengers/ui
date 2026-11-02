@@ -5,7 +5,7 @@ intent: [agent actions, action registry, app map, drive plan, drive step, agent 
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [mental-model]
 ---
 
 # agent

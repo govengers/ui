@@ -5,7 +5,7 @@ intent: [toast, snackbar, notification, flash message, saved message, undo, tran
 uses: [Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [peak-end-rule, selective-attention]
 ---
 
 # Toast

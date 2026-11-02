@@ -5,7 +5,7 @@ intent: [columns, column picker, show columns, hide columns, visible columns, ta
 uses: [Popover, Button, Icon, Checkbox]
 livewire: false
 status: ready
-laws: []
+laws: [choice-overload, cognitive-bias, millers-law, parkinsons-law, working-memory]
 ---
 
 # ColumnsPicker

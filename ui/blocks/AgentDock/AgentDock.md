@@ -5,7 +5,7 @@ intent: [agent dock, assistant, chat panel, chatbot, in-app agent, ask the assis
 uses: [AgentCursor, Spotlight, Avatar, Banner, Button, Icon, Skeleton, Textarea, agent, format]
 livewire: true
 status: ready
-laws: []
+laws: [cognitive-bias, paradox-of-the-active-user]
 ---
 
 # AgentDock

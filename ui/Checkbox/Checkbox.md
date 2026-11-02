@@ -5,7 +5,7 @@ intent: [checkbox, accept terms, opt in, multi select, checkbox group, select al
 uses: [Icon, Field]
 livewire: false
 status: ready
-laws: []
+laws: [fittss-law, law-of-proximity, mental-model]
 ---
 
 # Checkbox

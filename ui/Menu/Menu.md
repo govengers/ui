@@ -5,7 +5,7 @@ intent: [menu, dropdown, dropdown menu, row actions, more actions, kebab menu, o
 uses: [Popover, Button, Icon]
 livewire: false
 status: ready
-laws: []
+laws: [flow, hicks-law, law-of-similarity, serial-position-effect]
 ---
 
 # Menu

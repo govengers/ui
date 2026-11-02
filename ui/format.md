@@ -5,7 +5,7 @@ intent: [format date, format number, relative time, duration, bytes, currency, p
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [chunking, postels-law]
 ---
 
 # format

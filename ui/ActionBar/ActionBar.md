@@ -5,7 +5,7 @@ intent: [form actions, save bar, sticky bottom bar, cancel and save]
 uses: []
 livewire: false
 status: ready
-laws: []
+laws: [fittss-law, law-of-common-region]
 ---
 
 # ActionBar

@@ -5,7 +5,7 @@ intent: [workflow, status, lifecycle, state machine, approval, transitions, orde
 uses: [Badge, Banner, Button, Dialog, Icon, format]
 livewire: true
 status: ready
-laws: []
+laws: [hicks-law, law-of-uniform-connectedness, mental-model, teslers-law]
 ---
 
 # WorkflowStatus

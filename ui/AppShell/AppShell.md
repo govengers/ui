@@ -5,7 +5,7 @@ intent: [app shell, layout, navigation, sidebar, top bar, bottom tabs, main menu
 uses: [Icon]
 livewire: false
 status: ready
-laws: []
+laws: [millers-law, serial-position-effect]
 ---
 
 # AppShell

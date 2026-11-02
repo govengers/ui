@@ -5,7 +5,7 @@ intent: [status tile, dashboard tile, kpi, metric, stat card, number card, lamp,
 uses: [Card, Icon, Skeleton, format]
 livewire: false
 status: ready
-laws: []
+laws: [selective-attention]
 ---
 
 # StatusTile

@@ -5,7 +5,7 @@ intent: [button, action, submit, primary action, icon button, link button, loadi
 uses: [Icon]
 livewire: false
 status: ready
-laws: []
+laws: [aesthetic-usability-effect, cognitive-load, doherty-threshold, fittss-law, hicks-law, law-of-similarity, occams-razor, von-restorff-effect]
 ---
 
 # Button

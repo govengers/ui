@@ -5,7 +5,7 @@ intent: [whats new, release notes, changelog dialog, announcement, new version, 
 uses: [Button, Dialog]
 livewire: false
 status: ready
-laws: []
+laws: [jakobs-law, paradox-of-the-active-user]
 ---
 
 # WhatsNew

@@ -5,7 +5,7 @@ intent: [drive mode, agent cursor, visible automation, agent clicks for me, do i
 uses: [Spotlight, agent]
 livewire: false
 status: ready
-laws: []
+laws: [cognitive-bias, flow, teslers-law]
 ---
 
 # AgentCursor

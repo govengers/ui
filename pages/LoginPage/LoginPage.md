@@ -5,7 +5,7 @@ intent: [login page, sign in page, logout page, logged out, signed out, change p
 uses: [AppShell, Page, PageHeader, Card, Banner, Badge, Button, Field, Input, LoginForm]
 livewire: false
 status: ready
-laws: []
+laws: [pareto-principle]
 ---
 
 # LoginPage
