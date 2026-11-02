@@ -2,7 +2,7 @@
 name: FileUpload
 tier: block
 intent: [file upload, upload files, dropzone, drag and drop upload, attachments, upload progress, document upload, image upload]
-uses: [Badge, Button, Icon]
+uses: [Badge, Button, Icon, format]
 livewire: true
 status: ready
 ---

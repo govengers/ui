@@ -106,6 +106,8 @@ export const messages = {
       actionsFor: 'Actions for {row}',
       positionOf: '{n} of {total}',
       details: 'Details',
+      confirmStep: 'This step changes data. Press Go, or click it yourself.',
+      planFailed: 'The assistant could not find the next step on this page.',
     },
   },
   de: {
@@ -212,6 +214,8 @@ export const messages = {
       actionsFor: 'Aktionen für {row}',
       positionOf: '{n} von {total}',
       details: 'Details',
+      confirmStep: 'Dieser Schritt ändert Daten. Drück Los oder klick selbst.',
+      planFailed: 'Der Assistent findet den nächsten Schritt auf dieser Seite nicht.',
     },
   },
 } as const

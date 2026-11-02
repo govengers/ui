@@ -214,3 +214,9 @@ switchable style presets.
   roomier side with a scrolling cap), the toggle guard against the light-dismiss race, and
   per-frame following of its trigger. `Menu`, `FacetFilter`, `RangePicker` and `ColumnsPicker`
   build on it instead of each carrying the placement code; a placement fix lands once.
+- **D52 Drive mode pauses by default.** A `click` step on a `{ action }` target pauses for the
+  user unless the action is bound through `useAgentAction` and declared not mutating, or named in
+  `unattended`. An unbound action is treated as mutating; the earlier rule (pause only when a
+  bound action says `mutating`) let an unbound mutation run. On tablets and phones the shell
+  collapses the dock to a strip while a plan runs (`AppShell dockCollapsed`, bound to
+  `AgentDock`'s `running` event) so the plan can reach the page.

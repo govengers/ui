@@ -2,7 +2,7 @@
 name: JobProgress
 tier: block
 intent: [job progress, background job, long running task, export progress, import status, progress bar, async result]
-uses: [Badge, Banner, Button, Skeleton]
+uses: [Badge, Banner, Button, Skeleton, format]
 livewire: true
 status: ready
 ---

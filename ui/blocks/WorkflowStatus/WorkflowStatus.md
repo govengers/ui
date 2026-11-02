@@ -2,7 +2,7 @@
 name: WorkflowStatus
 tier: block
 intent: [workflow, status, lifecycle, state machine, approval, transitions, order status, timeline, status history]
-uses: [Badge, Banner, Button, Dialog, Icon]
+uses: [Badge, Banner, Button, Dialog, Icon, format]
 livewire: true
 status: ready
 ---

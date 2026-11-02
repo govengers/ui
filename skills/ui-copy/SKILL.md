@@ -26,7 +26,8 @@ afterwards.
    `git -C <source> diff <old>..HEAD -- <dir>` to the user and apply it by hand onto the project's
    copy (the copy may carry local changes; never overwrite blindly). Record the new commit in the
    header.
-3. **Copy** the directory to `src/ui/<Name>/` (blocks: `src/ui/blocks/<Name>/`, pages:
+3. **Copy** the directory to `src/ui/<Name>/` (a card without a directory, such as `format`,
+   `theme` or `agent`, names a single file or module directory under `ui/`: copy that) (blocks: `src/ui/blocks/<Name>/`, pages:
    `src/pages/<Name>/`), leaving out `*.md`, `*.demo.vue`, `*.test.ts`. Prepend the header line:
    `<!-- govengers/ui <Name> @ <commit> -->` as the first line of a `.vue` file,
    `// govengers/ui <Name> @ <commit>` in a `.ts` file.

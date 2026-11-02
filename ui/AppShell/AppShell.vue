@@ -17,11 +17,13 @@ withDefaults(defineProps<{
   nav: NavItem[]
   /** Hides the sidebar and the bottom tabs (login, full-screen flows). */
   bare?: boolean | undefined
+  /** On tablets and phones the dock shrinks to a strip so a guide or drive plan can reach the page. */
+  dockCollapsed?: boolean | undefined
 }>(), {})
 </script>
 
 <template>
-  <div class="ui-app-shell" :data-bare="bare || undefined" :data-dock="$slots.dock ? '' : undefined">
+  <div class="ui-app-shell" :data-bare="bare || undefined" :data-dock="$slots.dock ? '' : undefined" :data-dock-collapsed="dockCollapsed || undefined">
     <a href="#ui-main" class="ui-app-shell__skip">Skip to content</a>
     <header class="ui-app-shell__top">
       <div class="ui-app-shell__brand"><slot name="brand"><span class="ui-app-shell__title">{{ title }}</span></slot></div>
@@ -113,6 +115,7 @@ withDefaults(defineProps<{
   .ui-app-shell { grid-template-columns: var(--ui-sidebar-rail-w) minmax(0, 1fr); }
   .ui-app-shell[data-dock] { grid-template-columns: var(--ui-sidebar-rail-w) minmax(0, 1fr); grid-template-areas: "top top" "nav body"; }
   .ui-app-shell__dock { position: fixed; inset: var(--ui-topbar-h) 0 0 auto; width: min(var(--ui-dock-w), 100vw); z-index: var(--ui-z-drawer); box-shadow: var(--ui-shadow-lg); }
+  .ui-app-shell[data-dock-collapsed] .ui-app-shell__dock { inset: auto 0 0 auto; height: var(--ui-control-h-lg); overflow: hidden; }
   .ui-app-shell__link { justify-content: center; padding: 0; }
   .ui-app-shell__label, .ui-app-shell__count { display: none; }
 }
@@ -123,5 +126,6 @@ withDefaults(defineProps<{
   .ui-app-shell__link:nth-child(n + 6), .ui-app-shell__nav-footer { display: none; }
   .ui-app-shell__label { display: block; white-space: nowrap; }
   .ui-app-shell__dock { inset: var(--ui-topbar-h) 0 0 0; width: auto; }
+  .ui-app-shell[data-dock-collapsed] .ui-app-shell__dock { inset: auto 0 var(--ui-touch-min) 0; height: var(--ui-control-h-lg); }
 }
 </style>
