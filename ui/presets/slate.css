@@ -1,0 +1,42 @@
+/*
+ * preset: slate. A dark-first product tool: near-black ground, cool slate surfaces, a violet
+ * accent, slightly larger radii. The light theme is a faithful inverse for daylight use.
+ * Tokens only (D6).
+ */
+:root {
+  --ui-preset: "slate";
+
+  --ui-bg: light-dark(#f3f4f8, #0b0d12);
+  --ui-surface: light-dark(#ffffff, #141821);
+  --ui-surface-2: light-dark(#eceef4, #1c2130);
+  --ui-sunk: light-dark(#e6e8ef, #070910);
+  --ui-chrome: light-dark(#0b0d12, #0b0d12);
+  --ui-on-chrome: light-dark(#eef0f6, #eef0f6);
+
+  --ui-ink: light-dark(#14161c, #eef0f6);
+  --ui-ink-2: light-dark(#363b48, #c4c9d6);
+  --ui-muted: light-dark(#5b6274, #8f97ab);
+  --ui-placeholder: light-dark(#6a7185, #808a9f);
+
+  --ui-border: light-dark(#d8dbe5, #262c3b);
+  --ui-border-strong: light-dark(#878ea0, #5e677d);
+  --ui-divider: light-dark(#e3e6ee, #1d2230);
+
+  --ui-accent: light-dark(#5b47e0, #9b8cff);
+  --ui-accent-hover: light-dark(#4836c2, #b2a6ff);
+  --ui-on-accent: light-dark(#ffffff, #0b0d12);
+  --ui-accent-soft: light-dark(#e6e2fb, #27224d);
+  --ui-on-accent-soft: light-dark(#2d2380, #d9d3ff);
+  --ui-focus: light-dark(#5b47e0, #9b8cff);
+
+  --ui-danger: light-dark(#c8201f, #f08a8e);
+  --ui-on-danger: light-dark(#ffffff, #0b0d12);
+
+  --ui-radius-sm: 6px;
+  --ui-radius-control: 8px;
+  --ui-radius-card: 14px;
+
+  --ui-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25);
+  --ui-shadow-md: 0 6px 16px rgb(0 0 0 / 0.35);
+  --ui-shadow-lg: 0 16px 40px rgb(0 0 0 / 0.5);
+}

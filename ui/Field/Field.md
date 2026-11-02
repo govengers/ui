@@ -1,0 +1,41 @@
+---
+name: Field
+tier: primitive
+intent: [form field, label, hint, validation error, required]
+uses: []
+livewire: false
+status: ready
+---
+
+# Field
+
+Label, hint and error around one control. The control inside gets its `id`, `aria-describedby`,
+`aria-invalid` and `required` through `useField()` from `field.ts`, so a form is a stack of Fields
+and nothing else.
+
+## Props
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `label` | `string` | required | |
+| `hint` | `string` | none | shown under the control when there is no error |
+| `error` | `string` | none | shown instead of the hint, `role="alert"`; marks the control invalid |
+| `required` | `boolean` | `false` | asterisk on the label, `required` on the control |
+| `hideLabel` | `boolean` | `false` | label for assistive technology only (search boxes) |
+
+## Slots
+
+| Slot | Content |
+|------|---------|
+| default | exactly one control: `Input`, `Textarea`, `Select`, `Checkbox`, `Switch` |
+
+## With livewire
+
+Map `ApiError.fields[name]` to `error`: `:error="errors.email"`. `useLiveForm` (block tier)
+produces that map.
+
+## Gotchas
+
+- One control per Field. Two controls would share one label and one id.
+- Write the control yourself without a Field when it has a visible label elsewhere (a table
+  filter row); then pass `aria-label` on the control.

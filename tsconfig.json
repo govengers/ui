@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "types": ["bun"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["demo/src/*"]
+    }
+  },
+  "include": ["ui/**/*", "pages/**/*", "demo/src/**/*", "scripts/**/*", "env.d.ts"],
+  "exclude": ["node_modules", "demo/dist"]
+}

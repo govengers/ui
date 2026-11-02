@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun scripts/index.ts --check
+      - run: bun run contrast
+      - run: bun run lint
+      - run: bun scripts/screenshots.ts --check
+      - run: bun test scripts ui demo/src
+      - run: DEMO_BASE=/ui/ bun run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: demo/dist
+
+  pages:
+    if: github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

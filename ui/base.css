@@ -1,0 +1,57 @@
+/*
+ * govengers/ui base styles: the few global rules every component relies on. Import after
+ * tokens.css. Everything else is scoped to a component.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-family: var(--ui-font-sans);
+  font-size: 100%;
+  line-height: var(--ui-leading);
+  -webkit-text-size-adjust: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3, h4 { line-height: var(--ui-leading-tight); font-weight: var(--ui-weight-semibold); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--ui-accent); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+code, pre, kbd { font-family: var(--ui-font-mono); font-size: 0.9em; }
+img, svg { display: block; max-width: 100%; }
+
+:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+::placeholder { color: var(--ui-placeholder); opacity: 1; }
+
+[hidden] { display: none !important; }
+
+.ui-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

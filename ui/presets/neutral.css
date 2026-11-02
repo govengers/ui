@@ -1,0 +1,7 @@
+/*
+ * preset: neutral (the default). Deliberately empty: it documents that tokens.css already is the
+ * neutral preset. A project that picks neutral copies this file so DESIGN.md has a preset to name.
+ */
+:root {
+  --ui-preset: "neutral";
+}

@@ -1,0 +1,45 @@
+/*
+ * preset: paper. Warm bone surfaces, ink teal, tight corners (card stock has a 2 mm corner),
+ * a quiet coral accent that never carries white text. Rooted in Paloma One's "Il Tabellone".
+ * Tokens only (D6). Fonts stay the system stack; a project wanting Archivo self-hosts it and
+ * overrides --ui-font-sans in DESIGN.md.
+ */
+:root {
+  --ui-preset: "paper";
+
+  --ui-bg: light-dark(#efe9df, #15201f);
+  --ui-surface: light-dark(#fbf8f2, #1e2a2b);
+  --ui-surface-2: light-dark(#f2ece2, #253334);
+  --ui-sunk: light-dark(#e6dfd2, #0f1817);
+  --ui-chrome: light-dark(#04556a, #04556a);
+  --ui-on-chrome: light-dark(#fbf8f2, #fbf8f2);
+
+  --ui-ink: light-dark(#1e2a2e, #ece6da);
+  --ui-ink-2: light-dark(#3a474c, #c9c2b6);
+  --ui-muted: light-dark(#5b6a70, #9fa89f);
+  --ui-placeholder: light-dark(#637377, #8d9b98);
+
+  --ui-border: light-dark(#d9d1c3, #34444a);
+  --ui-border-strong: light-dark(#8d8a80, #6f8184);
+  --ui-divider: light-dark(#e2dacc, #2b393b);
+
+  --ui-accent: light-dark(#04556a, #6fb5c5);
+  --ui-accent-hover: light-dark(#033f50, #8ac6d3);
+  --ui-on-accent: light-dark(#fbf8f2, #0f1817);
+  --ui-accent-soft: light-dark(#d5e6ea, #0d3a46);
+  --ui-on-accent-soft: light-dark(#04394a, #cfe6ec);
+  --ui-focus: light-dark(#04556a, #6fb5c5);
+
+  --ui-danger: light-dark(#b23a3f, #f08a8e);
+  --ui-on-danger: light-dark(#fbf8f2, #1e2a2e);
+  --ui-danger-soft: light-dark(#f8dcdc, #4b1f22);
+  --ui-on-danger-soft: light-dark(#6e1f23, #f6c9cb);
+
+  --ui-radius-sm: 2px;
+  --ui-radius-control: 3px;
+  --ui-radius-card: 3px;
+
+  --ui-shadow-sm: 0 1px 1px rgb(30 42 46 / 0.08);
+  --ui-shadow-md: 1px 2px 6px rgb(30 42 46 / 0.14);
+  --ui-shadow-lg: 2px 6px 18px rgb(30 42 46 / 0.22);
+}

@@ -1,0 +1,184 @@
+# govengers/ui design decisions
+
+Binding record of the decisions behind this repository, agreed in the grill rounds of
+02.11.2026 (D1-D36) and taken while building the foundation (D37 onward). A change to one of
+these is a new numbered decision below the old one, never an edit in place.
+
+## What this is
+
+govengers/ui is a browsable collection of Vue components, composed blocks and page recipes that a
+coding agent copies into the next govengers application. It is not an npm package and never
+will be: copying keeps every project free of breaking changes and free to adjust its copy locally.
+The repository also carries the skills, playbooks and project templates that make a target
+project keep one look across all its pages, and a demonstrator that shows every piece under
+switchable style presets.
+
+## Scope and shape
+
+- **D1 Contract first, including quick projects.** A target project starts with a design
+  contract (`DESIGN.md`) the way Paloma One started with the impeccable direction: direction and
+  tokens first, every page against them. The contract is a file, not a ceremony: `ui-start --quick`
+  writes it from defaults in one step (D19).
+- **D2 Repository shape mirrors govengers/standards.** `README.md`, `AGENTS.md` (what an agent
+  reads by task), `MANIFESTO.md` (principles), `ui/` (components and blocks), `pages/` (recipes),
+  `patterns/` (intent guides), `skills/`, `templates/` (files that go into a target project),
+  `demo/`, `docs/design.md` (this file). Public, Apache 2.0.
+- **D3 Runtime dependencies allowed in copied code:** `vue`, `vue-router`, `vue-i18n`,
+  `date-fns`, and the project's generated livewire client. Icons are inline SVG (D43). No form
+  library, no component library, no CSS framework. A block solving a hard problem may bring one
+  dependency of its own (the feedback screenshot block brings `html2canvas-pro`); the card names
+  it.
+- **D4 Four tiers.** `primitive` (props and emits only, no livewire), `layout` (shell, page,
+  header, bars), `block` (composed and livewire-wired), `page` (a whole-page recipe composing
+  blocks). Primitives stay dumb so the demo and the tests need no backend.
+- **D5 Blocks reach livewire through props.** A block imports the runtime types from
+  `@/api/runtime` and `@/api/vue` (where the generator writes) and receives the project's
+  descriptor as a prop (`target`, `call`). A block copies verbatim; only the page names the
+  descriptor. `@` resolves to `src` in every target (the Vite default).
+- **D6 Tokens.** One `ui/tokens.css`: primitive scales feed semantic tokens (`--ui-bg`,
+  `--ui-ink`, `--ui-accent`, `--ui-radius-*`, `--ui-space-*`, `--ui-font-*`, ...). Components use
+  semantic tokens only. A preset is one CSS file that overrides tokens and nothing else; if a
+  preset needs more, the token is added first. No namespaced root class.
+- **D7 Three presets at launch:** `neutral` (default, system fonts), `paper` (warm, tight
+  radius), `slate` (dark-first product tool). Fonts stay the system stack unless a project
+  self-hosts one and overrides `--ui-font-sans`.
+- **D8 Coverage target: the typical business application.** Settings, profiles, lists with the
+  full filter kit, detail pages, edit forms, file upload, stepper, workflow, dashboard, login,
+  admin. The PDB databridge UI (Wilde IT, Mercedes-Benz) is the reference for what exists today;
+  its facet filter (OpenRouter variant D, 21.09.2026) is the model for ours (D31).
+- **D9 Native first, accessibility floor non-negotiable.** `<dialog>`, `popover`, `<details>`,
+  native date and number inputs, CSS over JS. Every component has a visible focus ring, labelled
+  controls, 44 px touch targets, measured 4.5:1 text contrast in every preset and both themes,
+  and respects reduced motion. Ponytail never trims these.
+
+## Navigation and copying
+
+- **D10 One directory per component.** `ui/<Name>/<Name>.vue`, `<Name>.md` (the card: front
+  matter with `tier`, `intent`, `uses`, `livewire`, `status`; body with contract, props, slots,
+  events, variants, agent notes, gotchas) and `<Name>.demo.vue`. `scripts/index.ts` generates
+  `INDEX.md` (the finder) from the cards; CI fails on drift. `patterns/` holds intent guides.
+  Agents enter through `AGENTS.md`, then `INDEX.md`, then the card, then the code.
+- **D11 Target layout and provenance.** Copies land in `src/ui/<Name>/`, blocks in
+  `src/ui/blocks/<Name>/`, tokens and presets in `src/ui/`, pages in `src/pages/<Name>/`. The copy
+  skill copies the `uses` closure, drops the card and the demo, and stamps every file with one
+  header line `// govengers/ui <Name> @ <commit>`.
+- **D12 Anti-creep in the target project.** Three templated mechanisms: `DESIGN.md` (preset,
+  overrides, page recipes, the rules "a new page picks a recipe or gets a written exception here"
+  and "no component outside `src/ui/`; copy from govengers/ui first, else write it there in the
+  same style"), `ui-lint` (fails CI on hex colours, raw `px`, `font-family` or `<style>` outside
+  `src/ui/`, pages without `Page` and `PageHeader`, pages without `data-page`, mutating buttons
+  without `data-action`) and a `CLAUDE.md` section ("before any UI work read DESIGN.md and
+  src/ui/INDEX.md").
+- **D13 Five skills:** `ui-start`, `ui-copy`, `ui-page`, `ui-review`, `ui-maintain`. The first
+  four are copied into the target's `.claude/skills/` by `ui-start`.
+
+## Demonstrator and quality
+
+- **D14 Demo.** `demo/` is a Vite + Vue app importing the collection by relative path. Routes
+  per component, block and page recipe; top bar with preset, theme and density switches. Blocks
+  run against an in-browser fake `LiveConnection` built on livewire's `FakeSocket` with seeded
+  data; no Go backend. Deployed to GitHub Pages from `main`.
+- **D15 Screenshots for agents.** Playwright renders every component, block and page in the
+  default preset, light and dark, into `screenshots/`, committed so an agent can look before it
+  copies. Regenerated by `ui-maintain`.
+- **D16 Gates.** `vue-tsc`, index drift, screenshot presence, the contrast script (measures every
+  declared text and surface pair per preset and theme), a Playwright axe pass on the demo. No
+  per-component unit tests; `bun test` covers logic with branches (fake engine, ui-lint, index
+  generator, contrast).
+- **D17 Harvest, rewritten.** Seeded from `@mxcd/vue-components` (bathroom planner) and Paloma
+  One's `tokens.css`/`components.css` lessons; brand derivation, `@fontsource` presets and the
+  vue-agent-fx wrappers are dropped. Everything is rewritten to D6 tokens and D3 dependencies.
+- **D18 Stack default.** Once v0 exists, the frontend default for new projects becomes "Vue 3 +
+  govengers/ui copies"; Quasar stays only for existing projects.
+
+## Round 2
+
+- **D19 Quick mode.** `ui-start --quick` writes a ten-line `DESIGN.md` from defaults (preset
+  `neutral`, light and dark, shipped recipes, no overrides) and copies the shell. `--full` runs
+  brief, direction and custom preset. A quick project upgrades by editing the same file.
+- **D20 Date library: `date-fns` v4** (`@date-fns/tz` when zones matter). Components accept ISO
+  strings or `Date`; display goes through `Intl` with the app locale, arithmetic through
+  `date-fns`.
+- **D21 i18n.** `vue-i18n`, one `messages.ts` per page folder (no shared locale file). Components
+  carry their strings under `ui.*` in `ui/messages.ts` (`en`, `de`), copied along.
+- **D22 AX principles** (agent experience over developer experience): explicit over magic (no
+  auto-imports, no global registration, visible relative imports); one way per job; one screen
+  per file (about 200 lines, else split) with the card next to it; grep-able names (no computed
+  class names, no string-built keys); convention in files, not tooling; everything checkable by
+  script wins over prose; native and standard before clever.
+- **D23 The accessibility tree is the agent tree.** Every page root carries `data-page`, every
+  actionable element `data-action`, every form field `name`. The spotlight, the visual driver and
+  the tests resolve targets by these; `ui-lint` enforces them.
+- **D24 One action vocabulary, three executors.** Blocks register
+  `useAgentAction({ name, description, params, run })`; names equal the livewire call names. A
+  build script emits `app-map.json` (routes with intent and params, actions per page, field
+  names); the server hands it to the agent. Background mode reuses the livewire calls as aikido
+  tools.
+- **D25 Agent modes and pieces.** Modes `chat`, `guide` (spotlight, user acts), `drive` (agent
+  acts visibly), `background` (server side). v0 ships `AgentDock` (panel on desktop, sheet on
+  phone, mode switch, stop and take over), `Spotlight` (cutout, bubble, next and back) and
+  `AgentCursor` (visible pointer performing registered actions at human pace; any user input
+  interrupts).
+- **D26 Chat over livewire.** A conversation is a livewire resource; streamed tokens arrive as
+  pushes; sending and mode switches are calls; the backend runs aikido inside the app's Go
+  server. One socket. The agent's client-side tools are `navigate`, `spotlight` and `drive`
+  events the dock executes.
+- **D27 Mutation safety in drive mode.** Navigation and filling run freely; the final submit of a
+  mutating action pauses on the submit button until the user clicks or says go. `DESIGN.md` may
+  whitelist actions for unattended submits.
+- **D28 No hand-written tours.** Guide and drive plans are derived by the agent from
+  `app-map.json` and page intents. A saved plan in the same format is the only static tour.
+- **D29 Background results.** `govengers/jobs` on the server, one `JobProgress` block in the UI,
+  and the convention that a job's result names a route the dock redirects to.
+- **D30 Demo covers the agent.** A scripted fake agent with canned plans makes chat, guide and
+  drive visible and screenshot-able without a model or backend.
+- **D31 FacetFilter block.** Button, cascade menu with live counts that ignore the facet's own
+  selection, one chip per field, optional panel for short enumerations; feature-identical to the
+  PDB variant D plus URL sync of clauses and search and a `not in` chip toggle. No operator
+  builder in v0; time ranges are `RangePicker`, text is the search field.
+- **D32 The `ListPage` recipe** is PDB's full kit made generic: `PageHeader`, `CountedTabs`,
+  toolbar (search, `FacetFilter`, `ColumnsPicker`), chip bar, `Table` (cards on phone), `BulkBar`,
+  `RowMenu`, `DetailDrawer` with previous and next, `CreateDialog`. Per-entity parts live in one
+  config file (`customers.list.ts`: columns, facets, tabs, row and bulk actions).
+- **D33 Four things PDB lacks, in v0:** `FileUpload`, `Stepper` (with "save then watch" as a step
+  kind), `WorkflowStatus` (timeline plus allowed transitions as confirmed actions), `useLiveForm`
+  (save sends only touched fields, a push refills only untouched ones).
+- **D34 Other PDB pieces generalised:** `RangePicker`, `CountedTabs`, `ColumnsPicker`,
+  `DetailDrawer`, `BulkBar`, the three shell banners, `WhatsNew`, status tiles, `format.ts`.
+  `FeedbackButton` with screenshot is an optional block carrying `html2canvas-pro`.
+- **D35 Theme.** `useTheme()`: `light | dark | auto`, `auto` default, persisted in
+  `localStorage`, optionally mirrored to a user setting through a call the app passes in.
+- **D36 Accent rule.** `--ui-accent` (buttons, links, state, focus) and `--ui-accent-soft`
+  (chips, selected rows) only. No accent region fills, no gradient tokens; a preset that wants
+  one writes the exception on its card.
+
+## Foundation decisions (building, 02.11.2026)
+
+- **D37 Themes through `light-dark()`.** Every colour token is declared once as
+  `light-dark(light, dark)` under `color-scheme: light dark`; `<html data-theme="light|dark">`
+  pins a theme, otherwise the system decides. No duplicated dark blocks, no theme engine.
+- **D38 Density is an attribute.** `<html data-density="compact">` overrides the control and
+  spacing tokens in `tokens.css`; components never branch on density.
+- **D39 The repository mirrors the target.** `ui/` here is `src/ui/` there, `pages/` is
+  `src/pages/`, so every relative import survives the copy untouched. Cards and demos sit next to
+  the code and are not copied.
+- **D40 Livewire runtime vendored for the demo.** `demo/src/api/runtime.ts` and `vue.ts` are
+  byte copies of livewire v1.0.0 (plus a one-line header) so blocks type-check and run here
+  against `@/api/*` exactly as in a target.
+- **D41 Variants are attributes, parts are classes.** Root class `ui-<name>`, parts
+  `ui-<name>__part`, variants and sizes as `data-variant`, `data-size`, states as `data-state`
+  or native pseudo-classes. No class concatenation anywhere.
+- **D42 Plain scoped CSS.** `<style scoped>` with `var(--ui-*)` only; no preprocessor, no CSS
+  modules, no utility classes.
+- **D43 Icons.** `ui/Icon/icons.ts` holds a curated Lucide subset as path data (ISC licence
+  noted in the file); `Icon.vue` renders by name. Adding an icon is pasting one path.
+- **D44 Component API conventions.** `modelValue` for v-model; `size` is `sm | md | lg`;
+  `variant` names are per component and listed on the card; booleans default to false; strings
+  the user sees are props with English defaults or `ui.*` keys; emits are typed; slots are named
+  and listed on the card.
+- **D45 Demo exceptions.** `import.meta.glob` is allowed in the demo only (to discover demos).
+  Presets are switched by enabling one of three `<link>` elements, so the preset file is used
+  exactly as a target uses it.
+- **D46 Screenshots in CI by presence, not pixels.** CI checks that every card has its light and
+  dark screenshot; pixel regeneration is local (`just screenshots`), because fonts differ across
+  machines.

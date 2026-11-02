@@ -1,0 +1,171 @@
+/*
+ * govengers/ui tokens. The single source of truth for every visual constant.
+ * Components read the semantic layer only (D6). A preset overrides semantic tokens and nothing
+ * else: if a preset needs something a token cannot express, the token is added here first.
+ *
+ * Colour tokens use light-dark(): the first value is the light theme, the second the dark one.
+ * The theme follows the system unless <html data-theme="light|dark"> says otherwise (D37).
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- primitives: the neutral scale (zinc-like, slightly cool) ---- */
+  --ui-gray-0: #ffffff;
+  --ui-gray-50: #fafafa;
+  --ui-gray-100: #f4f4f5;
+  --ui-gray-200: #e4e4e7;
+  --ui-gray-300: #d4d4d8;
+  --ui-gray-400: #a1a1aa;
+  --ui-gray-500: #71717a;
+  --ui-gray-600: #52525b;
+  --ui-gray-700: #3f3f46;
+  --ui-gray-800: #27272a;
+  --ui-gray-900: #18181b;
+  --ui-gray-950: #09090b;
+
+  /* ---- primitives: the accent and state scales ---- */
+  --ui-blue-500: #2563eb;
+  --ui-blue-400: #3b82f6;
+  --ui-blue-600: #1d4ed8;
+  --ui-blue-100: #dbeafe;
+  --ui-blue-300: #93c5fd;
+  --ui-blue-900: #1e3a8a;
+  --ui-red-600: #dc2626;
+  --ui-red-500: #ef4444;
+  --ui-red-100: #fee2e2;
+  --ui-red-900: #7f1d1d;
+  --ui-green-600: #16a34a;
+  --ui-green-500: #22c55e;
+  --ui-green-100: #dcfce7;
+  --ui-green-900: #14532d;
+  --ui-amber-600: #d97706;
+  --ui-amber-500: #f59e0b;
+  --ui-amber-100: #fef3c7;
+  --ui-amber-900: #78350f;
+
+  /* ---- semantic: surfaces ---- */
+  --ui-bg: light-dark(var(--ui-gray-50), var(--ui-gray-950));
+  --ui-surface: light-dark(var(--ui-gray-0), var(--ui-gray-900));
+  --ui-surface-2: light-dark(var(--ui-gray-100), var(--ui-gray-800));
+  --ui-sunk: light-dark(var(--ui-gray-100), var(--ui-gray-950));
+  --ui-chrome: light-dark(var(--ui-gray-900), var(--ui-gray-900));
+  --ui-on-chrome: light-dark(var(--ui-gray-50), var(--ui-gray-50));
+  --ui-scrim: light-dark(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.65));
+
+  /* ---- semantic: ink ---- */
+  --ui-ink: light-dark(var(--ui-gray-900), var(--ui-gray-50));
+  --ui-ink-2: light-dark(var(--ui-gray-700), var(--ui-gray-300));
+  --ui-muted: light-dark(var(--ui-gray-600), var(--ui-gray-400));
+  --ui-placeholder: light-dark(var(--ui-gray-500), #8f8f98);
+  --ui-disabled-ink: light-dark(var(--ui-gray-400), var(--ui-gray-600));
+
+  /* ---- semantic: lines (border-strong is the 3:1 boundary of inputs and buttons) ---- */
+  --ui-border: light-dark(var(--ui-gray-200), var(--ui-gray-700));
+  --ui-border-strong: light-dark(#8a8a93, #6c6c76);
+  --ui-divider: light-dark(var(--ui-gray-200), var(--ui-gray-800));
+
+  /* ---- semantic: accent (buttons, links, state, focus; never a region fill, D36) ---- */
+  --ui-accent: light-dark(var(--ui-blue-500), var(--ui-blue-400));
+  --ui-accent-hover: light-dark(var(--ui-blue-600), var(--ui-blue-300));
+  --ui-on-accent: light-dark(var(--ui-gray-0), var(--ui-gray-950));
+  --ui-accent-soft: light-dark(var(--ui-blue-100), var(--ui-blue-900));
+  --ui-on-accent-soft: light-dark(var(--ui-blue-900), var(--ui-blue-100));
+  --ui-focus: light-dark(var(--ui-blue-500), var(--ui-blue-400));
+
+  /* ---- semantic: states ---- */
+  --ui-danger: light-dark(var(--ui-red-600), var(--ui-red-500));
+  --ui-on-danger: light-dark(var(--ui-gray-0), var(--ui-gray-950));
+  --ui-danger-soft: light-dark(var(--ui-red-100), var(--ui-red-900));
+  --ui-on-danger-soft: light-dark(var(--ui-red-900), var(--ui-red-100));
+  --ui-success: light-dark(var(--ui-green-600), var(--ui-green-500));
+  --ui-success-soft: light-dark(var(--ui-green-100), var(--ui-green-900));
+  --ui-on-success-soft: light-dark(var(--ui-green-900), var(--ui-green-100));
+  --ui-warning: light-dark(var(--ui-amber-600), var(--ui-amber-500));
+  --ui-warning-soft: light-dark(var(--ui-amber-100), var(--ui-amber-900));
+  --ui-on-warning-soft: light-dark(var(--ui-amber-900), var(--ui-amber-100));
+
+  /* ---- typography ---- */
+  --ui-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ui-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --ui-text-xs: 0.75rem;
+  --ui-text-sm: 0.875rem;
+  --ui-text-md: 1rem;
+  --ui-text-lg: 1.125rem;
+  --ui-text-xl: 1.375rem;
+  --ui-text-2xl: 1.75rem;
+  --ui-leading: 1.5;
+  --ui-leading-tight: 1.25;
+  --ui-weight-normal: 400;
+  --ui-weight-medium: 500;
+  --ui-weight-semibold: 600;
+  --ui-tracking-caps: 0.04em;
+
+  /* ---- spacing (4px base) ---- */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.25rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+  --ui-space-10: 2.5rem;
+  --ui-space-12: 3rem;
+  --ui-space-16: 4rem;
+
+  /* ---- shape ---- */
+  --ui-radius-sm: 4px;
+  --ui-radius-control: 6px;
+  --ui-radius-card: 10px;
+  --ui-radius-pill: 999px;
+  --ui-border-width: 1px;
+
+  /* ---- controls and density (D38: data-density="compact" tightens these) ---- */
+  --ui-control-h: 2.5rem;
+  --ui-control-h-sm: 2rem;
+  --ui-control-h-lg: 3rem;
+  --ui-control-px: var(--ui-space-3);
+  --ui-touch-min: 44px;
+  --ui-row-py: var(--ui-space-3);
+  --ui-card-p: var(--ui-space-5);
+  --ui-page-p: var(--ui-space-6);
+  --ui-page-max: 80rem;
+  --ui-content-max: 48rem;
+
+  /* ---- elevation ---- */
+  --ui-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --ui-shadow-md: 0 4px 12px rgb(0 0 0 / 0.10);
+  --ui-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.18);
+
+  /* ---- motion ---- */
+  --ui-duration-fast: 120ms;
+  --ui-duration: 200ms;
+  --ui-duration-slow: 320ms;
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---- layers ---- */
+  --ui-z-sticky: 10;
+  --ui-z-drawer: 20;
+  --ui-z-overlay: 30;
+  --ui-z-toast: 40;
+  --ui-z-agent: 50;
+
+  /* ---- layout ---- */
+  --ui-sidebar-w: 16rem;
+  --ui-sidebar-rail-w: 4rem;
+  --ui-topbar-h: 3.5rem;
+  --ui-dock-w: 24rem;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+:root[data-density="compact"] {
+  --ui-control-h: 2rem;
+  --ui-control-h-sm: 1.75rem;
+  --ui-control-h-lg: 2.5rem;
+  --ui-row-py: var(--ui-space-2);
+  --ui-card-p: var(--ui-space-4);
+  --ui-page-p: var(--ui-space-4);
+  --ui-text-md: 0.9375rem;
+}
