@@ -65,7 +65,7 @@ function onChange(event: Event) {
 </template>
 
 <style scoped>
-/* The row is the click target: a control's height (44px on touch screens through the tokens), the box centred on the first line. */
+/* The row is the click target: a control's height (the touch target on coarse pointers, through the tokens), the box centred on the first line. */
 .ui-checkbox {
   display: flex;
   align-items: flex-start;

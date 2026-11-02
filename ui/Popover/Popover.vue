@@ -53,6 +53,12 @@ function hide() {
   if (isOpen()) panel.value?.hidePopover()
 }
 
+/** Tab leaving the panel and the trigger closes it, as light dismiss does for a click outside. */
+function onFocusOut(event: FocusEvent) {
+  const next = event.relatedTarget as Node | null
+  if (next && !root.value?.contains(next)) hide()
+}
+
 function toggle() {
   const wasOpen = openOnPress || isOpen()
   openOnPress = false
@@ -115,7 +121,7 @@ defineExpose({ open: show, close: hide, toggle, panel })
 </script>
 
 <template>
-  <div ref="root" class="ui-popover" @pointerdown="onPress" @keydown="onKey">
+  <div ref="root" class="ui-popover" @pointerdown="onPress" @keydown="onKey" @focusout="onFocusOut">
     <slot name="trigger" :open="open" :toggle="toggle" :close="hide" :expanded="expanded" />
     <div :id="id" ref="panel" popover class="ui-popover__panel" :role="role" :aria-label="label" @toggle="onToggle">
       <slot :close="hide" />
