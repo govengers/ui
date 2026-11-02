@@ -6,7 +6,7 @@
 //   UL-001 no hex colour: use a var(--ui-*) token
 //   UL-002 no px length except 0, 1px, 2px hairlines (also negative): use a token (rem, --ui-space-*, --ui-radius-*)
 //   UL-003 no font-family: the token --ui-font-sans or --ui-font-mono carries it
-// Rules on a page (a .vue file under a pages directory whose name is not a demo):
+// Rules on a page (the <Name>/<Name>.vue file under a pages directory):
 //   UL-010 the root carries data-page
 //   UL-011 the page uses Page and PageHeader
 //   UL-012 a submit or danger Button carries data-action
@@ -65,7 +65,8 @@ export function lintDirectories(root: string, directories: string[], options: { 
   return directories.flatMap(directory => walk(join(root, directory)).filter(file => file.endsWith('.vue') || file.endsWith('.css')).flatMap(file => {
     const path = relative(root, file)
     const parts = path.split(sep)
-    const page = file.endsWith('.vue') && parts.includes('pages') && !file.endsWith('.demo.vue')
+    // Only <Name>/<Name>.vue is the page; a recipe may split sub-components next to it (D22).
+    const page = file.endsWith('.vue') && parts.includes('pages') && parts.at(-1) === `${parts.at(-2)}.vue`
     const insideUi = path.startsWith(options.uiDirectory + sep)
     const source = readFileSync(file, 'utf8')
     // A .css file next to a component (<style scoped src>) is one style block; tokens.css and presets declare the values and are exempt.

@@ -56,3 +56,13 @@ export function selectorOf(target: DriveTarget): string {
   if ('page' in target) return `[data-page="${target.page}"]`
   return target.selector
 }
+
+/**
+ * The element a target means on screen: the first VISIBLE match. A list page has one
+ * `data-action="deleteCustomer"` per row menu, all in the DOM and hidden until opened, and a
+ * dialog's submit shares its name with the opener behind the backdrop.
+ */
+export function resolveTarget(target: DriveTarget, root: ParentNode = document): HTMLElement | null {
+  const matches = [...root.querySelectorAll<HTMLElement>(selectorOf(target))]
+  return matches.find(element => element.checkVisibility?.({ visibilityProperty: true } as CheckVisibilityOptions) ?? true) ?? matches[0] ?? null
+}

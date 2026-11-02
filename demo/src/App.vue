@@ -90,7 +90,9 @@ const groupTitle: Record<string, string> = { ui: 'Components', 'ui/blocks': 'Blo
 .side a.router-link-active { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 .main { padding: var(--ui-page-p); max-width: var(--ui-page-max); width: 100%; }
 @media (max-width: 48rem) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .top { flex-wrap: wrap; padding: var(--ui-space-2) var(--ui-space-3); gap: var(--ui-space-2); position: static; }
+  .controls { gap: var(--ui-space-2); flex-wrap: wrap; }
   .side { position: static; height: auto; border-right: 0; border-bottom: var(--ui-border-width) solid var(--ui-divider); }
 }
 </style>

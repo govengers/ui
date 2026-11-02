@@ -1,0 +1,53 @@
+// Every string the customer detail page shows (D21), mounted by DetailPage.vue under customers.detail.
+export const messages = {
+  en: {
+    customers: {
+      detail: {
+        title: 'Customer',
+        back: 'Back to customers',
+        since: 'Customer since {date}',
+        details: 'Details',
+        saved: 'Changes saved',
+        delete: 'Delete',
+        deleteTitle: 'Delete {name}?',
+        deleteDescription: 'The customer and its history are removed for good. This cannot be undone.',
+        deleted: '{name} deleted',
+        lifecycle: 'Status',
+        churnConfirm: 'The customer leaves the active accounts and their owner gets no more reminders.',
+        orders: 'Recent orders',
+        allOrders: 'All orders',
+        notFound: 'This customer does not exist',
+        notFoundHint: 'It may have been deleted, or the link is wrong.',
+        status: { active: 'Active', onHold: 'On hold', churned: 'Churned' },
+        transitions: { active: 'Reactivate', onHold: 'Put on hold', churned: 'Mark as churned' },
+        orderStatus: { draft: 'Draft', open: 'Open', paid: 'Paid', shipped: 'Shipped', cancelled: 'Cancelled' },
+        fields: { name: 'Name', email: 'Email', country: 'Country', number: 'Number', status: 'Status', total: 'Total', createdAt: 'Created' },
+      },
+    },
+  },
+  de: {
+    customers: {
+      detail: {
+        title: 'Kunde',
+        back: 'Zurück zu den Kunden',
+        since: 'Kunde seit {date}',
+        details: 'Stammdaten',
+        saved: 'Änderungen gespeichert',
+        delete: 'Löschen',
+        deleteTitle: '{name} löschen?',
+        deleteDescription: 'Der Kunde und seine Historie werden endgültig entfernt. Das lässt sich nicht rückgängig machen.',
+        deleted: '{name} gelöscht',
+        lifecycle: 'Status',
+        churnConfirm: 'Der Kunde verlässt die aktiven Konten, sein Betreuer bekommt keine Erinnerungen mehr.',
+        orders: 'Letzte Bestellungen',
+        allOrders: 'Alle Bestellungen',
+        notFound: 'Diesen Kunden gibt es nicht',
+        notFoundHint: 'Er wurde vielleicht gelöscht, oder der Link ist falsch.',
+        status: { active: 'Aktiv', onHold: 'Pausiert', churned: 'Abgewandert' },
+        transitions: { active: 'Reaktivieren', onHold: 'Pausieren', churned: 'Als abgewandert markieren' },
+        orderStatus: { draft: 'Entwurf', open: 'Offen', paid: 'Bezahlt', shipped: 'Versandt', cancelled: 'Storniert' },
+        fields: { name: 'Name', email: 'E-Mail', country: 'Land', number: 'Nummer', status: 'Status', total: 'Summe', createdAt: 'Angelegt' },
+      },
+    },
+  },
+}
