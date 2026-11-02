@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // Button: the one button (D22). Variants and sizes are attributes (D41). Renders a RouterLink
 // with `to`, an anchor with `href`, else a <button>. `data-action` passes through to the root.
+// Only the attributes of the chosen form are bound: an `href: undefined` fallthrough would
+// override RouterLink's own href and leave the link without one.
 import { computed } from 'vue'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import Icon from '../Icon/Icon.vue'
@@ -37,9 +39,7 @@ function guard(event: MouseEvent): void {
     :data-variant="variant"
     :data-size="size"
     :data-block="block || undefined"
-    :type="tag === 'button' ? type : undefined"
-    :to="to"
-    :href="href"
+    v-bind="tag === 'button' ? { type } : tag === 'a' ? { href } : { to }"
     :disabled="tag === 'button' ? inert : undefined"
     :aria-disabled="tag !== 'button' && inert ? 'true' : undefined"
     :aria-busy="loading || undefined"
