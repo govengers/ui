@@ -1,0 +1,10 @@
+
+# ---- govengers/ui ----
+
+# The mechanical design-contract rules on every page and component.
+ui-lint:
+    bun scripts/ui-lint.ts src/ui src/pages
+
+# Screenshot every route light and dark for a review (needs the dev server on :5173).
+ui-screens:
+    bun scripts/ui-screens.ts

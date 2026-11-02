@@ -7,7 +7,7 @@ import { icons, type IconName } from './icons'
 const props = withDefaults(defineProps<{
   name: IconName
   size?: 'sm' | 'md' | 'lg'
-  label?: string
+  label?: string | undefined
 }>(), { size: 'md' })
 
 const markup = computed(() => icons[props.name])

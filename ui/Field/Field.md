@@ -22,6 +22,7 @@ and nothing else.
 | `error` | `string` | none | shown instead of the hint, `role="alert"`; marks the control invalid |
 | `required` | `boolean` | `false` | asterisk on the label, `required` on the control |
 | `hideLabel` | `boolean` | `false` | label for assistive technology only (search boxes) |
+| `group` | `boolean` | `false` | a `fieldset` with the label as `legend`; for `Checkbox` groups and radios |
 
 ## Slots
 
@@ -36,6 +37,7 @@ produces that map.
 
 ## Gotchas
 
-- One control per Field. Two controls would share one label and one id.
+- One control per Field, unless `group`: then the Field is a fieldset and each Checkbox inside
+  carries its own label.
 - Write the control yourself without a Field when it has a visible label elsewhere (a table
   filter row); then pass `aria-label` on the control.

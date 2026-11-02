@@ -33,6 +33,7 @@ export const pairs: Pair[] = [
   { fg: '--ui-danger', bg: '--ui-surface', min: 4.5 },
   { fg: '--ui-danger', bg: '--ui-bg', min: 4.5 },
   { fg: '--ui-on-danger', bg: '--ui-danger', min: 4.5 },
+  { fg: '--ui-on-danger', bg: '--ui-danger-hover', min: 4.5 },
   { fg: '--ui-on-danger-soft', bg: '--ui-danger-soft', min: 4.5 },
   { fg: '--ui-on-success-soft', bg: '--ui-success-soft', min: 4.5 },
   { fg: '--ui-on-warning-soft', bg: '--ui-warning-soft', min: 4.5 },

@@ -29,11 +29,18 @@ number or `null`. Put it inside a `Field` for label, hint and error.
 | `prefix` | an `Icon` before the text (search) |
 | `suffix` | an `Icon` or unit after the text; not shown for passwords (the reveal toggle sits there) |
 
+## Events
+
+`update:modelValue` with a `string`, or a `number | null` for `type="number"`.
+
 ## Exposes
 
 `focus()`.
 
 ## Gotchas
+
+- Attributes you pass (`aria-label`, `data-action`, `autofocus`) land on the `<input>`; `class`
+  and `style` on the wrapper.
 
 - Dates are strings in the `<input type="date">` format (`2026-11-02`); convert with `date-fns`
   `parseISO` at the edge, never in the component.

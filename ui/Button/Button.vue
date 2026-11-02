@@ -13,13 +13,21 @@ const props = withDefaults(defineProps<{
   loading?: boolean
   block?: boolean
   /** Accessible name for an icon-only button (no default slot). */
-  label?: string
-  to?: RouteLocationRaw
-  href?: string
+  label?: string | undefined
+  to?: RouteLocationRaw | undefined
+  href?: string | undefined
 }>(), { variant: 'secondary', size: 'md', type: 'button' })
 
 const tag = computed(() => (props.to ? RouterLink : props.href ? 'a' : 'button'))
 const inert = computed(() => props.disabled || props.loading)
+
+/** A link cannot be disabled natively: swallow the click while inert. */
+function guard(event: MouseEvent): void {
+  if (inert.value && tag.value !== 'button') {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+  }
+}
 </script>
 
 <template>
@@ -36,6 +44,7 @@ const inert = computed(() => props.disabled || props.loading)
     :aria-disabled="tag !== 'button' && inert ? 'true' : undefined"
     :aria-busy="loading || undefined"
     :aria-label="label"
+    @click.capture="guard"
   >
     <Icon v-if="loading" name="loader" class="ui-button__spinner" />
     <slot v-else name="icon" />
@@ -72,9 +81,9 @@ const inert = computed(() => props.disabled || props.loading)
 .ui-button[data-variant="ghost"] { background: transparent; color: var(--ui-ink-2); }
 .ui-button[data-variant="ghost"]:hover:not(:disabled, [aria-disabled]) { background: var(--ui-surface-2); color: var(--ui-ink); }
 .ui-button[data-variant="danger"] { background: var(--ui-danger); color: var(--ui-on-danger); }
-.ui-button[data-variant="danger"]:hover:not(:disabled, [aria-disabled]) { filter: brightness(0.92); }
+.ui-button[data-variant="danger"]:hover:not(:disabled, [aria-disabled]) { background: var(--ui-danger-hover); }
 
-.ui-button:disabled, .ui-button[aria-disabled] { cursor: not-allowed; opacity: 0.55; }
+.ui-button:disabled, .ui-button[aria-disabled] { cursor: not-allowed; opacity: var(--ui-disabled-opacity); }
 .ui-button__spinner { animation: ui-spin 0.8s linear infinite; }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 </style>

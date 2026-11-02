@@ -1,24 +1,30 @@
 <script setup lang="ts">
 // Input: the one text-like input. Native types only (D9); a password gets a reveal toggle.
-// Takes id, describedby, invalid and required from a surrounding Field.
-import { computed, ref } from 'vue'
+// Takes id, describedby, invalid and required from a surrounding Field. Attributes (aria-label,
+// data-action, autofocus) land on the <input>, class and style on the wrapper.
+import { computed, ref, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '../Icon/Icon.vue'
 import { useField } from '../Field/field'
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(defineProps<{
-  modelValue?: string | number | null
+  modelValue?: string | number | null | undefined
   type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'tel' | 'date' | 'time' | 'datetime-local'
-  name?: string
-  placeholder?: string
+  name?: string | undefined
+  placeholder?: string | undefined
   disabled?: boolean
   readonly?: boolean
   size?: 'sm' | 'md' | 'lg'
-  autocomplete?: string
-  min?: number | string
-  max?: number | string
-  step?: number | string
+  autocomplete?: string | undefined
+  min?: number | string | undefined
+  max?: number | string | undefined
+  step?: number | string | undefined
 }>(), { type: 'text', size: 'md', modelValue: '' })
+
+const attrs = useAttrs()
+const controlAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style')))
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | number | null] }>()
 
@@ -41,10 +47,11 @@ defineExpose({ focus: () => input.value?.focus() })
 </script>
 
 <template>
-  <div class="ui-input" :data-size="size" :data-invalid="field?.invalid.value || undefined">
+  <div class="ui-input" :class="attrs['class']" :style="attrs['style'] as string | undefined" :data-size="size" :data-invalid="field?.invalid.value || undefined">
     <span v-if="$slots.prefix" class="ui-input__affix"><slot name="prefix" /></span>
     <input
       ref="input"
+      v-bind="controlAttrs"
       class="ui-input__control"
       :id="field?.id"
       :type="actualType"

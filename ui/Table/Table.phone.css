@@ -1,0 +1,33 @@
+/* Table phone layout, scoped to Table.vue (split out to keep the component one screen long). */
+@container (max-width: 48rem) {
+  .ui-table__scroll { overflow: visible; background: none; border: 0; }
+  .ui-table__table, .ui-table__table tbody { display: flex; flex-direction: column; gap: var(--ui-space-2); }
+  .ui-table__head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ui-table__table tbody tr {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: var(--ui-space-2);
+    padding: var(--ui-space-2) var(--ui-space-3);
+    background: var(--ui-surface);
+    border: var(--ui-border-width) solid var(--ui-border);
+    border-radius: var(--ui-radius-card);
+  }
+  .ui-table__table td { grid-column: 2; display: flex; gap: var(--ui-space-3); padding: var(--ui-space-1) 0; border: 0; overflow-wrap: anywhere; }
+  .ui-table__table td[data-label] { text-align: start; }
+  .ui-table__row:hover > td, .ui-table__row[data-state="selected"] > td { background: none; box-shadow: none; }
+  .ui-table__row:hover { background: var(--ui-surface-2); }
+  .ui-table__row[data-state="selected"] { background: var(--ui-accent-soft); }
+  .ui-table__table td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-xs);
+    letter-spacing: var(--ui-tracking-caps);
+    text-transform: uppercase;
+  }
+  .ui-table__table td.ui-table__select { grid-column: 1; grid-row: 1; }
+  .ui-table__table td.ui-table__actions { grid-column: 3; grid-row: 1; }
+  .ui-table__table td.ui-table__empty { grid-column: 1 / -1; justify-content: center; }
+  .ui-table__table [data-hide-on-phone] { display: none; }
+}

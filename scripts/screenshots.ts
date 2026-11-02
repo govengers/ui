@@ -48,6 +48,7 @@ async function render(cards: Card[]): Promise<void> {
         await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
         await page.goto(`http://localhost:${port}${route(card)}`, { waitUntil: 'networkidle' })
         await page.locator('article.demo').waitFor()
+        await page.addStyleTag({ content: 'header.top { position: static !important; }' })
         await page.locator('article.demo').screenshot({ path: join(out, `${card.name}.${scheme}.png`) })
         console.log(`${card.name}.${scheme}.png`)
       }

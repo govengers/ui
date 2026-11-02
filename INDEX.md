@@ -5,8 +5,8 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 
 | Tier | Count |
 |------|-------|
-| primitive | 4 |
-| layout | 0 |
+| primitive | 20 |
+| layout | 5 |
 | block | 0 |
 | page | 0 |
 | pattern | 0 |
@@ -15,35 +15,201 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 
 | Name | Intent | Uses | Livewire | Status | Summary |
 |------|--------|------|----------|--------|---------|
+| [Avatar](ui/Avatar/Avatar.md) | avatar, user picture, profile picture, initials, presence, online status |  | no | ready | A person's picture, or their initials when there is no picture or it fails to load, in three sizes, with an optional presence dot. To assistive technology the whole avatar is one image named after the person and their status. |
+| [Badge](ui/Badge/Badge.md) | badge, status label, count, tag, chip, pill, status dot |  | no | ready | An inline label for a status, a count or a tag. Five soft variants, two sizes, an optional leading dot in the variant's strong colour, square or pill corners. |
 | [Button](ui/Button/Button.md) | button, action, submit, primary action, icon button, link button, loading button | Icon | no | ready | The one button. Four variants, three sizes, a loading state, and it becomes a router link or an anchor when given `to` or `href`. |
+| [Card](ui/Card/Card.md) | card, panel, surface, box, section container, link card, tile |  | no | ready | One surface: an optional header with a title and actions, a body, an optional footer. `flush` lets a Table fill the body edge to edge; `to` turns the whole card into a router link. |
+| [Checkbox](ui/Checkbox/Checkbox.md) | checkbox, accept terms, opt in, multi select, checkbox group, select all, indeterminate | Icon, Field | no | ready | The native checkbox, drawn with CSS, with its own label and an optional muted description. Binds a boolean, or toggles `value` in an array like Vue's `v-model` on native checkboxes. The whole row is the click target, at least 44 px tall. |
+| [Dialog](ui/Dialog/Dialog.md) | dialog, modal, confirm, confirmation, delete confirm, popup, alert dialog, form dialog | Button, Icon | no | ready | A modal dialog on the native `<dialog>` with `showModal()`: the platform traps focus, closes on Escape and returns focus to the opener. Title, optional description, a body and a right-aligned actions footer; on phones it sits at the bottom, full width, and the footer stays visible. |
+| [EmptyState](ui/EmptyState/EmptyState.md) | empty state, no results, empty list, not found, nothing here yet, zero state | Icon | no | ready | The centred message where a list has nothing to show, a filter matches nothing or a thing was not found: an icon, a title, an optional description and an optional action. |
 | [Field](ui/Field/Field.md) | form field, label, hint, validation error, required |  | no | ready | Label, hint and error around one control. The control inside gets its `id`, `aria-describedby`, `aria-invalid` and `required` through `useField()` from `field.ts`, so a form is a stack of Fields and nothing else. |
 | [Icon](ui/Icon/Icon.md) | icon, symbol, glyph, pictogram |  | no | ready | One inline SVG from the curated Lucide subset in `icons.ts`. Decorative unless it gets a `label`, then it is announced as an image. |
 | [Input](ui/Input/Input.md) | text input, email, password, number input, search box, date input, time input | Icon, Field | no | ready | The one text-like input over the native types. A password gets a reveal toggle; a number emits a number or `null`. Put it inside a `Field` for label, hint and error. |
+| [Menu](ui/Menu/Menu.md) | menu, dropdown, dropdown menu, row actions, more actions, kebab menu, overflow menu, context menu, action menu | Button, Icon | no | ready | A dropdown list of actions on the native `popover` attribute: a click outside or Escape closes it and focus returns to the trigger. The default trigger is a ghost "more" button; bring your own through the `trigger` slot. Items are buttons, or router links when they have `to`. |
+| [Pagination](ui/Pagination/Pagination.md) | pagination, pager, page size, rows per page, next page, previous page, cursor pagination, load more | Button, Icon | no | ready | The one pager under a list. Offset mode shows the range, a rows-per-page select and first, previous, next and last; cursor mode shows only previous and next, for lists without a total. |
+| [Select](ui/Select/Select.md) | select, dropdown, choose one, picker, page size select, enum field | Icon, Field | no | ready | The native `<select>` with a drawn chevron, no custom listbox. Options carry their own value type: a number option emits a number. Put it inside a `Field` for label, hint and error. |
+| [Sheet](ui/Sheet/Sheet.md) | sheet, side panel, drawer, slide-over, bottom sheet, detail panel, edit panel, filter panel | Button, Icon | no | ready | A panel that slides in from the right (or left) edge on desktop and up from the bottom on phones. The native `<dialog>` with `showModal()`, like `Dialog`: focus trap, Escape and focus return come from the platform. Use it for content too long for a dialog: an edit form, a detail view, filters. |
+| [Skeleton](ui/Skeleton/Skeleton.md) | skeleton, loading placeholder, shimmer, loading state, placeholder text, content loader |  | no | ready | A shimmering placeholder in the shape of the content that is still loading: text bars, a circle for an avatar, a rectangle for an image or a chart. Hidden from assistive technology. |
+| [Switch](ui/Switch/Switch.md) | switch, toggle, on off, enable setting, feature flag toggle |  | no | ready | An on/off setting that applies at once: a `<button role="switch">` with a track, a thumb and a label next to it. Space and Enter toggle natively. For a choice that is saved with a form later, use a `Checkbox`. |
+| [Table](ui/Table/Table.md) | table, data table, list, sortable columns, row selection, bulk actions, row actions, responsive table, cards on phone, loading rows, empty state | Button, Icon | no | ready | The one data table: a semantic `<table>` with controlled sorting, a checkbox column with a bulk bar, custom cells, a row-actions column, loading rows and an empty state. Below 48rem of its own width every row becomes a card that shows each value under its column label. |
+| [Tabs](ui/Tabs/Tabs.md) | tabs, tab list, counted tabs, list tabs, segmented navigation, sub navigation, CountedTabs | Badge | no | ready | A row of tabs with an accent underline on the active one and an optional count per tab. Plain items make a keyboard-operable tab list; items with `to` make a nav of router links, the counted tabs of a list page. |
+| [Textarea](ui/Textarea/Textarea.md) | textarea, multi-line text, comment box, notes, description input, autosize textarea | Field | no | ready | Multi-line text that grows with its content through CSS `field-sizing: content`, from `rows` lines up to a max height, then scrolls. No JavaScript sizing. Put it inside a `Field` for label, hint and error; it looks like `Input`. |
+| [Toast](ui/Toast/Toast.md) | toast, snackbar, notification, flash message, saved message, undo, transient feedback | Button, Icon | no | ready | Short feedback after an action ("Saved", "Invoice sent", "Could not delete"). `toast()` in `toast.ts` queues a message from anywhere; `Toast.vue` is the host that shows it. **Mount the host exactly once, in the app shell** (next to the `RouterView`); a second host shows every toast twice. |
+
+## Layout: the shell and the page frame
+
+| Name | Intent | Uses | Livewire | Status | Summary |
+|------|--------|------|----------|--------|---------|
+| [ActionBar](ui/ActionBar/ActionBar.md) | form actions, save bar, sticky bottom bar, cancel and save |  | no | ready | The row of a form's actions, sticky at the bottom of the viewport while the form scrolls. On phones the buttons stretch to full width. |
+| [AppShell](ui/AppShell/AppShell.md) | app shell, layout, navigation, sidebar, top bar, bottom tabs, main menu, dock | Icon | no | ready | The frame of the application: top bar (chrome), navigation, banners, the page and the dock. Sidebar on desktop, icon rail on tablets, bottom tabs on phones (the first five items). The `AgentDock` block renders in the `dock` slot (D25). |
+| [Banner](ui/Banner/Banner.md) | banner, notice, connection lost, maintenance notice, impersonation banner, error with retry, stale data | Button, Icon | no | ready | A full-width notice: in the shell for connection, maintenance and impersonation (D34), at the top of a page for an error with a retry. The livewire-aware `ConnectionBanner` block wraps it. |
+| [Page](ui/Page/Page.md) | page, content column, page width, page root |  | no | ready | The content column of every page: padding, max width and the vertical rhythm between its children. Every page component's root is a `Page` carrying `data-page` (D23); `ui-lint` checks both. |
+| [PageHeader](ui/PageHeader/PageHeader.md) | page title, page header, heading, page actions, back link, counted tabs row | Button, Icon | no | ready | The first child of every `Page`: the h1, an optional subtitle and back link, the page's actions on the right, and a row for `Tabs` underneath. One primary action per page lives here. |
 
 ## By intent
 
 Every intent keyword and the pieces that answer it.
 
+- **accept terms**: [Checkbox](ui/Checkbox/Checkbox.md)
 - **action**: [Button](ui/Button/Button.md)
+- **action menu**: [Menu](ui/Menu/Menu.md)
+- **alert dialog**: [Dialog](ui/Dialog/Dialog.md)
+- **app shell**: [AppShell](ui/AppShell/AppShell.md)
+- **autosize textarea**: [Textarea](ui/Textarea/Textarea.md)
+- **avatar**: [Avatar](ui/Avatar/Avatar.md)
+- **back link**: [PageHeader](ui/PageHeader/PageHeader.md)
+- **badge**: [Badge](ui/Badge/Badge.md)
+- **banner**: [Banner](ui/Banner/Banner.md)
+- **bottom sheet**: [Sheet](ui/Sheet/Sheet.md)
+- **bottom tabs**: [AppShell](ui/AppShell/AppShell.md)
+- **box**: [Card](ui/Card/Card.md)
+- **bulk actions**: [Table](ui/Table/Table.md)
 - **button**: [Button](ui/Button/Button.md)
+- **cancel and save**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **card**: [Card](ui/Card/Card.md)
+- **cards on phone**: [Table](ui/Table/Table.md)
+- **checkbox**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **checkbox group**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **chip**: [Badge](ui/Badge/Badge.md)
+- **choose one**: [Select](ui/Select/Select.md)
+- **comment box**: [Textarea](ui/Textarea/Textarea.md)
+- **confirm**: [Dialog](ui/Dialog/Dialog.md)
+- **confirmation**: [Dialog](ui/Dialog/Dialog.md)
+- **connection lost**: [Banner](ui/Banner/Banner.md)
+- **content column**: [Page](ui/Page/Page.md)
+- **content loader**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **context menu**: [Menu](ui/Menu/Menu.md)
+- **count**: [Badge](ui/Badge/Badge.md)
+- **counted tabs**: [Tabs](ui/Tabs/Tabs.md)
+- **counted tabs row**: [PageHeader](ui/PageHeader/PageHeader.md)
+- **CountedTabs**: [Tabs](ui/Tabs/Tabs.md)
+- **cursor pagination**: [Pagination](ui/Pagination/Pagination.md)
+- **data table**: [Table](ui/Table/Table.md)
 - **date input**: [Input](ui/Input/Input.md)
+- **delete confirm**: [Dialog](ui/Dialog/Dialog.md)
+- **description input**: [Textarea](ui/Textarea/Textarea.md)
+- **detail panel**: [Sheet](ui/Sheet/Sheet.md)
+- **dialog**: [Dialog](ui/Dialog/Dialog.md)
+- **dock**: [AppShell](ui/AppShell/AppShell.md)
+- **drawer**: [Sheet](ui/Sheet/Sheet.md)
+- **dropdown**: [Menu](ui/Menu/Menu.md), [Select](ui/Select/Select.md)
+- **dropdown menu**: [Menu](ui/Menu/Menu.md)
+- **edit panel**: [Sheet](ui/Sheet/Sheet.md)
 - **email**: [Input](ui/Input/Input.md)
+- **empty list**: [EmptyState](ui/EmptyState/EmptyState.md)
+- **empty state**: [EmptyState](ui/EmptyState/EmptyState.md), [Table](ui/Table/Table.md)
+- **enable setting**: [Switch](ui/Switch/Switch.md)
+- **enum field**: [Select](ui/Select/Select.md)
+- **error with retry**: [Banner](ui/Banner/Banner.md)
+- **feature flag toggle**: [Switch](ui/Switch/Switch.md)
+- **filter panel**: [Sheet](ui/Sheet/Sheet.md)
+- **flash message**: [Toast](ui/Toast/Toast.md)
+- **form actions**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **form dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **form field**: [Field](ui/Field/Field.md)
 - **glyph**: [Icon](ui/Icon/Icon.md)
+- **heading**: [PageHeader](ui/PageHeader/PageHeader.md)
 - **hint**: [Field](ui/Field/Field.md)
 - **icon**: [Icon](ui/Icon/Icon.md)
 - **icon button**: [Button](ui/Button/Button.md)
+- **impersonation banner**: [Banner](ui/Banner/Banner.md)
+- **indeterminate**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **initials**: [Avatar](ui/Avatar/Avatar.md)
+- **kebab menu**: [Menu](ui/Menu/Menu.md)
 - **label**: [Field](ui/Field/Field.md)
+- **layout**: [AppShell](ui/AppShell/AppShell.md)
 - **link button**: [Button](ui/Button/Button.md)
+- **link card**: [Card](ui/Card/Card.md)
+- **list**: [Table](ui/Table/Table.md)
+- **list tabs**: [Tabs](ui/Tabs/Tabs.md)
+- **load more**: [Pagination](ui/Pagination/Pagination.md)
 - **loading button**: [Button](ui/Button/Button.md)
+- **loading placeholder**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **loading rows**: [Table](ui/Table/Table.md)
+- **loading state**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **main menu**: [AppShell](ui/AppShell/AppShell.md)
+- **maintenance notice**: [Banner](ui/Banner/Banner.md)
+- **menu**: [Menu](ui/Menu/Menu.md)
+- **modal**: [Dialog](ui/Dialog/Dialog.md)
+- **more actions**: [Menu](ui/Menu/Menu.md)
+- **multi select**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **multi-line text**: [Textarea](ui/Textarea/Textarea.md)
+- **navigation**: [AppShell](ui/AppShell/AppShell.md)
+- **next page**: [Pagination](ui/Pagination/Pagination.md)
+- **no results**: [EmptyState](ui/EmptyState/EmptyState.md)
+- **not found**: [EmptyState](ui/EmptyState/EmptyState.md)
+- **notes**: [Textarea](ui/Textarea/Textarea.md)
+- **nothing here yet**: [EmptyState](ui/EmptyState/EmptyState.md)
+- **notice**: [Banner](ui/Banner/Banner.md)
+- **notification**: [Toast](ui/Toast/Toast.md)
 - **number input**: [Input](ui/Input/Input.md)
+- **on off**: [Switch](ui/Switch/Switch.md)
+- **online status**: [Avatar](ui/Avatar/Avatar.md)
+- **opt in**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **overflow menu**: [Menu](ui/Menu/Menu.md)
+- **page**: [Page](ui/Page/Page.md)
+- **page actions**: [PageHeader](ui/PageHeader/PageHeader.md)
+- **page header**: [PageHeader](ui/PageHeader/PageHeader.md)
+- **page root**: [Page](ui/Page/Page.md)
+- **page size**: [Pagination](ui/Pagination/Pagination.md)
+- **page size select**: [Select](ui/Select/Select.md)
+- **page title**: [PageHeader](ui/PageHeader/PageHeader.md)
+- **page width**: [Page](ui/Page/Page.md)
+- **pager**: [Pagination](ui/Pagination/Pagination.md)
+- **pagination**: [Pagination](ui/Pagination/Pagination.md)
+- **panel**: [Card](ui/Card/Card.md)
 - **password**: [Input](ui/Input/Input.md)
+- **picker**: [Select](ui/Select/Select.md)
 - **pictogram**: [Icon](ui/Icon/Icon.md)
+- **pill**: [Badge](ui/Badge/Badge.md)
+- **placeholder text**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **popup**: [Dialog](ui/Dialog/Dialog.md)
+- **presence**: [Avatar](ui/Avatar/Avatar.md)
+- **previous page**: [Pagination](ui/Pagination/Pagination.md)
 - **primary action**: [Button](ui/Button/Button.md)
+- **profile picture**: [Avatar](ui/Avatar/Avatar.md)
 - **required**: [Field](ui/Field/Field.md)
+- **responsive table**: [Table](ui/Table/Table.md)
+- **row actions**: [Menu](ui/Menu/Menu.md), [Table](ui/Table/Table.md)
+- **row selection**: [Table](ui/Table/Table.md)
+- **rows per page**: [Pagination](ui/Pagination/Pagination.md)
+- **save bar**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **saved message**: [Toast](ui/Toast/Toast.md)
 - **search box**: [Input](ui/Input/Input.md)
+- **section container**: [Card](ui/Card/Card.md)
+- **segmented navigation**: [Tabs](ui/Tabs/Tabs.md)
+- **select**: [Select](ui/Select/Select.md)
+- **select all**: [Checkbox](ui/Checkbox/Checkbox.md)
+- **sheet**: [Sheet](ui/Sheet/Sheet.md)
+- **shimmer**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **side panel**: [Sheet](ui/Sheet/Sheet.md)
+- **sidebar**: [AppShell](ui/AppShell/AppShell.md)
+- **skeleton**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **slide-over**: [Sheet](ui/Sheet/Sheet.md)
+- **snackbar**: [Toast](ui/Toast/Toast.md)
+- **sortable columns**: [Table](ui/Table/Table.md)
+- **stale data**: [Banner](ui/Banner/Banner.md)
+- **status dot**: [Badge](ui/Badge/Badge.md)
+- **status label**: [Badge](ui/Badge/Badge.md)
+- **sticky bottom bar**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **sub navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **submit**: [Button](ui/Button/Button.md)
+- **surface**: [Card](ui/Card/Card.md)
+- **switch**: [Switch](ui/Switch/Switch.md)
 - **symbol**: [Icon](ui/Icon/Icon.md)
+- **tab list**: [Tabs](ui/Tabs/Tabs.md)
+- **table**: [Table](ui/Table/Table.md)
+- **tabs**: [Tabs](ui/Tabs/Tabs.md)
+- **tag**: [Badge](ui/Badge/Badge.md)
 - **text input**: [Input](ui/Input/Input.md)
+- **textarea**: [Textarea](ui/Textarea/Textarea.md)
+- **tile**: [Card](ui/Card/Card.md)
 - **time input**: [Input](ui/Input/Input.md)
+- **toast**: [Toast](ui/Toast/Toast.md)
+- **toggle**: [Switch](ui/Switch/Switch.md)
+- **top bar**: [AppShell](ui/AppShell/AppShell.md)
+- **transient feedback**: [Toast](ui/Toast/Toast.md)
+- **undo**: [Toast](ui/Toast/Toast.md)
+- **user picture**: [Avatar](ui/Avatar/Avatar.md)
 - **validation error**: [Field](ui/Field/Field.md)
+- **zero state**: [EmptyState](ui/EmptyState/EmptyState.md)

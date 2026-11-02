@@ -182,3 +182,20 @@ switchable style presets.
 - **D46 Screenshots in CI by presence, not pixels.** CI checks that every card has its light and
   dark screenshot; pixel regeneration is local (`just screenshots`), because fonts differ across
   machines.
+- **D47 One `ui-lint`, two modes.** `scripts/ui-lint.ts` is copied into a target as is (no
+  template copy). The ban on `<style>` blocks outside `src/ui/` from D12 is its `--strict` mode;
+  the default lets a page keep a grid-and-gap style block under the same token rules, because
+  recipes composing blocks need that much CSS and utility classes are not an option (D42).
+- **D48 Actions are declared in files, bound at runtime.** A page folder exports its actions
+  from `actions.ts` (plain `AgentAction` objects: name = livewire call, description, params,
+  page, mutating). `useAgentAction(action, run)` binds a handler while the page lives.
+  `scripts/app-map.ts` (template) imports every `actions.ts` and the route meta and writes
+  `src/app-map.json`; nothing is extracted from templates by regex. Drive plans are
+  `DriveStep[]` targeting `data-action`, `name` or `data-page` (`ui/agent/types.ts`).
+- **D49 Optional props are `x?: T | undefined`; attributes land on the control.** The
+  repository compiles with `exactOptionalPropertyTypes`, so a page passing `string | undefined`
+  (an error from `ApiError.fields`) needs the explicit union. Controls set `inheritAttrs: false`
+  and bind the attributes to the native element, `class` and `style` to the wrapper, so
+  `aria-label` and `data-action` reach the `<input>`. `ui-lint` and D42 agree on hairlines: 0,
+  1px and 2px (also negative) are the only px values; every control is 44px on coarse pointers
+  through the tokens, not per component.

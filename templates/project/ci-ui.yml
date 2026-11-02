@@ -1,0 +1,3 @@
+      # govengers/ui gates (add to the frontend job)
+      - run: bun scripts/ui-lint.ts src/ui src/pages
+      - run: bunx vue-tsc --noEmit

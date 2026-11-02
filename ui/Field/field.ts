@@ -6,7 +6,7 @@ export interface FieldContext {
   id: string
   describedBy: Ref<string | undefined>
   invalid: Ref<boolean>
-  required: Ref<boolean>
+  required: Readonly<Ref<boolean | undefined>>
 }
 
 export const fieldKey: InjectionKey<FieldContext> = Symbol('ui field')
