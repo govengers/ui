@@ -10,11 +10,11 @@ const props = withDefaults(defineProps<{
   hint?: string | undefined
   /** The error sentence; its presence marks the control invalid. */
   error?: string | undefined
-  required?: boolean
+  required?: boolean | undefined
   /** Hide the label visually; it stays for assistive technology. */
-  hideLabel?: boolean
+  hideLabel?: boolean | undefined
   /** A fieldset with a legend, for a group of checkboxes or radios. */
-  group?: boolean
+  group?: boolean | undefined
 }>(), {})
 
 const id = fieldId()

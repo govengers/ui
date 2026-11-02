@@ -11,12 +11,12 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
   modelValue?: string | number | null | undefined
-  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'tel' | 'date' | 'time' | 'datetime-local'
+  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'tel' | 'date' | 'time' | 'datetime-local' | undefined
   name?: string | undefined
   placeholder?: string | undefined
-  disabled?: boolean
-  readonly?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean | undefined
+  readonly?: boolean | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
   autocomplete?: string | undefined
   min?: number | string | undefined
   max?: number | string | undefined

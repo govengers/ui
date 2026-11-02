@@ -37,8 +37,8 @@ onMounted(() => preview.value?.toggle())
   <section>
     <h2>Own trigger, align start</h2>
     <Menu :items="exportItems" align="start" label="Export">
-      <template #trigger="{ open, toggle }">
-        <Button aria-haspopup="menu" :aria-expanded="open" @click="toggle">
+      <template #trigger="{ toggle, expanded }">
+        <Button v-bind="expanded" @click="toggle">
           Export<template #icon><Icon name="download" /></template>
         </Button>
       </template>

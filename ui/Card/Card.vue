@@ -5,11 +5,11 @@ import { computed } from 'vue'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 
 const props = withDefaults(defineProps<{
-  title?: string
-  as?: 'div' | 'article' | 'section'
-  flush?: boolean
-  interactive?: boolean
-  to?: RouteLocationRaw
+  title?: string | undefined
+  as?: 'div' | 'article' | 'section' | undefined
+  flush?: boolean | undefined
+  interactive?: boolean | undefined
+  to?: RouteLocationRaw | undefined
 }>(), { as: 'div' })
 
 const tag = computed(() => (props.to ? RouterLink : props.as))

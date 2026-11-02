@@ -2,10 +2,10 @@
 export interface TableColumn {
   key: string
   label: string
-  sortable?: boolean
-  align?: 'start' | 'end'
-  width?: string
-  hideOnPhone?: boolean
+  sortable?: boolean | undefined
+  align?: 'start' | 'end' | undefined
+  width?: string | undefined
+  hideOnPhone?: boolean | undefined
 }
 export interface TableSort { key: string; direction: 'asc' | 'desc' }
 export type TableKey = string | number
@@ -25,15 +25,15 @@ const props = withDefaults(defineProps<{
   columns: TableColumn[]
   rows: Row[]
   rowKey: keyof Row | ((row: Row) => TableKey)
-  sort?: TableSort | null
-  selectable?: boolean
-  selected?: TableKey[]
-  loading?: boolean
+  sort?: TableSort | null | undefined
+  selectable?: boolean | undefined
+  selected?: TableKey[] | undefined
+  loading?: boolean | undefined
   /** Visually hidden caption, read by assistive technology. */
-  caption?: string
-  stickyHeader?: boolean
+  caption?: string | undefined
+  stickyHeader?: boolean | undefined
   /** Bound by `@row-click`; declared as a prop so the rows know to look and act clickable. */
-  onRowClick?: (row: Row) => void
+  onRowClick?: ((row: Row) => void) | undefined
 }>(), { sort: null, selected: () => [] })
 
 const emit = defineEmits<{

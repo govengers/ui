@@ -2,15 +2,15 @@
 name: Menu
 tier: primitive
 intent: [menu, dropdown, dropdown menu, row actions, more actions, kebab menu, overflow menu, context menu, action menu]
-uses: [Button, Icon]
+uses: [Popover, Button, Icon]
 livewire: false
 status: ready
 ---
 
 # Menu
 
-A dropdown list of actions on the native `popover` attribute: a click outside or Escape closes it
-and focus returns to the trigger. The default trigger is a ghost "more" button; bring your own
+A dropdown list of actions on `Popover` (role `menu`): a click outside or Escape closes it and
+focus returns to the trigger. The default trigger is a ghost "more" button; bring your own
 through the `trigger` slot. Items are buttons, or router links when they have `to`.
 
 ## Props
@@ -29,7 +29,7 @@ through the `trigger` slot. Items are buttons, or router links when they have `t
 
 | Slot | Props | Content |
 |------|-------|---------|
-| `trigger` | `{ open, toggle }` | your own button: call `toggle` on click, bind `open` to `aria-expanded`, set `aria-haspopup="menu"` |
+| `trigger` | `{ open, toggle, expanded }` | your own button: `<Button v-bind="expanded" @click="toggle">`; `expanded` carries `aria-expanded`, `aria-haspopup` and `aria-controls` |
 
 ## Events
 
@@ -51,7 +51,4 @@ the driver can call it without opening the menu by hand. The menu is `role="menu
   The menu closes and focus returns to the trigger first, so the dialog gives focus back there.
 - Arrow keys, Home and End move between enabled items; disabled items are skipped. Tab closes
   the menu and moves on from the trigger.
-- It opens below the trigger, above when only that fits, else on the roomier side with a
-  scrolling list; it never covers its trigger. While open it re-places itself every frame, so it
-  follows scrolling, resizing and a row that a live update moves. No CSS anchor positioning.
-- Position, `top`, `left` and `max-height` are inline styles the script owns; do not style them.
+- Placement, following and light dismiss are `Popover`'s; see its card.

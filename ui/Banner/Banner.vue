@@ -7,10 +7,10 @@ import Icon from '../Icon/Icon.vue'
 import type { IconName } from '../Icon/icons'
 
 withDefaults(defineProps<{
-  variant?: 'info' | 'warning' | 'danger' | 'success'
+  variant?: 'info' | 'warning' | 'danger' | 'success' | undefined
   icon?: IconName | undefined
   /** Shows a close button; emits `dismiss`. */
-  dismissible?: boolean
+  dismissible?: boolean | undefined
 }>(), { variant: 'info' })
 
 defineEmits<{ dismiss: [] }>()

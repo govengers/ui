@@ -2,7 +2,7 @@
 // Page: the content column of every page (D32). The root carries the page's data-page (D23),
 // passed through from the page component. Width `content` for forms, `full` for lists.
 withDefaults(defineProps<{
-  width?: 'content' | 'page' | 'full'
+  width?: 'content' | 'page' | 'full' | undefined
 }>(), { width: 'page' })
 </script>
 

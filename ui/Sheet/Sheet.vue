@@ -9,17 +9,17 @@ import Icon from '../Icon/Icon.vue'
 
 const props = withDefaults(defineProps<{
   /** Open state. */
-  modelValue?: boolean
+  modelValue?: boolean | undefined
   /** The accessible name; shown as the heading unless the header slot replaces it. */
   title: string
   /** Desktop only; phones always get a bottom sheet. */
-  side?: 'right' | 'left'
+  side?: 'right' | 'left' | undefined
   /** A CSS length; desktop only. */
-  width?: string
+  width?: string | undefined
   /** No X button; Escape and a backdrop click do nothing. The actions are the only way out. */
-  persistent?: boolean
+  persistent?: boolean | undefined
   /** Open in the page flow without showModal(): no backdrop, no focus trap. Docs and previews only. */
-  inline?: boolean
+  inline?: boolean | undefined
 }>(), { side: 'right', width: '28rem' })
 
 const emit = defineEmits<{ 'update:modelValue': [open: boolean]; close: [] }>()

@@ -6,9 +6,9 @@ import Icon from '../Icon/Icon.vue'
 import type { IconName } from '../Icon/icons'
 
 withDefaults(defineProps<{
-  title?: string
-  description?: string
-  icon?: IconName
+  title?: string | undefined
+  description?: string | undefined
+  icon?: IconName | undefined
 }>(), { icon: 'search' })
 
 const { t } = useI18n()

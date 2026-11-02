@@ -3,11 +3,11 @@
 // natively. With `name`, a hidden input inside the button carries the state into a form post
 // (a hidden input is not interactive content, so it may sit in a button).
 withDefaults(defineProps<{
-  modelValue?: boolean
-  label?: string
-  disabled?: boolean
-  size?: 'sm' | 'md'
-  name?: string
+  modelValue?: boolean | undefined
+  label?: string | undefined
+  disabled?: boolean | undefined
+  size?: 'sm' | 'md' | undefined
+  name?: string | undefined
 }>(), { size: 'md' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()

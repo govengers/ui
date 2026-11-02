@@ -3,8 +3,8 @@
 // in DOM order: position sticky only engages with preceding scrollable content (Paloma lesson).
 withDefaults(defineProps<{
   /** Sticks to the bottom of the viewport while the form scrolls. */
-  sticky?: boolean
-  align?: 'start' | 'end' | 'between'
+  sticky?: boolean | undefined
+  align?: 'start' | 'end' | 'between' | undefined
 }>(), { sticky: true, align: 'end' })
 </script>
 

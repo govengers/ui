@@ -16,7 +16,7 @@ withDefaults(defineProps<{
   title: string
   nav: NavItem[]
   /** Hides the sidebar and the bottom tabs (login, full-screen flows). */
-  bare?: boolean
+  bare?: boolean | undefined
 }>(), {})
 </script>
 

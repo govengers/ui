@@ -199,3 +199,18 @@ switchable style presets.
   `aria-label` and `data-action` reach the `<input>`. `ui-lint` and D42 agree on hairlines: 0,
   1px and 2px (also negative) are the only px values; every control is 44px on coarse pointers
   through the tokens, not per component.
+- **D50 The fake engine is a demo server, not a livewire clone.** `demo/src/fake/` implements the
+  frames the v1.0.0 runtime sends and expects (query, subscribe with snapshot then diff or
+  replace pushes, calls with field errors, stored filters evicted as 404 `not_found`, presence,
+  uploads reported as live `files` rows because `Client.upload` has no progress callback, jobs
+  advancing on a timer; distinct reads cap at 1000 values and ignore paging; an upload ignores
+  its abort signal once started). Facet counts come from a custom object read `customerFacets` (every
+  value, own selection ignored) because livewire's `distinct` counts one field under the full
+  filter; a block must work with both: per-facet `distinct` reads with the filter minus that
+  facet's clauses against a real backend, a combined read when the app offers one. Known gaps:
+  no batch, no history reads, no 4401, no reconnects, one acting user, `billing` always
+  answers 403 to show the forbidden state.
+- **D51 One Popover primitive.** `ui/Popover` owns anchored placement (below, above, else the
+  roomier side with a scrolling cap), the toggle guard against the light-dismiss race, and
+  per-frame following of its trigger. `Menu`, `FacetFilter`, `RangePicker` and `ColumnsPicker`
+  build on it instead of each carrying the placement code; a placement fix lands once.

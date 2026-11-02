@@ -6,11 +6,11 @@ import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   name: string
-  src?: string
+  src?: string | undefined
   /** The accessible name; defaults to `name`. */
-  alt?: string
-  size?: 'sm' | 'md' | 'lg'
-  status?: 'online' | 'offline' | 'busy' | 'none'
+  alt?: string | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
+  status?: 'online' | 'offline' | 'busy' | 'none' | undefined
 }>(), { size: 'md', status: 'none' })
 
 const { t } = useI18n()

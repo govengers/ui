@@ -2,13 +2,13 @@
 // Skeleton: a shimmering placeholder while data loads. Hidden from assistive technology; the
 // container that loads says aria-busy. width and height are the one place inline style is allowed.
 withDefaults(defineProps<{
-  shape?: 'text' | 'circle' | 'rect'
+  shape?: 'text' | 'circle' | 'rect' | undefined
   /** For `text`: the number of bars; the last of several is 60% wide. */
-  lines?: number
+  lines?: number | undefined
   /** A CSS length, e.g. `12rem` or `40%`. */
-  width?: string
+  width?: string | undefined
   /** A CSS length; a circle with only a width stays round. */
-  height?: string
+  height?: string | undefined
 }>(), { shape: 'text', lines: 1 })
 </script>
 

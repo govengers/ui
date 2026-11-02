@@ -6,13 +6,13 @@ import { ref } from 'vue'
 import { useField } from '../Field/field'
 
 withDefaults(defineProps<{
-  modelValue?: string
-  name?: string
-  rows?: number
-  placeholder?: string
-  disabled?: boolean
-  readonly?: boolean
-  maxlength?: number
+  modelValue?: string | undefined
+  name?: string | undefined
+  rows?: number | undefined
+  placeholder?: string | undefined
+  disabled?: boolean | undefined
+  readonly?: boolean | undefined
+  maxlength?: number | undefined
 }>(), { modelValue: '', rows: 3 })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()

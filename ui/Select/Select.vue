@@ -10,13 +10,13 @@ const attrs = useAttrs()
 const controlAttrs = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style')))
 
 const props = withDefaults(defineProps<{
-  modelValue?: string | number | null
+  modelValue?: string | number | null | undefined
   options: { value: string | number; label: string; disabled?: boolean }[]
   /** Shown as a disabled empty option while modelValue is null. */
-  placeholder?: string
-  name?: string
-  disabled?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  placeholder?: string | undefined
+  name?: string | undefined
+  disabled?: boolean | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
 }>(), { modelValue: null, size: 'md' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | number] }>()

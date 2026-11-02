@@ -6,12 +6,12 @@ import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import Icon from '../Icon/Icon.vue'
 
 const props = withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-  type?: 'button' | 'submit' | 'reset'
-  disabled?: boolean
-  loading?: boolean
-  block?: boolean
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
+  type?: 'button' | 'submit' | 'reset' | undefined
+  disabled?: boolean | undefined
+  loading?: boolean | undefined
+  block?: boolean | undefined
   /** Accessible name for an icon-only button (no default slot). */
   label?: string | undefined
   to?: RouteLocationRaw | undefined

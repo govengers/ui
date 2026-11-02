@@ -2,10 +2,10 @@
 // Badge: an inline label for a status, a count or a tag. Soft tokens per variant (D36), variant
 // and size as attributes (D41). The dot repeats the variant in its strong colour.
 withDefaults(defineProps<{
-  variant?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger'
-  size?: 'sm' | 'md'
-  dot?: boolean
-  pill?: boolean
+  variant?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | undefined
+  size?: 'sm' | 'md' | undefined
+  dot?: boolean | undefined
+  pill?: boolean | undefined
 }>(), { variant: 'neutral', size: 'md' })
 </script>
 

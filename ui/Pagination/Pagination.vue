@@ -7,17 +7,17 @@ import Button from '../Button/Button.vue'
 import Icon from '../Icon/Icon.vue'
 
 const props = withDefaults(defineProps<{
-  mode?: 'offset' | 'cursor'
+  mode?: 'offset' | 'cursor' | undefined
   /** Offset mode: the current page, 1-based. */
-  page?: number
-  pageSize?: number
-  total?: number
-  pageSizes?: number[]
+  page?: number | undefined
+  pageSize?: number | undefined
+  total?: number | undefined
+  pageSizes?: number[] | undefined
   /** Cursor mode: whether a page exists before and after this one. */
-  hasPrevious?: boolean
-  hasNext?: boolean
+  hasPrevious?: boolean | undefined
+  hasNext?: boolean | undefined
   /** Cursor mode: optional text on the left, e.g. "25 of many". */
-  label?: string
+  label?: string | undefined
 }>(), { mode: 'offset', page: 1, pageSize: 25, total: 0, pageSizes: () => [25, 50, 100] })
 
 const emit = defineEmits<{

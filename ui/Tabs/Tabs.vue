@@ -16,10 +16,10 @@ export interface TabItem {
 
 const props = withDefaults(defineProps<{
   items: TabItem[]
-  modelValue?: string
-  size?: 'sm' | 'md'
+  modelValue?: string | undefined
+  size?: 'sm' | 'md' | undefined
   /** Accessible name of the tab list or nav, needed when a page has more than one. */
-  label?: string
+  label?: string | undefined
 }>(), { size: 'md' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()

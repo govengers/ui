@@ -9,15 +9,15 @@ import Icon from '../Icon/Icon.vue'
 
 const props = withDefaults(defineProps<{
   /** Open state. */
-  modelValue?: boolean
+  modelValue?: boolean | undefined
   title: string
   description?: string | undefined
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'default' | 'danger'
+  size?: 'sm' | 'md' | 'lg' | undefined
+  variant?: 'default' | 'danger' | undefined
   /** No X button; Escape and a backdrop click do nothing. The actions are the only way out. */
-  persistent?: boolean
+  persistent?: boolean | undefined
   /** Open in the page flow without showModal(): no backdrop, no focus trap. Docs and previews only. */
-  inline?: boolean
+  inline?: boolean | undefined
 }>(), { size: 'md', variant: 'default' })
 
 const emit = defineEmits<{ 'update:modelValue': [open: boolean]; close: [] }>()

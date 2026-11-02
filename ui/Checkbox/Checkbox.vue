@@ -7,17 +7,17 @@ import Icon from '../Icon/Icon.vue'
 import { fieldId, useField } from '../Field/field'
 
 const props = withDefaults(defineProps<{
-  modelValue?: boolean | (string | number)[]
+  modelValue?: boolean | (string | number)[] | undefined
   /** The value this checkbox stands for: toggled in an array model, posted with the form. */
-  value?: string | number
-  label?: string
+  value?: string | number | undefined
+  label?: string | undefined
   /** A second, muted line under the label. */
-  description?: string
-  indeterminate?: boolean
-  disabled?: boolean
-  name?: string
+  description?: string | undefined
+  indeterminate?: boolean | undefined
+  disabled?: boolean | undefined
+  name?: string | undefined
   /** Keep the label for assistive technology only (a table's row selector). */
-  hideLabel?: boolean
+  hideLabel?: boolean | undefined
 }>(), { modelValue: false })
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean | (string | number)[]] }>()

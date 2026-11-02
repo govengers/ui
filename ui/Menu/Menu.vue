@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// Menu: a dropdown on the native popover attribute (D9): light dismiss, Escape and focus return
-// come from the platform. Script places it from the trigger's box (below, flipped above when there
-// is no room, kept inside the viewport) and follows the trigger while open; arrow keys move focus.
-import { onBeforeUnmount, ref, useId } from 'vue'
+// Menu: a dropdown list of actions on Popover (role menu): Popover opens, places, follows and
+// closes it; Menu renders the items and moves focus with the arrow keys. A '-' item is a divider.
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import Button from '../Button/Button.vue'
 import Icon from '../Icon/Icon.vue'
+import Popover from '../Popover/Popover.vue'
 import type { IconName } from '../Icon/icons'
 
 export interface MenuItem {
@@ -21,91 +21,20 @@ export interface MenuItem {
   run?: (() => void) | undefined
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   items: MenuItem[]
   /** Which edge of the menu lines up with the trigger. */
-  align?: 'start' | 'end'
+  align?: 'start' | 'end' | undefined
   /** Accessible name of the default trigger and of the menu; default ui.actions. */
   label?: string | undefined
 }>(), { align: 'end' })
 
 const { t } = useI18n()
-const id = useId()
-const root = ref<HTMLElement | null>(null)
-const panel = ref<HTMLElement | null>(null)
-const open = ref(false)
-const gap = 4
-
-function isOpen() {
-  return panel.value?.matches(':popover-open') ?? false
-}
+const popover = ref<InstanceType<typeof Popover> | null>(null)
+const list = ref<HTMLElement | null>(null)
 
 function enabledItems() {
-  return [...(panel.value?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? [])]
-}
-
-// A press on the trigger while the menu is open closes it by light dismiss before the click
-// arrives; without this the click would open it again. A key press starts a fresh gesture.
-let openOnPress = false
-function onPress(event: PointerEvent) {
-  openOnPress = isOpen() && !panel.value?.contains(event.target as Node)
-}
-function onKey() {
-  openOnPress = false
-}
-
-function toggle() {
-  const wasOpen = openOnPress || isOpen()
-  openOnPress = false
-  if (wasOpen) hide()
-  else show()
-}
-
-function show() {
-  panel.value?.showPopover()
-  place()
-  enabledItems()[0]?.focus({ preventScroll: true })
-}
-
-function hide() {
-  if (isOpen()) panel.value?.hidePopover()
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(value, max))
-}
-
-// Inline style straight on the element: placing every frame must not re-render the component.
-function place() {
-  if (!root.value || !panel.value) return
-  const anchor = root.value.getBoundingClientRect()
-  const menu = panel.value.getBoundingClientRect()
-  const { clientWidth: width, clientHeight: height } = document.documentElement
-  const roomBelow = height - anchor.bottom - 2 * gap
-  const roomAbove = anchor.top - 2 * gap
-  // Below if it fits, above if only that fits, else the roomier side with a scrolling menu.
-  const below = menu.height <= roomBelow || roomBelow >= roomAbove
-  const room = below ? roomBelow : roomAbove
-  const top = below ? anchor.bottom + gap : anchor.top - gap - Math.min(menu.height, room)
-  const left = props.align === 'end' ? anchor.right - menu.width : anchor.left
-  panel.value.style.maxHeight = `${room}px`
-  panel.value.style.top = `${top}px`
-  panel.value.style.left = `${clamp(left, gap, width - menu.width - gap)}px`
-}
-
-// While open, re-place every frame: covers scroll (of any container), resize, and a live update
-// that moves the trigger's row. Two rect reads per frame, only while a menu is open.
-let frame = 0
-function follow() {
-  place()
-  frame = requestAnimationFrame(follow)
-}
-onBeforeUnmount(() => cancelAnimationFrame(frame))
-
-function onToggle(event: Event) {
-  open.value = (event as ToggleEvent).newState === 'open'
-  cancelAnimationFrame(frame)
-  if (open.value) frame = requestAnimationFrame(follow)
+  return [...(list.value?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? [])]
 }
 
 const moves: Record<string, (current: number, count: number) => number> = {
@@ -119,52 +48,38 @@ function onKeydown(event: KeyboardEvent) {
   const move = moves[event.key]
   if (move) {
     event.preventDefault()
-    const list = enabledItems()
-    const next = move(list.indexOf(document.activeElement as HTMLElement), list.length)
-    list[(next + list.length) % list.length]?.focus()
+    const items = enabledItems()
+    const next = move(items.indexOf(document.activeElement as HTMLElement), items.length)
+    items[(next + items.length) % items.length]?.focus()
   } else if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
     // Space activates a link item like a button item (Enter already does).
     event.preventDefault()
     event.target.click()
   } else if (event.key === 'Tab') {
     // Leave the menu: focus goes back to the trigger, then Tab moves on from there.
-    hide()
+    popover.value?.close()
   }
 }
 
 // Close first so focus is back on the trigger before run() opens, say, a confirm Dialog.
 function activate(item: MenuItem) {
-  hide()
+  popover.value?.close()
   item.run?.()
 }
 
-defineExpose({ toggle })
+defineExpose({ toggle: () => popover.value?.toggle() })
 </script>
 
 <template>
-  <span ref="root" class="ui-menu" @pointerdown="onPress" @keydown="onKey">
-    <slot name="trigger" :open="open" :toggle="toggle">
-      <Button
-        variant="ghost"
-        :label="label ?? t('ui.actions')"
-        aria-haspopup="menu"
-        :aria-expanded="open"
-        :aria-controls="id"
-        @click="toggle"
-      >
-        <template #icon><Icon name="more-vertical" /></template>
-      </Button>
-    </slot>
-    <div
-      :id="id"
-      ref="panel"
-      popover
-      class="ui-menu__panel"
-      role="menu"
-      :aria-label="label ?? t('ui.actions')"
-      @toggle="onToggle"
-      @keydown="onKeydown"
-    >
+  <Popover ref="popover" class="ui-menu" role="menu" :align="align" :label="label ?? t('ui.actions')" autofocus>
+    <template #trigger="{ open, toggle, expanded }">
+      <slot name="trigger" :open="open" :toggle="toggle" :expanded="expanded">
+        <Button variant="ghost" :label="label ?? t('ui.actions')" v-bind="expanded" @click="toggle">
+          <template #icon><Icon name="more-vertical" /></template>
+        </Button>
+      </slot>
+    </template>
+    <div ref="list" class="ui-menu__list" @keydown="onKeydown">
       <template v-for="(item, index) in items" :key="index">
         <div v-if="item.label === '-'" role="separator" class="ui-menu__separator" />
         <RouterLink
@@ -194,26 +109,14 @@ defineExpose({ toggle })
         </button>
       </template>
     </div>
-  </span>
+  </Popover>
 </template>
 
 <style scoped>
-.ui-menu { display: inline-flex; }
-
-/* The UA centres a popover (inset: 0, margin: auto); script sets top and left instead. */
-.ui-menu__panel {
-  inset: auto;
-  width: max-content;
+.ui-menu__list {
   min-width: 12rem;
-  max-width: min(20rem, calc(100vw - 2 * var(--ui-space-2)));
-  margin: 0;
+  max-width: 20rem;
   padding: var(--ui-space-1);
-  overflow: auto;
-  background: var(--ui-surface);
-  color: var(--ui-ink);
-  border: var(--ui-border-width) solid var(--ui-border);
-  border-radius: var(--ui-radius-control);
-  box-shadow: var(--ui-shadow-md);
 }
 
 .ui-menu__item {
