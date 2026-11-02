@@ -1,0 +1,65 @@
+---
+name: Spotlight
+tier: primitive
+intent: [spotlight, guide mode, show me where to click, product tour, onboarding tour, coach mark, highlight element, walkthrough]
+uses: [Button, Icon, agent]
+livewire: false
+status: ready
+---
+
+# Spotlight
+
+Guide mode's "click here" (D25): a scrim with a cutout and an accent ring around one element, and
+a bubble beside it with the text, "Step x of n", Back, Next and a close button. The overlay lets
+every click through, so the user clicks the real control; only the bubble takes input.
+
+## Props
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `target` | `DriveTarget \| null` | required | `{ action }`, `{ field }`, `{ page }` or `{ selector }`, resolved with `selectorOf`; `null` hides the spotlight |
+| `text` | `string` | required | the bubble's text; empty shows only the buttons |
+| `step` | `number` | none | with `total`: "Step {step} of {total}" |
+| `total` | `number` | none | |
+| `canBack` | `boolean` | `false` | shows Back |
+| `canNext` | `boolean` | `false` | shows the primary button |
+| `nextLabel` | `string` | `ui.next` | pass `ui.done` on the last step, `ui.go` on a drive pause |
+
+## Slots
+
+None.
+
+## Events
+
+| Event | Payload | When |
+|-------|---------|------|
+| `next` | none | the primary button |
+| `back` | none | Back |
+| `close` | none | the close button or Escape anywhere on the page |
+
+## Exposed
+
+`focus()` moves focus to the primary button (else the bubble); `AgentCursor` calls it when a
+drive plan pauses, so Enter presses Go.
+
+## Agent
+
+The bubble carries `data-agent-ui`, so a running `AgentCursor` does not treat a press on it as the
+user taking over. A guide plan's stops are the non-`navigate` steps of a `DrivePlan`; `AgentDock`
+walks them with this component (D28: plans come from the agent, never hand-written tours). The
+bubble is a non-modal `role="dialog"` named by its text, which is `aria-live="polite"`, so a
+screen reader reads each step.
+
+## Messages
+
+`ui.stepOf`, `ui.back`, `ui.next`, `ui.close`.
+
+## Gotchas
+
+- A target that is not on the page shows the bubble centred with no cutout; the spotlight keeps
+  looking every frame, so it appears once the element renders (after a navigation).
+- The first element matching the target wins: two `data-action="filter"` buttons on one page
+  point at the first.
+- It takes focus when it appears and gives it back when it hides, but only if focus is still in
+  the bubble; a click on the target keeps focus where the user put it.
+- Rendered into `<body>` through `Teleport` with `--ui-z-agent`, above dialogs and sheets.

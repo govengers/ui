@@ -245,7 +245,7 @@ function decodeScalar(meta: FieldMeta, raw: unknown, path: string, now: number):
         return instant
       }
       const relative = isObject(raw) ? raw['relative'] : undefined
-      const match = typeof relative === 'string' ? /^([+-])((?:\d+[smhdw])+)$/.exec(relative) : null
+      const match = typeof relative === 'string' ? /^([+-]?)((?:\d+[smhdw])+)$/.exec(relative) : null
       if (match === null) throw filterError(path, 'a time is an RFC 3339 string or {"relative": "-7d"}')
       let offset = 0
       for (const [, amount, unit] of (match[2] ?? '').matchAll(/(\d+)([smhdw])/g)) offset += Number(amount) * (units[unit ?? 's'] ?? 0)
@@ -278,10 +278,14 @@ export function withoutField(document: unknown, name: string): unknown {
   return where === undefined ? rest : { ...rest, where }
 }
 
-/** ponytail: strips conditions at the top and inside `and` only; a facet's selection is one in or notIn clause there (D31). */
+/** ponytail: strips conditions at the top, inside `and` and under `not`; a facet's selection is one in, notIn or not-hasAny clause there (D31). */
 function strip(node: unknown, name: string): unknown {
   if (!isObject(node)) return node
   if (node['field'] === name) return undefined
+  if (node['not'] !== undefined) {
+    const inner = strip(node['not'], name)
+    return inner === undefined ? undefined : { not: inner }
+  }
   const children = node['and']
   if (!Array.isArray(children)) return node
   const kept = children.map((child) => strip(child, name)).filter((child) => child !== undefined)

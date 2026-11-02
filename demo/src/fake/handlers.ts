@@ -113,7 +113,7 @@ export function createHandlers(context: HandlerContext): Handlers {
     },
     sendMessage: (_, body) => {
       const input = objectBody(body)
-      validate(input, { id: nonEmpty, text: nonEmpty }, ['text'])
+      validate(input, { id: nonEmpty, text: nonEmpty, mode: oneOf(['chat', 'guide', 'drive']) }, ['text']) // mode steers the agent, the row does not keep it
       const id = typeof input['id'] === 'string' ? input['id'] : uuidv7()
       if (tables.conversation.some((message) => message.id === id)) throw new Refusal('conflict')
       return { status: 201, payload: insert('conversation', { id, role: 'user', text: String(input['text']), createdAt: now() }) }

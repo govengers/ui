@@ -196,9 +196,13 @@ export interface StartJob {
   kind: string
 }
 
+/** The dock mode a message is sent in (D25); background runs server side and sends none. */
+export type AgentMode = 'chat' | 'guide' | 'drive'
+
 export interface SendMessage {
   id?: string
   text: string
+  mode?: AgentMode
 }
 
 /** Every mutation, for LiveConnection.call (the socket, with its optimistic effect, D36) and Client.call. */

@@ -65,14 +65,14 @@ function onChange(event: Event) {
 </template>
 
 <style scoped>
-/* The row is the click target: at least --ui-touch-min tall, the box centred on the first line. */
+/* The row is the click target: a control's height (44px on touch screens through the tokens), the box centred on the first line. */
 .ui-checkbox {
   display: flex;
   align-items: flex-start;
   gap: var(--ui-space-3);
   width: fit-content;
-  min-height: var(--ui-touch-min);
-  padding-block: calc((var(--ui-touch-min) - 1lh) / 2);
+  min-height: var(--ui-control-h);
+  padding-block: calc((var(--ui-control-h) - 1lh) / 2);
   font-size: var(--ui-text-sm);
   color: var(--ui-ink);
   cursor: pointer;

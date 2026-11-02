@@ -21,7 +21,7 @@ import { composeFilter, cursorWindow, errorKey, needsMore, readQuery, sortTerms,
 const props = withDefaults(defineProps<{
   /** The list read, e.g. `live.customers`. */
   target: LiveTarget<Query, ListResponse<Item>>
-  /** The page's filter document (FacetFilter, tabs); the search is added to it. */
+  /** The page's filter document (FacetFilter's toFilterDocument, tabs); the search is added beside its where. */
   filter?: Query['filter'] | undefined
   columns: TableColumn[]
   rowKey: keyof Item | ((row: Item) => TableKey)

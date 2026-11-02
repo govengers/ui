@@ -77,3 +77,11 @@ describe('query', () => {
     expect(rest.next).toBeUndefined()
   })
 })
+
+import { withoutField } from './query'
+import { test as t2, expect as e2 } from 'bun:test'
+t2('withoutField strips a negated facet clause under not', () => {
+  const document = { where: { and: [{ field: 'status', op: 'in', value: ['active'] }, { not: { field: 'tags', op: 'hasAny', value: ['trial'] } }] } }
+  e2(withoutField(document, 'tags')).toEqual({ where: { and: [{ field: 'status', op: 'in', value: ['active'] }] } })
+  e2(withoutField({ where: { not: { field: 'tags', op: 'hasAny', value: ['trial'] } } }, 'tags')).toEqual({})
+})

@@ -20,7 +20,7 @@ as `filter`.
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
 | `target` | `LiveTarget<Query, ListResponse<Item>>` | required | the list read, e.g. `live.customers`; types `Item` and the filter |
-| `filter` | `Query['filter'] \| undefined` | none | the page's filter document (FacetFilter, tabs); the search is added beside its `where` |
+| `filter` | `Query['filter'] \| undefined` | none | the page's filter document: FacetFilter's clauses through `toFilterDocument(clauses, { base, facets })` from `FacetFilter/facets.ts`, or a tab's; the search is added beside its `where` |
 | `columns` | `TableColumn[]` | required | as on `Table` |
 | `rowKey` | `keyof Item \| (row) => string \| number` | required | livewire items: `"id"` |
 | `defaultSort` | `TableSort \| undefined` | none | `{ key, direction }`; none is the resource's default sort |
@@ -40,8 +40,8 @@ Models: `v-model:selected` (row keys, optional: unbound it is internal) and `v-m
 
 | Slot | Scope | Content |
 |------|-------|---------|
-| `toolbar` | | beside the search box: `FacetFilter`'s button, `RangePicker`, `ColumnsPicker`, tab-like toggles |
-| `chips` | | under the toolbar: `FacetFilter`'s chip bar |
+| `toolbar` | | beside the search box: `FacetFilter` (its button and chips wrap in one row), `RangePicker`, `ColumnsPicker`, tab-like toggles |
+| `chips` | | a row under the toolbar, for chips that live apart from their button; FacetFilter needs none |
 | `cell-<key>` | `{ row, value }` | passed through to `Table`: a custom cell for column `<key>` |
 | `bulk` | `{ selected }` | bulk action buttons in the bar above the table, shown while rows are selected |
 | `empty` | `{ search }` | replaces the empty state (EmptyState with "Clear search" while searching) |
@@ -84,6 +84,7 @@ page and search in the URL (`syncQuery`) let the agent link to a list state.
   stays subscribed until the filter, search or sort changes.
 - A non-empty search replaces a `search` the page's `filter` carries; the filter's `where` is
   kept untouched. Only resources with a searchable field accept a search.
-- `syncQuery` owns the URL keys `sort`, `page` and `search` (DetailDrawer owns `item`); two
-  syncing lists on one page would share them.
+- `syncQuery` owns the URL keys `sort`, `page` and `search`. DetailDrawer owns `item`,
+  RangePicker `t`, FacetFilter one key per facet plus `<facet>.not`, so no facet may be named
+  `search`, `sort`, `page`, `item` or `t`. Two syncing lists on one page would share their keys.
 - `mode`, `syncQuery` and `target` are read at mount; key the component to swap them.

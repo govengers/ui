@@ -34,8 +34,8 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
   display: inline-flex;
   align-items: center;
   gap: var(--ui-space-3);
-  min-width: var(--ui-touch-min);
-  min-height: var(--ui-touch-min);
+  min-width: var(--ui-control-h);
+  min-height: var(--ui-control-h);
   padding: 0;
   background: none;
   border: 0;
