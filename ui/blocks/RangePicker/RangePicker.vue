@@ -10,11 +10,11 @@ import Field from '../../Field/Field.vue'
 import Icon from '../../Icon/Icon.vue'
 import Input from '../../Input/Input.vue'
 import Popover from '../../Popover/Popover.vue'
-import { calendarQuick, calendarRange, fromLocalInput, fromQuery, labelOf, relativeQuick, relativeRange, sameRange, toLocalInput, toQuery, type TimeRange } from './range'
+import { anyTime, calendarQuick, calendarRange, fromLocalInput, fromQuery, labelOf, relativeQuick, relativeRange, sameRange, toLocalInput, toQuery, type TimeRange } from './range'
 
 const props = defineProps<{
   modelValue: TimeRange
-  /** Read the range from `?t=` and write it back (`?t=-7d`, `?t=today`, `?t=<from>..<to>`). */
+  /** Read the range from `?t=` and write it back (`?t=-7d`, `?t=today`, `?t=<from>..<to>`; any time is no `t`). */
   syncQuery?: boolean
 }>()
 const emit = defineEmits<{ 'update:modelValue': [range: TimeRange] }>()
@@ -24,8 +24,9 @@ const popover = ref<InstanceType<typeof Popover> | null>(null)
 const list = ref<HTMLElement | null>(null)
 const label = computed(() => labelOf(props.modelValue, t, locale.value))
 const quick = computed(() => [
-  ...relativeQuick.map(relative => ({ key: relative, range: relativeRange(relative) })),
-  ...calendarQuick.map(key => ({ key, range: { from: '', to: '', calendar: key } satisfies TimeRange })),
+  { key: 'any', group: 'any', range: anyTime },
+  ...relativeQuick.map(relative => ({ key: relative, group: 'relative', range: relativeRange(relative) })),
+  ...calendarQuick.map(key => ({ key, group: 'calendar', range: { from: '', to: '', calendar: key } satisfies TimeRange })),
 ].map(item => ({ ...item, label: labelOf(item.range, t, locale.value), current: isCurrent(item.range) })))
 const from = ref('')
 const to = ref('')
@@ -69,7 +70,11 @@ if (props.syncQuery) {
   const route = useRoute()
   const router = useRouter()
   // By path, so a catch-all route param is not re-encoded (a/b to a%2Fb).
-  const write = (range: TimeRange): void => { void router.replace({ path: route.path, hash: route.hash, query: { ...route.query, t: toQuery(range) } }) }
+  const write = (range: TimeRange): void => {
+    const { t: _, ...query } = route.query
+    const text = toQuery(range)
+    void router.replace({ path: route.path, hash: route.hash, query: text === '' ? query : { ...query, t: text } })
+  }
   // The URL wins on load when it names a range; a URL without one means the initial v-model.
   const initial = fromQuery(route.query['t'])
   if (initial) emit('update:modelValue', initial)
@@ -78,7 +83,7 @@ if (props.syncQuery) {
     if (range && toQuery(range) !== toQuery(props.modelValue)) emit('update:modelValue', range)
   })
   watch(() => props.modelValue, (range) => {
-    if (toQuery(range) !== route.query['t']) write(range)
+    if (toQuery(range) !== (route.query['t'] ?? '')) write(range)
   })
 }
 </script>
@@ -94,7 +99,7 @@ if (props.syncQuery) {
     <div class="ui-range-picker">
       <div ref="list" class="ui-range-picker__quick" role="menu" :aria-label="t('ui.timeRange')" @keydown="onKeydown">
         <template v-for="(item, index) in quick" :key="item.key">
-          <div v-if="index === relativeQuick.length" role="separator" class="ui-range-picker__separator" />
+          <div v-if="index > 0 && item.group !== quick[index - 1]?.group" role="separator" class="ui-range-picker__separator" />
           <button
             type="button"
             role="menuitemradio"

@@ -108,6 +108,7 @@ export const messages = {
       details: 'Details',
       confirmStep: 'This step changes data. Press Go, or click it yourself.',
       planFailed: 'The assistant could not find the next step on this page.',
+      anyTime: 'Any time',
     },
   },
   de: {
@@ -216,6 +217,7 @@ export const messages = {
       details: 'Details',
       confirmStep: 'Dieser Schritt ändert Daten. Drück Los oder klick selbst.',
       planFailed: 'Der Assistent findet den nächsten Schritt auf dieser Seite nicht.',
+      anyTime: 'Beliebiger Zeitraum',
     },
   },
 } as const

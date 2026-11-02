@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test'
-import { calendarRange, fromLocalInput, instantOf, fromQuery, labelOf, rangeToConditions, relativeRange, sameRange, toLocalInput, toQuery, type Translate } from './range'
+import { anyTime, calendarRange, fromLocalInput, instantOf, fromQuery, labelOf, rangeToConditions, relativeRange, sameRange, toLocalInput, toQuery, type Translate } from './range'
 
 const t: Translate = (key, named, plural) => {
   const words: Record<string, [string, string]> = { 'ui.lastHours': ['Last hour', 'Last {n} hours'], 'ui.lastDays': ['Last day', 'Last {n} days'], 'ui.lastMinutes': ['Last minute', 'Last {n} minutes'], 'ui.lastWeeks': ['Last week', 'Last {n} weeks'] }
   const pair = words[key]
   if (pair) return (plural === 1 ? pair[0] : pair[1]).replace('{n}', String(named['n']))
-  return ({ 'ui.today': 'Today', 'ui.yesterday': 'Yesterday', 'ui.now': 'now' })[key] ?? key
+  return ({ 'ui.today': 'Today', 'ui.yesterday': 'Yesterday', 'ui.now': 'now', 'ui.anyTime': 'Any time' })[key] ?? key
 }
 // 02.11.2026 10:30 local time, a Monday.
 const now = new Date(2026, 10, 2, 10, 30)
@@ -15,6 +15,11 @@ describe('labelOf', () => {
     expect(labelOf(relativeRange('-7d'), t, 'en')).toBe('Last 7 days')
     expect(labelOf(relativeRange('-1h'), t, 'en')).toBe('Last hour')
     expect(labelOf(relativeRange('-15m'), t, 'en')).toBe('Last 15 minutes')
+  })
+
+  test('no range is any time, an open absolute range ends at now', () => {
+    expect(labelOf(anyTime, t, 'en')).toBe('Any time')
+    expect(labelOf({ from: new Date(2026, 10, 2, 10).toISOString(), to: '' }, t, 'de')).toBe('02.11.26, 10:00 - now')
   })
 
   test('calendar ranges by name, compound and absolute ranges as two ends', () => {
@@ -36,7 +41,8 @@ describe('calendarRange', () => {
 })
 
 describe('rangeToConditions', () => {
-  test('gte from, lte to, now is no bound', () => {
+  test('gte from, lte to, now is no bound, any time is none', () => {
+    expect(rangeToConditions('createdAt', anyTime)).toEqual([])
     expect(rangeToConditions('createdAt', relativeRange('-7d'))).toEqual([{ field: 'createdAt', op: 'gte', value: { relative: '-7d' } }])
     expect(rangeToConditions('createdAt', { from: 'a', to: 'b' })).toEqual([{ field: 'createdAt', op: 'gte', value: 'a' }, { field: 'createdAt', op: 'lte', value: 'b' }])
   })
@@ -49,6 +55,12 @@ describe('URL query', () => {
     }
     expect(toQuery(relativeRange('-7d'))).toBe('-7d')
     expect(toQuery(calendarRange('today', now))).toBe('today')
+  })
+
+  test('any time is no t: an empty query value, and no t names no range', () => {
+    expect(toQuery(anyTime)).toBe('')
+    expect(fromQuery(undefined)).toBeUndefined()
+    expect(fromQuery('')).toBeUndefined()
   })
 
   test('garbage is no range', () => {

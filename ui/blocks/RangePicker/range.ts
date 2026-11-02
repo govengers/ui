@@ -25,6 +25,13 @@ export type Translate = (key: string, named: Record<string, unknown>, plural: nu
 export const relativeQuick = ['-5m', '-15m', '-1h', '-6h', '-24h', '-7d', '-30d', '-90d'] as const
 export const calendarQuick: readonly CalendarKey[] = ['today', 'yesterday', 'thisWeek', 'thisMonth']
 
+/** No range: no conditions, no `t` in the URL; a list's usual default. */
+export const anyTime: TimeRange = { from: '', to: '' }
+
+export function isAnyTime(range: TimeRange): boolean {
+  return !range.calendar && range.from === '' && range.to === ''
+}
+
 export function relativeRange(relative: string): TimeRange {
   return { from: { relative }, to: '' }
 }
@@ -51,9 +58,10 @@ function timeLabel(value: TimeValue, t: Translate, locale: string): string {
   return typeof value === 'string' ? new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : value.relative
 }
 
-/** "Last 7 days", "Today", or "02.11.26, 10:00 - 02.11.26, 12:00" in the locale. */
+/** "Any time", "Last 7 days", "Today", or "02.11.26, 10:00 - 02.11.26, 12:00" in the locale. */
 export function labelOf(range: TimeRange, t: Translate, locale: string): string {
   if (range.calendar) return t(`ui.${range.calendar}`, {}, 1)
+  if (isAnyTime(range)) return t('ui.anyTime', {}, 1)
   const match = typeof range.from === 'string' ? null : /^-(\d+)([mhdw])$/.exec(range.from.relative)
   if (match && range.to === '') {
     const n = Number(match[1])
@@ -70,16 +78,17 @@ export function rangeToConditions(field: string, range: TimeRange): TimeConditio
   return conditions
 }
 
-/** `?t=-7d`, `?t=today`, `?t=<from>..<to>` (an empty side is now). */
+/** `?t=-7d`, `?t=today`, `?t=<from>..<to>` (an empty side is now); '' for any time, which is no `t`. */
 export function toQuery(range: TimeRange): string {
   if (range.calendar) return range.calendar
+  if (isAnyTime(range)) return ''
   const side = (value: TimeValue): string => (typeof value === 'string' ? value : value.relative)
   return range.to === '' && typeof range.from !== 'string' ? range.from.relative : `${side(range.from)}..${side(range.to)}`
 }
 
 const relativePattern = /^[+-](\d+[smhdw])+$/
 
-/** The range of a `t` query value, undefined when it is none. */
+/** The range of a `t` query value; undefined when it names none (no `t` at all is any time or the page's default). */
 export function fromQuery(text: unknown, now: Date = new Date()): TimeRange | undefined {
   if (typeof text !== 'string' || text === '') return undefined
   if ((calendarQuick as readonly string[]).includes(text)) return calendarRange(text as CalendarKey, now)
