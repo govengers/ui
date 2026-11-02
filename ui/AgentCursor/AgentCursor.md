@@ -73,4 +73,8 @@ Plans come from the server-side agent on the message (D26, D28); the cursor only
   never pauses, so a plan must name a submit by its action.
 - Typing sets `value` and fires `input`: Vue's `v-model` follows, a component that listens only
   to `keydown` does not.
+- Targets resolve with `resolveTarget`, the first visible match: the hidden menu items of other
+  rows are skipped. Visible is not on top: behind an open modal's backdrop an element still
+  counts, so a plan that opens a dialog should target the dialog's own controls by a name the
+  page behind does not use.
 - Under reduced motion the pointer jumps instead of gliding; the pace stays the same.

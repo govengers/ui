@@ -5,7 +5,8 @@ import { selectorOf, type DrivePlan, type DriveStep, type DriveTarget } from '..
 
 /** What the engine does to the screen; `Element` is a DOM element in the app, anything in a test. */
 export interface DriveEffects<Element> {
-  query(selector: string): Element | null
+  /** The element a target points at; the app passes resolveTarget (the first visible match). */
+  query(target: DriveTarget): Element | null
   sleep(ms: number): Promise<void>
   /** Scrolls the element into view, moves the pointer to it and highlights it with the step's text. */
   point(element: Element, step: DriveStep): void
@@ -71,9 +72,8 @@ export function createDriver<Element>(effects: DriveEffects<Element>, options: D
   const wait = (ms: number) => guard(effects.sleep(ms / speed))
 
   async function find(target: DriveTarget): Promise<Element | null | Halted> {
-    const selector = selectorOf(target)
     for (let waited = 0; ; waited += pace.poll) {
-      const element = effects.query(selector)
+      const element = effects.query(target)
       if (element !== null || waited >= retry) return element
       if ((await guard(effects.sleep(pace.poll))) === halted) return halted
     }

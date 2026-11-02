@@ -7,7 +7,7 @@ import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from '../Button/Button.vue'
 import Icon from '../Icon/Icon.vue'
-import { selectorOf, type DriveTarget } from '../agent/types'
+import { resolveTarget, type DriveTarget } from '../agent/types'
 import { placeBubble } from './spotlight'
 
 const props = withDefaults(defineProps<{
@@ -32,7 +32,7 @@ const bubble = ref<HTMLElement | null>(null)
 const pad = 4
 
 function elementOf(target: DriveTarget | null): HTMLElement | null {
-  return target ? document.querySelector<HTMLElement>(selectorOf(target)) : null
+  return target ? resolveTarget(target) : null
 }
 
 // Inline style straight on the elements: placing every frame must not re-render the component.

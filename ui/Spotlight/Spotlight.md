@@ -17,7 +17,7 @@ every click through, so the user clicks the real control; only the bubble takes 
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `target` | `DriveTarget \| null` | required | `{ action }`, `{ field }`, `{ page }` or `{ selector }`, resolved with `selectorOf`; `null` hides the spotlight |
+| `target` | `DriveTarget \| null` | required | `{ action }`, `{ field }`, `{ page }` or `{ selector }`, resolved with `resolveTarget`; `null` hides the spotlight |
 | `text` | `string` | required | the bubble's text; empty shows only the buttons |
 | `step` | `number` | none | with `total`: "Step {step} of {total}" |
 | `total` | `number` | none | |
@@ -58,8 +58,9 @@ screen reader reads each step.
 
 - A target that is not on the page shows the bubble centred with no cutout; the spotlight keeps
   looking every frame, so it appears once the element renders (after a navigation).
-- The first element matching the target wins: two `data-action="filter"` buttons on one page
-  point at the first.
+- The target resolves with `resolveTarget`: the first visible match, so a row menu's hidden
+  item or a closed dialog's button is skipped. Visible is not on top: an element behind an open
+  modal's backdrop still counts, and two visible matches point at the first in the DOM.
 - It takes focus when it appears and gives it back when it hides, but only if focus is still in
   the bubble; a click on the target keeps focus where the user put it.
 - Rendered into `<body>` through `Teleport` with `--ui-z-agent`, above dialogs and sheets.

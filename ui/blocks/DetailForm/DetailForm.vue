@@ -31,8 +31,10 @@ defineSlots<{
 const { t } = useI18n()
 const element = ref<HTMLFormElement>()
 
-// Controls disabled while saving lose the focus: give it back, or to the first refused field.
+// Nothing touched: no call and no `saved`. Controls disabled while saving lose the focus: give it
+// back, or to the first refused field.
 async function submit(): Promise<void> {
+  if (!props.form.dirty.value) return
   const focused = document.activeElement
   const saved = await props.form.save()
   await nextTick()

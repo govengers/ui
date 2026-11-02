@@ -32,6 +32,7 @@ as `filter`.
 | `syncQuery` | `boolean` | `false` | reads `sort`, `page`, `search` from the URL at mount, writes them back with `router.replace`; read once |
 | `emptyTitle` | `string \| undefined` | `ui.noResults` | title of the empty state |
 | `caption` | `string \| undefined` | none | the table's hidden caption |
+| `hideStale` | `boolean` | `false` | drops the muted stale line, for a page that shows its own stale notice |
 
 Models: `v-model:selected` (row keys, optional: unbound it is internal) and `v-model:search`
 (optional: bind it to preset or read the search).
@@ -54,6 +55,7 @@ Models: `v-model:selected` (row keys, optional: unbound it is internal) and `v-m
 | `update:selected` | `(string \| number)[]` | the selection changed |
 | `update:search` | `string` | the debounced search changed |
 | `rows` | `Item[]` | the rows on screen changed (at mount too): hand their ids to `DetailDrawer` |
+| `total` | `number \| null` | the total under filter and search changed; `null` until the first page (at mount); kept while a page loads; feeds a subtitle or tab count without a second read |
 
 ## With livewire
 
@@ -77,8 +79,8 @@ page and search in the URL (`syncQuery`) let the agent link to a list state.
   shows the danger banner with Retry instead of the table, never a skeleton.
 - Live errors carry no HTTP status: the text branches on `error.code` (`not_found`,
   `forbidden` get `ui.notFound` and `ui.forbidden`), every other refusal shows its message.
-- A dropped socket keeps the last rows on screen under the muted `ui.stale` line; the shell's
-  `ConnectionBanner` says the rest.
+- A dropped socket keeps the last rows on screen under the muted `ui.stale` line (`hideStale`
+  drops it where the page has its own notice); the shell's `ConnectionBanner` says the rest.
 - Cursor mode: livewire's `useLiveList` tiles pages for "load more"; previous and next step
   through the loaded tiles and load the next tile when stepping past them. Every visited page
   stays subscribed until the filter, search or sort changes.

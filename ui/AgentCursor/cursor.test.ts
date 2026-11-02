@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import type { DrivePlan } from '../agent/types'
+import { selectorOf, type DrivePlan } from '../agent/types'
 import { createDriver, needsPause, type DriveEffects } from './cursor'
 
 /** What the pages bound: createCustomer mutating, filter not; anything else is unbound. */
@@ -10,7 +10,7 @@ function screen(present: string[], answer: 'go' | 'target' = 'go') {
   const log: string[] = []
   let release: (() => void) | undefined
   const effects: DriveEffects<string> = {
-    query: selector => (present.includes(selector) ? selector : null),
+    query: target => (present.includes(selectorOf(target)) ? selectorOf(target) : null),
     sleep: () => Promise.resolve(),
     point: (element, step) => log.push(`point ${element} ${step.kind}`),
     click: element => log.push(`click ${element}`),

@@ -7,7 +7,7 @@ import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Spotlight from '../Spotlight/Spotlight.vue'
 import { findAction } from '../agent/registry'
-import type { DrivePlan, DriveTarget } from '../agent/types'
+import { resolveTarget, type DrivePlan, type DriveTarget } from '../agent/types'
 import { createDriver, pace, type DriveEffects, type Driver } from './cursor'
 
 const props = withDefaults(defineProps<{
@@ -35,7 +35,7 @@ let current = 0
 let stoppedAt = 0
 
 const effects: DriveEffects<HTMLElement> = {
-  query: selector => document.querySelector<HTMLElement>(selector),
+  query: resolveTarget,
   sleep: ms => new Promise(resolve => setTimeout(resolve, ms)),
   point(element, step) {
     element.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' })

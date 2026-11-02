@@ -40,7 +40,7 @@ None: a composable. Its options:
 | `touched` | `ComputedRef<string[]>` | fields whose value differs from the server value they were filled with |
 | `dirty` | `ComputedRef<boolean>` | `touched` is not empty |
 | `conflicts` | `ComputedRef<string[]>` | touched fields the server changed since the user started editing them |
-| `save()` | `Promise<boolean>` | sends `touched` only; true when saved or nothing to save |
+| `save()` | `Promise<boolean>` | sends `touched` only; with nothing touched it makes no call and answers true |
 | `reset()` | `void` | every field takes the server's value, errors clear |
 | `retry()` | `void` | subscribes the read again |
 

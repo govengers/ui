@@ -21,10 +21,11 @@ copying again; the header line in each copied file says where it came from.
 
 | Tier | What | Livewire |
 |------|------|----------|
-| primitive | Button, Input, Field, Select, Checkbox, Switch, Textarea, Badge, Card, Dialog, Sheet, Toast, Tabs, Table, Pagination, Skeleton, EmptyState, Avatar, Menu, Icon | no |
-| layout | AppShell, Sidebar, Page, PageHeader, ActionBar, banners | no |
-| block | FacetFilter, SearchTable, LoginForm, DetailForm, FileUpload, Stepper, WorkflowStatus, JobProgress, AgentDock, Spotlight, AgentCursor, ... | yes |
+| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent` | no |
+| layout | AppShell, Page, PageHeader, ActionBar, Banner | no |
+| block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, AgentDock | yes |
 | page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard | yes |
+| pattern | building a list page, a form, a settings page, live data, login and session, uploads and jobs, the in-app agent | |
 
 Dependencies a copy may need: `vue`, `vue-router`, `vue-i18n`, `date-fns` and the project's
 generated [livewire](https://github.com/govengers/livewire) client.

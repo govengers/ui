@@ -34,7 +34,7 @@ Enter submits through a real `<form>`.
 
 | Event | Payload | When |
 |-------|---------|------|
-| `saved` | none | `save()` succeeded, or there was nothing to save |
+| `saved` | none | `save()` succeeded; a submit with nothing touched sends nothing and emits nothing |
 | `cancelled` | none | Cancel was clicked, after `reset()` |
 
 ## With livewire

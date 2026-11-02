@@ -36,11 +36,13 @@ const props = withDefaults(defineProps<{
   syncQuery?: boolean | undefined
   emptyTitle?: string | undefined
   caption?: string | undefined
+  /** Drops the muted stale line, for a page that shows its own stale notice. */
+  hideStale?: boolean | undefined
   /** Bound by `@row-click`; declared so rows only look clickable when someone listens. */
   onRowClick?: ((row: Item) => void) | undefined
 }>(), { pageSize: 25, mode: 'offset' })
 
-const emit = defineEmits<{ rows: [rows: Item[]] }>()
+const emit = defineEmits<{ rows: [rows: Item[]]; total: [total: number | null] }>()
 const selected = defineModel<TableKey[]>('selected', { default: () => [] })
 const search = defineModel<string>('search', { default: '' })
 
@@ -112,18 +114,20 @@ const rows = computed(() => (cursor ? window.value.rows : loaded.value))
 watch(rows, (value) => emit('rows', value), { immediate: true })
 const loading = computed(() => !error.value && ((list.loading.value && loaded.value.length === 0) || (cursor && rows.value.length === 0 && list.stale.value)))
 const status = useLiveStatus()
-const stale = computed(() => status.value !== 'open' && loaded.value.length > 0)
+const stale = computed(() => !props.hideStale && status.value !== 'open' && loaded.value.length > 0)
 const errorText = computed(() => {
   const failure = error.value
   const key = failure && errorKey(failure)
   return key ? t(key) : (failure?.message ?? '')
 })
 
-// The pager keeps the last total while a page loads, so it does not jump.
-const shownTotal = ref(0)
+// The last known total, null until the first page: kept while a page loads, so the pager and a
+// page's count do not jump.
+const shownTotal = ref<number | null>(null)
 watch(total, (value) => {
   if (value !== undefined) shownTotal.value = value
 })
+watch(shownTotal, (value) => emit('total', value), { immediate: true })
 
 if (route && router) {
   watch(
@@ -167,7 +171,7 @@ const nameOf = (row: Item) => String((row as Record<string, unknown>)[props.colu
         </template>
       </Table>
       <Pagination v-if="cursor" mode="cursor" :has-previous="window.hasPrevious" :has-next="window.hasNext" @previous="index--" @next="next" />
-      <Pagination v-else-if="shownTotal > 0" v-model:page="page" :page-size="size" :total="shownTotal" @update:page-size="(value) => (limit = value)" />
+      <Pagination v-else-if="(shownTotal ?? 0) > 0" v-model:page="page" :page-size="size" :total="shownTotal ?? 0" @update:page-size="(value) => (limit = value)" />
     </template>
   </div>
 </template>

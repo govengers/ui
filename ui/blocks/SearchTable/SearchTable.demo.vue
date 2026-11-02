@@ -37,6 +37,7 @@ const connection = useLiveConnection()
 const open = ref<TableKey | null>(null)
 const ids = ref<TableKey[]>([])
 const selected = ref<TableKey[]>([])
+const total = ref<number | null>(null)
 let seeded = false
 function onRows(rows: Customer[]) {
   ids.value = rows.map((row) => row.id)
@@ -110,9 +111,9 @@ const noMatch = ref('zzzz')
 
 <template>
   <section>
-    <h2>Customers: search, filter, selection, row menu, live changes</h2>
+    <h2>Customers ({{ total ?? '-' }}): search, filter, selection, row menu, live changes</h2>
     <SearchTable v-model:selected="selected" :target="live.customers" :filter="filter" :columns="customerColumns" row-key="id" :page-size="10"
-      :row-actions="rowActions" searchable selectable caption="Customers" @row-click="(row) => (open = row.id)" @rows="onRows">
+      :row-actions="rowActions" searchable selectable caption="Customers" @row-click="(row) => (open = row.id)" @rows="onRows" @total="(value) => (total = value)">
       <template #toolbar>
         <Button :variant="onlyActive ? 'secondary' : 'primary'" :aria-pressed="!onlyActive" @click="onlyActive = false">All</Button>
         <Button :variant="onlyActive ? 'primary' : 'secondary'" :aria-pressed="onlyActive" @click="onlyActive = true">Active only</Button>

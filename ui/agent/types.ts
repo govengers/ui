@@ -63,6 +63,13 @@ export function selectorOf(target: DriveTarget): string {
  * dialog's submit shares its name with the opener behind the backdrop.
  */
 export function resolveTarget(target: DriveTarget, root: ParentNode = document): HTMLElement | null {
-  const matches = [...root.querySelectorAll<HTMLElement>(selectorOf(target))]
-  return matches.find(element => element.checkVisibility?.({ visibilityProperty: true } as CheckVisibilityOptions) ?? true) ?? matches[0] ?? null
+  // An open modal dialog covers the page, and checkVisibility() does not know: search it first.
+  const modal = root.querySelector<HTMLElement>('dialog:modal')
+  const scopes: ParentNode[] = modal ? [modal, root] : [root]
+  for (const scope of scopes) {
+    const matches = [...scope.querySelectorAll<HTMLElement>(selectorOf(target))]
+    const visible = matches.find(element => element.checkVisibility?.({ visibilityProperty: true } as CheckVisibilityOptions) ?? true)
+    if (visible) return visible
+  }
+  return root.querySelector<HTMLElement>(selectorOf(target))
 }
