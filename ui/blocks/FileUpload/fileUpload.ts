@@ -37,6 +37,16 @@ export interface Entry {
 }
 
 /**
+ * The entry a new pick replaces: with `maxFiles` 1, the one finished file in the list. None while
+ * it still uploads (an upload cannot be cancelled), and none when the list holds more than one
+ * file, so a list that is not this field's alone is never emptied.
+ */
+export function replaceable(entries: readonly Entry[], maxFiles: number | undefined): Entry | undefined {
+  const kept = entries.filter((entry) => entry.status !== 'failed')
+  return maxFiles === 1 && kept.length === 1 && kept[0]?.status !== 'uploading' ? kept[0] : undefined
+}
+
+/**
  * Merges the page's uploads with the live rows (none without a live list). An upload shows until
  * the list has its row: by id once answered, before that the uploading row of its name and size.
  * A failed upload has no row and always shows.

@@ -12,7 +12,7 @@ import Button from '../../Button/Button.vue'
 import Icon from '../../Icon/Icon.vue'
 import { formatBytes } from '../../format'
 import FileDropzone from './FileDropzone.vue'
-import { entriesOf, type Entry, type Upload, type UploadRow } from './fileUpload'
+import { entriesOf, replaceable, type Entry, type Upload, type UploadRow } from './fileUpload'
 
 const props = defineProps<{
   /** The upload descriptor, e.g. `uploads.uploadFile`; its content types are the picker's `accept`. */
@@ -40,12 +40,14 @@ const uid = useId()
 const list = props.files === undefined ? undefined : useLiveList(props.files, (props.filter === undefined ? {} : { filter: props.filter }) as UseLiveListOptions<Query>)
 const uploads = reactive<Upload[]>([])
 const problems = ref<string[]>([])
+/** Files dropped from the list without a `remove` call: a replaced one. */
+const hidden = reactive(new Set<string>())
 let lastKey = 0
 
 const accept = computed(() => props.upload.contentTypes.join(','))
 const bytes = (size: number): string => formatBytes(size, locale.value)
 
-const entries = computed(() => entriesOf(uploads, list?.items.value))
+const entries = computed(() => entriesOf(uploads, list?.items.value).filter((entry) => entry.id === undefined || !hidden.has(entry.id)))
 
 function badge(status: string): { variant: 'accent' | 'success' | 'danger' | 'neutral'; label: string } {
   if (status === 'uploading') return { variant: 'accent', label: t('ui.uploading') }
@@ -57,7 +59,11 @@ function badge(status: string): { variant: 'accent' | 'success' | 'danger' | 'ne
 /** Checks size and count, then uploads what passes; the rest is said inline. */
 function add(chosen: Iterable<File>): void {
   const found: string[] = []
-  let room = props.maxFiles === undefined ? Infinity : props.maxFiles - entries.value.filter((entry) => entry.status !== 'failed').length
+  // One file only: a new pick replaces the finished one, which goes once the new one is in.
+  const replacing = replaceable(entries.value, props.maxFiles)
+  let room = props.maxFiles === undefined
+    ? Infinity
+    : props.maxFiles - entries.value.filter((entry) => entry.status !== 'failed').length + (replacing === undefined ? 0 : 1)
   for (const file of chosen) {
     if (props.maxSize !== undefined && file.size > props.maxSize) {
       found.push(t('ui.fileTooLarge', { name: file.name, max: bytes(props.maxSize) }))
@@ -66,13 +72,13 @@ function add(chosen: Iterable<File>): void {
       break
     } else {
       room -= 1
-      void send(file)
+      void send(file, replacing)
     }
   }
   problems.value = found
 }
 
-async function send(file: File): Promise<void> {
+async function send(file: File, replacing: Entry | undefined): Promise<void> {
   const upload = reactive<Upload>({ key: ++lastKey, name: file.name, size: file.size, state: 'uploading', id: undefined, error: undefined })
   uploads.unshift(upload)
   try {
@@ -81,6 +87,7 @@ async function send(file: File): Promise<void> {
     upload.id = typeof id === 'string' || typeof id === 'number' ? String(id) : undefined
     upload.state = 'done'
     emit('uploaded', response)
+    if (replacing !== undefined) await removeEntry(replacing)
   } catch (failure) {
     upload.state = 'failed'
     upload.error = failure instanceof ApiError ? (Object.values(failure.fields)[0] ?? failure.message) : undefined
@@ -99,6 +106,7 @@ async function removeEntry(entry: Entry): Promise<void> {
     }
   }
   if (entry.upload !== undefined) uploads.splice(uploads.indexOf(entry.upload), 1)
+  if (entry.id !== undefined) hidden.add(entry.id)
 }
 
 defineExpose({ add })

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { entriesOf, type Upload, type UploadRow } from './fileUpload'
+import { entriesOf, replaceable, type Upload, type UploadRow } from './fileUpload'
 
 const upload = (patch: Partial<Upload>): Upload => ({ key: 1, name: 'a.pdf', size: 10, state: 'uploading', id: undefined, error: undefined, ...patch })
 const row = (patch: Partial<UploadRow>): UploadRow => ({ id: 'f1', name: 'a.pdf', size: 10, status: 'uploading', progress: 25, ...patch })
@@ -22,6 +22,17 @@ describe('entriesOf', () => {
 
   test('a failed upload always shows, even beside an uploading row of its name and size', () => {
     expect(shown([upload({ state: 'failed', error: 'too big' })], [row({})])).toEqual([['upload-1', 'failed', undefined], ['f1', 'uploading', 25]])
+  })
+
+  test('with maxFiles 1 a new pick replaces the one finished file, never an uploading one or one of several', () => {
+    const entries = (rows: UploadRow[]) => entriesOf([], rows)
+    expect(replaceable(entries([row({ status: 'ready' })]), 1)?.key).toBe('f1')
+    expect(replaceable(entriesOf([upload({ state: 'done', id: 'f2' })], undefined), 1)?.key).toBe('upload-1')
+    expect(replaceable(entriesOf([upload({ state: 'failed' })], [row({ status: 'ready' })]), 1)?.key).toBe('f1')
+    expect(replaceable(entries([row({})]), 1)).toBeUndefined()
+    expect(replaceable(entries([row({ status: 'ready' }), row({ id: 'f2', status: 'ready' })]), 1)).toBeUndefined()
+    expect(replaceable(entries([row({ status: 'ready' })]), 2)).toBeUndefined()
+    expect(replaceable(entries([]), 1)).toBeUndefined()
   })
 
   test('a row without status is ready, another status shows as is', () => {

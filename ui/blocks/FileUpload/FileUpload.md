@@ -23,7 +23,7 @@ Uploads go through the pair's `Client.upload`.
 | `files` | `LiveTarget<Query, ListResponse<Row>> \| undefined` | none | the live list of files; read once |
 | `filter` | `unknown` | none | the filter document of the `files` read, e.g. one customer's files; read once |
 | `maxSize` | `number \| undefined` | none | bytes per file; shown under the dropzone |
-| `maxFiles` | `number \| undefined` | none | files in the list, failed ones excluded; `1` makes the picker single |
+| `maxFiles` | `number \| undefined` | none | files in the list, failed ones excluded; `1` makes the picker single and a new pick replaces the file |
 | `remove` | `MutationTarget<{ id }, undefined, unknown> \| undefined` | none | deletes an uploaded file; without it only failed uploads can be removed |
 | `name` | `string` | required | the file input's `name` |
 
@@ -71,6 +71,11 @@ accessible name "Remove {file}".
 
 - The content type is not checked here: the picker's `accept` filters, but a drop bypasses it,
   and the server's refusal shows on the file's row ("must be one of ...").
+- With `maxFiles` 1 a new pick replaces the finished file: the new one goes up first, and only
+  once it is in, the old one goes, through `remove` when given, else only from the list (the
+  server keeps it; an endpoint that replaces by itself needs no `remove`). A failed upload keeps
+  the old file. No replacement while the file still uploads, or when the list (an unfiltered
+  `files`) holds more than one file: then the pick is refused as too many.
 - An upload cannot be cancelled once started; its row has no remove button until it finished
   or failed.
 - A multipart part is read into memory on the server up to the upload's `MaximumBytes`; fine for
