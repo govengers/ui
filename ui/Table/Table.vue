@@ -32,6 +32,8 @@ const props = withDefaults(defineProps<{
   /** Visually hidden caption, read by assistive technology. */
   caption?: string | undefined
   stickyHeader?: boolean | undefined
+  /** No border and radius of its own: for a Table inside a flush Card. */
+  frameless?: boolean | undefined
   /** Bound by `@row-click`; declared as a prop so the rows know to look and act clickable. */
   onRowClick?: ((row: Row) => void) | undefined
 }>(), { sort: null, selected: () => [] })
@@ -92,7 +94,7 @@ function click(row: Row, event: MouseEvent) {
 </script>
 
 <template>
-  <div class="ui-table" :data-sticky="stickyHeader || undefined" :data-clickable="onRowClick ? '' : undefined">
+  <div class="ui-table" :data-sticky="stickyHeader || undefined" :data-frameless="frameless || undefined" :data-clickable="onRowClick ? '' : undefined">
     <div v-if="selected.length > 0" class="ui-table__bulk">
       <span aria-live="polite">{{ t('ui.selectedCount', { n: selected.length }) }}</span>
       <Button variant="ghost" size="sm" @click="emit('update:selected', [])">{{ t('ui.clear') }}</Button>
@@ -151,6 +153,7 @@ function click(row: Row, event: MouseEvent) {
   border: var(--ui-border-width) solid var(--ui-border);
   border-radius: var(--ui-radius-card);
 }
+.ui-table[data-frameless] .ui-table__scroll { border: 0; border-radius: 0; }
 /* A scroll box would capture the sticky header; with stickyHeader the page scrolls instead. */
 .ui-table[data-sticky] .ui-table__scroll { overflow: visible; }
 .ui-table__table { width: 100%; border-collapse: collapse; font-size: var(--ui-text-sm); }

@@ -1,6 +1,6 @@
 // useTheme (D35): light, dark or auto, applied as data-theme on <html> (D37), kept in
 // localStorage, optionally mirrored to a user setting through a call the app passes in.
-import { ref, watch, type Ref } from 'vue'
+import { effectScope, ref, watch, type Ref } from 'vue'
 
 export type Theme = 'auto' | 'light' | 'dark'
 
@@ -33,9 +33,12 @@ export function useTheme(options: UseThemeOptions = {}): { theme: Ref<Theme>; se
   if (!applied) {
     applied = true
     apply(theme.value)
-    watch(theme, value => {
-      apply(value)
-      void options.persist?.(value)
+    // A detached scope: the watcher must outlive the component that called useTheme first.
+    effectScope(true).run(() => {
+      watch(theme, value => {
+        apply(value)
+        void options.persist?.(value)
+      })
     })
   }
   return {

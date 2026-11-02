@@ -16,7 +16,7 @@ describe('agent registry', () => {
 
   test('selectors follow the data attributes', () => {
     expect(selectorOf({ action: 'createCustomer' })).toBe('[data-action="createCustomer"]')
-    expect(selectorOf({ field: 'email' })).toBe('[name="email"]')
+    expect(selectorOf({ field: 'email' })).toBe('[name="email"], [data-field="email"]')
     expect(selectorOf({ page: 'customers.list' })).toBe('[data-page="customers.list"]')
     expect(selectorOf({ selector: '.x' })).toBe('.x')
   })

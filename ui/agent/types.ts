@@ -52,7 +52,7 @@ export interface DrivePlan {
 
 export function selectorOf(target: DriveTarget): string {
   if ('action' in target) return `[data-action="${target.action}"]`
-  if ('field' in target) return `[name="${target.field}"]`
+  if ('field' in target) return `[name="${target.field}"], [data-field="${target.field}"]`
   if ('page' in target) return `[data-page="${target.page}"]`
   return target.selector
 }

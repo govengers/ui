@@ -22,6 +22,6 @@ const view = computed(() => (demo.value ? defineAsyncComponent(demo.value.load) 
 .head { display: flex; align-items: baseline; gap: var(--ui-space-4); margin-bottom: var(--ui-space-6); }
 h1 { font-size: var(--ui-text-xl); }
 .card-link { font-size: var(--ui-text-sm); }
-.demo :deep(section) { margin-bottom: var(--ui-space-8); }
-.demo :deep(section > h2) { font-size: var(--ui-text-sm); text-transform: uppercase; letter-spacing: var(--ui-tracking-caps); color: var(--ui-muted); margin-bottom: var(--ui-space-3); }
+.demo > :deep(section) { margin-bottom: var(--ui-space-8); }
+.demo > :deep(section > h2) { font-size: var(--ui-text-sm); text-transform: uppercase; letter-spacing: var(--ui-tracking-caps); color: var(--ui-muted); margin-bottom: var(--ui-space-3); }
 </style>

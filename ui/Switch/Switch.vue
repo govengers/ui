@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Switch: an on/off setting that applies at once, a <button role="switch">. Space and Enter toggle
-// natively. With `name`, a hidden input inside the button carries the state into a form post
+// natively. With `name`, a hidden input inside the button carries the state into a form post and
+// the button carries `data-field` so an agent target by field name reaches the clickable element
 // (a hidden input is not interactive content, so it may sit in a button).
 withDefaults(defineProps<{
   modelValue?: boolean | undefined
@@ -17,6 +18,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
   <button
     type="button"
     role="switch"
+    :data-field="name"
     class="ui-switch"
     :data-size="size"
     :aria-checked="modelValue"

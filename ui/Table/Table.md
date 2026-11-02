@@ -26,6 +26,7 @@ width every row becomes a card that shows each value under its column label.
 | `loading` | `boolean` | `false` | five shimmer rows instead of the rows, `aria-busy` on the table |
 | `caption` | `string` | none | visually hidden caption, read by assistive technology |
 | `stickyHeader` | `boolean` | `false` | the header sticks to the top of the nearest scrolling ancestor (the page) |
+| `frameless` | `boolean` | `false` | no border and radius of its own, for a Table inside `<Card flush>` |
 
 `TableColumn`, `TableSort` and `TableKey` are exported from `Table.vue`; a list config imports
 them with `import type { TableColumn } from '@/ui/Table/Table.vue'`.

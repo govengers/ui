@@ -18,6 +18,11 @@ describe('ui-lint', () => {
     expect(lintSource('pages/X/X.vue', good, { ...options, page: true })).toEqual([])
   })
 
+  test('page rules see past nested slot templates', () => {
+    const page = `<template>\n<AppShell bare>\n<template #brand><span>Logo</span></template>\n<Page data-page="auth.login">\n<PageHeader title="Sign in" />\n<template #actions><Button type="submit">Go</Button></template>\n</Page>\n</AppShell>\n</template>`
+    expect(lintSource('pages/X/X.vue', page, { ...options, page: true }).map(finding => finding.rule)).toEqual(['UL-012'])
+  })
+
   test('strict forbids style blocks outside ui', () => {
     const source = `<template><div /></template>\n<style scoped>\n.a { gap: var(--ui-space-2); }\n</style>`
     expect(lintSource('src/pages/X/X.vue', source, { page: false, strict: true, insideUi: false }).map(finding => finding.rule)).toEqual(['UL-020'])

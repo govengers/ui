@@ -18,7 +18,7 @@ Sidebar on desktop, icon rail on tablets, bottom tabs on phones (the first five 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
 | `title` | `string` | required | shown in the top bar unless the `brand` slot is given |
-| `nav` | `NavItem[]` | required | `{ label, icon, to, count? }`; the first five show on phones |
+| `nav` | `NavItem[]` | `[]` | `{ label, icon, to, count? }`; the first five show on phones; omit with `bare` |
 | `bare` | `boolean` | `false` | no navigation: login, full-screen flows |
 | `dockCollapsed` | `boolean` | `false` | tablets and phones: the dock becomes a strip at the bottom so a guide or drive plan can reach the page; bind it to `AgentDock`'s `running` event |
 

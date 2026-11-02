@@ -46,10 +46,12 @@ export function lintSource(file: string, source: string, options: { page: boolea
   return findings
 }
 
-/** [start, end) line ranges of the content of every <tag> block. */
+/** [start, end) line ranges of the content of every <tag> block; the root template runs to the last closing tag at column 0 (nested templates inside). */
 function blocks(source: string, tag: string): [number, number][] {
   const out: [number, number][] = []
-  const pattern = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'g')
+  const pattern = tag === 'template'
+    ? new RegExp(`^<${tag}\\b[^>]*>([\\s\\S]*)^</${tag}>`, 'gm')
+    : new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'g')
   for (const match of source.matchAll(pattern)) {
     const start = lineOf(source, match.index! + match[0].indexOf('>') + 1) - 1
     out.push([start, start + match[1]!.split('\n').length])

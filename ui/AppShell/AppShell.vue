@@ -14,12 +14,12 @@ export interface NavItem {
 
 withDefaults(defineProps<{
   title: string
-  nav: NavItem[]
+  nav?: NavItem[] | undefined
   /** Hides the sidebar and the bottom tabs (login, full-screen flows). */
   bare?: boolean | undefined
   /** On tablets and phones the dock shrinks to a strip so a guide or drive plan can reach the page. */
   dockCollapsed?: boolean | undefined
-}>(), {})
+}>(), { nav: () => [] })
 </script>
 
 <template>
