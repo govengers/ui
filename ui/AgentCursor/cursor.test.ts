@@ -10,7 +10,8 @@ function screen(present: string[], answer: 'go' | 'target' = 'go') {
   const log: string[] = []
   let release: (() => void) | undefined
   const effects: DriveEffects<string> = {
-    query: target => (present.includes(selectorOf(target)) ? selectorOf(target) : null),
+    // selectorOf may name several selectors (`[name=x], [data-field=x]`); the screen answers the first present one.
+    query: target => selectorOf(target).split(', ').find(selector => present.includes(selector)) ?? null,
     sleep: () => Promise.resolve(),
     point: (element, step) => log.push(`point ${element} ${step.kind}`),
     click: element => log.push(`click ${element}`),
