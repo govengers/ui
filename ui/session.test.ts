@@ -240,6 +240,16 @@ describe('session', () => {
     }
   })
 
+  test('a change asked for after a redirect logout serves the new identity', async () => {
+    const box = fixture({ 'POST /auth/password/login': () => { box.signIn(ada); return reply(200, ada) } }, { providers: [{ name: 'company', label: 'Company SSO', prefix: '/auth/oidc/company' }], navigate: () => undefined })
+    box.signIn({ ...ada, provider: 'company' })
+    await box.session.resume()
+    await box.session.logout() // the navigation was cancelled: the page lives on
+    expect(await box.session.login({ identifier: 'ada', password: 'secret' })).toEqual({})
+    expect(box.session.identity.value?.provider).toBe('password')
+    expect(box.pairs.at(-1)).toMatchObject({ key: 'password:u-1', ended: false })
+  })
+
   test('an impersonation is looked at again every minute', async () => {
     jest.useFakeTimers()
     try {

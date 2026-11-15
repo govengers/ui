@@ -84,5 +84,5 @@ error even when the read after it fails too.
 - govengers/auth's `/auth/me` does not answer the impersonation end; an app that wants the
   countdown adds `impersonationEndsAt` to its own `/auth/me` handler. Without it the banner has
   no countdown, and the minute poll notices the end.
-- A redirect logout navigates away; the promise resolves before the page unloads, and the session serves nobody after it (no retry or check brings the identity back).
+- A redirect logout navigates away; the promise resolves before the page unloads, and the session serves nobody after it (no retry or check brings the identity back). When the page lives on anyway (Back restores it from the back/forward cache, or the navigation was cancelled), `pageshow` and the next `login`, `devLogin`, `resume` or impersonation change serve the session again.
 - Never store a token: the cookie is the session.

@@ -251,7 +251,8 @@ switchable style presets.
   pair. Logout follows the provider that made the session (the impersonator's while
   impersonating): a redirect provider (OIDC, GitHub) navigates to its `<prefix>/logout`, a dev
   login posts `/auth/dev/logout`, any other `POST /auth/password/logout`, which ends whatever
-  session the request has. govengers/auth also changes the identity without a 401 or 4401 (an
+  session the request has. After a redirect logout nothing serves an identity until the page
+  shows it lives on: a `pageshow` from the back/forward cache, or the next change the app asks for. govengers/auth also changes the identity without a 401 or 4401 (an
   impersonation past `MaximumDuration` ends in place; another tab signs in or out), so
   `check()` re-reads `/auth/me` on tab or window focus and every minute while impersonating,
   takes the fresh identity (roles, name) and builds a new pair only when the key changed. The anonymous pair's unauthorized callback is ignored.

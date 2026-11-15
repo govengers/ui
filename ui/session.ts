@@ -194,6 +194,8 @@ export function createSession(options: SessionOptions): Session {
 
   /** Ends the pair, runs the change, then serves whoever the session is afterwards, also when the change failed. */
   function serial<Result>(change: () => Promise<Result>): Promise<Result> {
+    // The app asks for a change after a redirect logout: the page did not unload (cancelled navigation).
+    leaving = false
     const run = transitions.then(async () => {
       pair.value.end()
       let result: Result
@@ -247,6 +249,12 @@ export function createSession(options: SessionOptions): Session {
       if (document.visibilityState === 'visible') void follow(false).catch(() => undefined)
     })
     window.addEventListener('focus', () => { void follow(false).catch(() => undefined) })
+    // Back after a redirect logout restores the page from the back/forward cache: it lives on.
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return
+      leaving = false
+      void follow(true).catch(() => undefined)
+    })
   }
 
   async function expect(response: Response): Promise<Response> {
