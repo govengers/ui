@@ -98,6 +98,16 @@ export interface ApiKey {
   createdAt: string
 }
 
+/** A notification of the signed-in user (NotificationInbox); `route` is where it points, `readAt` null while unread. */
+export interface Notification {
+  id: string
+  title: string
+  body: string | null
+  route: string | null
+  createdAt: string
+  readAt: string | null
+}
+
 /** The value counts of every customer facet, each under the filter without its own clauses (D31). */
 export interface CustomerFacets {
   status: DistinctValue[]
@@ -115,6 +125,7 @@ export interface Tables {
   files: FileItem[]
   conversation: Message[]
   apiKeys: ApiKey[]
+  notifications: Notification[]
   settings: Settings[]
 }
 
@@ -178,6 +189,12 @@ export const fields: Record<ListTable, readonly FieldMeta[]> = {
   apiKeys: [
     { name: 'id', type: 'string', filter: true, sort: true, search: false },
     { name: 'name', type: 'string', filter: true, sort: true, search: true },
+    { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
+  ],
+  notifications: [
+    { name: 'id', type: 'string', filter: true, sort: true, search: false },
+    { name: 'title', type: 'string', filter: true, sort: true, search: true },
+    { name: 'readAt', type: 'time', filter: true, sort: true, search: false },
     { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
   ],
 }
@@ -287,6 +304,13 @@ export function seedTables(seed = 1): Tables {
     { id: 'msg-1', role: 'user', text: 'Which customers in Germany are on hold?', createdAt: at(0.02) },
     { id: 'msg-2', role: 'agent', text: 'I filtered the customer list to Germany and on hold. Open it to see them.', createdAt: at(0.019) },
   ]
+  const notifications: Notification[] = [
+    { id: 'ntf-1', title: 'Export finished', body: 'The customer export is ready to download.', route: '/files', createdAt: at(2), readAt: at(1.9) },
+    { id: 'ntf-2', title: 'Import failed', body: 'Row 214 has no email address.', route: null, createdAt: at(1), readAt: at(0.9) },
+    { id: 'ntf-3', title: 'Grace Hopper mentioned you', body: 'Can you check the terms of Northwind Traders before Friday?', route: '/customers', createdAt: at(0.2), readAt: null },
+    { id: 'ntf-4', title: 'Order SO-10300 was paid', body: null, route: '/orders', createdAt: at(0.05), readAt: null },
+    { id: 'ntf-5', title: 'New customer assigned to you', body: 'Contoso Logistics now belongs to your accounts.', route: '/customers', createdAt: at(0.01), readAt: null },
+  ]
   const settings: Settings[] = [{
     id: 'settings', companyName: 'Govengers Demo GmbH', supportEmail: 'support@demo.example', timezone: 'Europe/Berlin',
     language: 'en', notifyByEmail: true, weeklyDigest: false,
@@ -295,5 +319,5 @@ export function seedTables(seed = 1): Tables {
     { id: 'key-1', name: 'CI pipeline', prefix: 'demo_key-1', scopes: ['customers:read', 'orders:read'], expiresAt: new Date(seededNow + 60 * day).toISOString(), lastUsedAt: at(0.1), createdAt: at(40) },
     { id: 'key-2', name: 'Old import script', prefix: 'demo_key-2', scopes: ['customers:write'], expiresAt: at(3), lastUsedAt: null, createdAt: at(120) },
   ]
-  return { customers, orders, users, jobs, files, conversation, apiKeys, settings }
+  return { customers, orders, users, jobs, files, conversation, apiKeys, notifications, settings }
 }

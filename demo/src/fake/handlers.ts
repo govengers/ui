@@ -127,6 +127,17 @@ export function createHandlers(context: HandlerContext): Handlers {
       if (!remove('apiKeys', id ?? '')) throw new Refusal('not_found')
       return { status: 204 }
     },
+    markNotificationRead: ({ id }) => {
+      const notification = tables.notifications.find((candidate) => candidate.id === id)
+      if (notification === undefined) throw new Refusal('not_found')
+      return { status: 200, payload: notification.readAt === null ? update('notifications', notification.id, { readAt: now() }) : notification }
+    },
+    markAllNotificationsRead: () => {
+      const unread = tables.notifications.filter((notification) => notification.readAt === null)
+      const at = now()
+      for (const notification of unread) update('notifications', notification.id, { readAt: at })
+      return { status: 200, payload: { unread: 0 } }
+    },
     sendMessage: (_, body) => {
       const input = objectBody(body)
       validate(input, { id: nonEmpty, text: nonEmpty, mode: oneOf(['chat', 'guide', 'drive']) }, ['text']) // mode steers the agent, the row does not keep it
