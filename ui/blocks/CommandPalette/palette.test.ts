@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { LiveConnection } from '@/api/runtime'
 import { live } from '@/fake/api'
 import type { BoundAction } from '../../agent/registry'
-import { addRecent, humanize, matchActions, moveActive, readRecent, searchGroup } from './palette'
+import { addRecent, humanize, matchActions, moveActive, readRecent, recentKey, searchGroup, writeRecent } from './palette'
 
 const action = (name: string, description: string, params?: Record<string, string>): BoundAction =>
   ({ name, description, page: 'demo.page', run: () => undefined, ...(params ? { params } : {}) })
@@ -30,6 +30,11 @@ describe('recent picks', () => {
     expect(readRecent({ getItem: () => '{bad' }, 'k')).toEqual([])
     expect(readRecent({ getItem: () => '[{"group":"a","id":"1","label":"x"},{"id":2}]' }, 'k')).toEqual([{ group: 'a', id: '1', label: 'x' }])
     expect(readRecent(undefined, 'k')).toEqual([])
+  })
+  test('a refusing storage keeps the picks in memory, keys are per identity', () => {
+    expect(() => writeRecent({ setItem: () => { throw new Error('QuotaExceededError') } }, 'k', [])).not.toThrow()
+    expect(recentKey('ui.palette.recent', 'user:1')).toBe('ui.palette.recent:user:1')
+    expect(recentKey('', 'user:1')).toBe('')
   })
 })
 

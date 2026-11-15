@@ -4,17 +4,17 @@
 // answer wins) and filters the actions. One keydown handler on the dialog runs the keyboard.
 import { computed, onMounted, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useLiveConnection } from '@/api/vue'
+import { useLiveConnection, useLivePair } from '@/api/vue'
 import Icon from '../../Icon/Icon.vue'
 import type { IconName } from '../../Icon/icons'
 import { boundActions, type BoundAction } from '../../agent/registry'
-import { addRecent, humanize, matchActions, moveActive, readRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
+import { addRecent, defaultStorage, humanize, matchActions, moveActive, readRecent, recentKey, writeRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
 
 const props = withDefaults(defineProps<{
   groups: PaletteGroup[]
   /** The key that opens it with Cmd or Ctrl; empty for none. */
   hotkey?: string | undefined
-  /** The localStorage key of the recent picks; empty keeps none. */
+  /** The localStorage key prefix of the recent picks, the pair's identity is appended; empty keeps none. */
   storageKey?: string | undefined
   placeholder?: string | undefined
   /** Shown in the page flow without showModal(): no backdrop, no focus trap. Docs and previews only. */
@@ -43,12 +43,15 @@ interface Section {
 const { t } = useI18n()
 const uid = useId()
 const connection = useLiveConnection()
+const pair = useLivePair()
 const dialog = ref<HTMLDialogElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 const text = ref('')
 const active = ref(-1)
-const storage = (): Storage | undefined => (typeof localStorage === 'undefined' ? undefined : localStorage)
-const recent = ref<RecentPick[]>(props.storageKey ? readRecent(storage(), props.storageKey) : [])
+const storage = defaultStorage()
+const storageKey = computed(() => recentKey(props.storageKey ?? '', pair.value.identity))
+const recent = ref<RecentPick[]>([])
+watch(storageKey, (key) => (recent.value = key ? readRecent(storage, key) : []), { immediate: true })
 const found = shallowRef<Record<string, { state: Section['state']; results: PaletteResult[] }>>({})
 
 // Searches: 150 ms after the last key, every group at once; a newer text aborts the older reads.
@@ -64,6 +67,12 @@ watch(text, (value) => {
   }
   found.value = Object.fromEntries(props.groups.map((group) => [group.key, { state: 'loading' as const, results: found.value[group.key]?.results ?? [] }]))
   debounce = setTimeout(() => search(value.trim()), 150)
+})
+
+// A new pair (logout, account switch): nothing found for the old identity stays.
+watch(connection, () => {
+  text.value = ''
+  found.value = {}
 })
 
 function search(query: string): void {
@@ -85,7 +94,7 @@ function settle(key: string, from: AbortController, entry: { state: Section['sta
 function pick(group: string, result: PaletteResult): void {
   const entry: RecentPick = { group, ...result }
   recent.value = addRecent(recent.value, entry)
-  if (props.storageKey) storage()?.setItem(props.storageKey, JSON.stringify(recent.value))
+  if (storageKey.value) writeRecent(storage, storageKey.value, recent.value)
   close()
   emit('select', entry)
 }
@@ -108,7 +117,7 @@ const sections = computed<Section[]>(() => {
       id: `recent:${entry.group}:${entry.id}`, icon: 'history', label: entry.label, hint: entry.hint ?? groupLabel(entry.group), run: () => pick(entry.group, entry),
     })) })
   }
-  if (actionOptions.value.length > 0) out.push({ key: 'actions', label: t('ui.quickActions'), state: 'ready', options: actionOptions.value })
+  // Typed text: the results first, so Enter opens the top hit rather than running an action.
   if (!empty) {
     for (const group of props.groups) {
       const entry = found.value[group.key] ?? { state: 'loading' as const, results: [] }
@@ -117,14 +126,17 @@ const sections = computed<Section[]>(() => {
       })) })
     }
   }
+  if (actionOptions.value.length > 0) out.push({ key: 'actions', label: t('ui.quickActions'), state: 'ready', options: actionOptions.value })
   return out
 })
 const options = computed(() => sections.value.flatMap((section) => section.options))
 const optionId = (index: number): string => `${uid}-option-${index}`
 const indexOf = (option: Option): number => options.value.indexOf(option)
 const nothing = computed(() => text.value.trim() !== '' && options.value.length === 0 && sections.value.every((section) => section.state !== 'loading'))
+// Typing makes the first option active, also when the options arrive after the text (a paste).
 watch(() => options.value.length, (count) => {
   if (active.value >= count) active.value = count - 1
+  else if (active.value < 0 && count > 0 && text.value.trim() !== '') active.value = 0
 })
 
 // One handler on the dialog: arrows, Home, End and Enter; Escape is the dialog's own cancel.

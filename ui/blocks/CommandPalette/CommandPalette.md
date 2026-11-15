@@ -12,7 +12,7 @@ laws: [hicks-law, jakobs-law, paradox-of-the-active-user, serial-position-effect
 
 The Cmd/Ctrl+K dialog: empty, it offers the recent picks and the quick actions of the agent
 action registry; typing searches every group (one livewire list query each, the newest answer
-wins) and filters the actions. Arrows, Home, End, Enter and Escape run it; the result list is a
+wins) and filters the actions, listed under the results. Arrows, Home, End, Enter and Escape run it; the result list is a
 listbox the input points into with `aria-activedescendant`.
 
 ## Load
@@ -35,10 +35,10 @@ Do not load:
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `groups` | `PaletteGroup[]` | required | built with `searchGroup` (below); shown in this order under the actions |
+| `groups` | `PaletteGroup[]` | required | built with `searchGroup` (below); shown in this order; while a text is typed above the actions |
 | `v-model:open` | `boolean` | `false` | the hotkey and Escape drive it too |
 | `hotkey` | `string` | `'k'` | Cmd or Ctrl plus this key toggles the palette; `''` for none |
-| `storageKey` | `string` | `'ui.palette.recent'` | localStorage key of the last 6 picks; `''` keeps none |
+| `storageKey` | `string` | `'ui.palette.recent'` | localStorage key prefix of the last 6 picks; the pair's identity is appended (`ui.palette.recent:<identity>`), so a pick never shows to the next account on the browser; `''` keeps none |
 | `placeholder` | `string \| undefined` | `ui.paletteSearch` | |
 | `inline` | `boolean` | `false` | open in the page flow without `showModal()`; docs and previews only |
 
@@ -70,8 +70,11 @@ results are `role="option"` with their label as text.
 
 ## Gotchas
 
-- Nothing is active on an empty query (Enter does nothing until an arrow key); typing makes the
-  first option active, so Enter opens the top hit.
+- Nothing is active on an empty query (Enter does nothing until an arrow key); typing or pasting
+  makes the first option active, and the results come before the actions, so Enter opens the top
+  hit. A text no result matches leaves the matching actions first.
+- A new pair (logout, account switch) clears the text and the results and loads that identity's
+  recent picks. A storage that is blocked or full keeps the picks for the page only.
 - One keydown handler on the dialog; it stops the keys it handles, so page hotkeys do not fire
   under it. Composition (IME) keys are ignored.
 - Home and End move the active option only while the input is empty; otherwise they move the

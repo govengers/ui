@@ -75,6 +75,29 @@ export function addRecent(recent: readonly RecentPick[], pick: RecentPick, max =
   return [pick, ...recent.filter((entry) => entry.group !== pick.group || entry.id !== pick.id)].slice(0, max)
 }
 
+/** localStorage, or none where there is none or the browser blocks it (its getter throws). */
+export function defaultStorage(): Storage | undefined {
+  try {
+    return typeof localStorage === 'undefined' ? undefined : localStorage
+  } catch {
+    return undefined
+  }
+}
+
+/** The storage key of one identity's recent picks: a pick never shows to the next account on the browser. */
+export function recentKey(prefix: string, identity: string): string {
+  return prefix === '' ? '' : `${prefix}:${identity}`
+}
+
+/** Stores the recent picks; a full or refusing storage keeps them for this page only. */
+export function writeRecent(storage: Pick<Storage, 'setItem'> | undefined, key: string, recent: readonly RecentPick[]): void {
+  try {
+    storage?.setItem(key, JSON.stringify(recent))
+  } catch {
+    // ponytail: the picks live until reload when storage refuses them
+  }
+}
+
 /** The stored recent picks; anything unreadable counts as none. */
 export function readRecent(storage: Pick<Storage, 'getItem'> | undefined, key: string): RecentPick[] {
   try {
