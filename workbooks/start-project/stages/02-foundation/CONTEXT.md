@@ -13,11 +13,12 @@ The block from `01-preflight`.
    on every file.
 3. The shell closure through `workbooks/copy-piece/` (stages 01-03, one run): `AppShell`,
    `Page`, `PageHeader`, `Banner`, `Button`, `Icon`, `Menu`, `Popover`, `Toast`, `Dialog`,
-   `Field`, `Input`; with a livewire client also `ConnectionBanner`, `ImpersonationBanner` and
-   the `LoginPage` recipe (its closure brings `LoginForm`).
+   `Field`, `Input`; with a livewire client also `ConnectionBanner`, `ImpersonationBanner`,
+   `DevLogin` and the `LoginPage` recipe (its closure brings `LoginForm`).
 4. `src/session.ts` after `templates/project/session.ts` (the pair and the redirect providers the
    server mounts), `src/router.ts` after `templates/project/router.ts` (routes with `page`,
-   `title`, `intent`, `public` meta, lazy components, the sign-in guard), the first page
+   `title`, `intent`, `public` meta, lazy components, the sign-in guard), `src/LoginRoute.vue`
+   from `templates/project/LoginRoute.vue` (LoginPage wired, DevLogin in dev builds), the first page
    `src/pages/Home/Home.vue` from `templates/project/Home.vue`; `src/main.ts` after
    `templates/project/main.ts` (tokens, base, preset, messages, `session.resume()` before the
    router, `livePlugin(session.pair)`); `src/App.vue` after `templates/project/App.vue` (public

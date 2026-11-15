@@ -5,7 +5,7 @@
 import { createRouter, createWebHistory, type LocationQueryValue, type RouteRecordRaw, type Router } from 'vue-router'
 import { providers, session } from './session'
 import { safeRedirect } from './ui/session'
-import type { LoginCredentials } from './ui/blocks/LoginForm/LoginForm.vue'
+import type { LoginAnswer, LoginCredentials } from './ui/blocks/LoginForm/LoginForm.vue'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -21,16 +21,24 @@ type Redirect = LocationQueryValue | LocationQueryValue[] | undefined
 let router: Router | undefined
 
 /** LoginPage's login: the session's login, then back to where the guard came from. */
-async function login(credentials: LoginCredentials, redirect: Redirect): Promise<{ twoFactor?: boolean }> {
+async function login(credentials: LoginCredentials, redirect: Redirect): Promise<LoginAnswer> {
   const answer = await session.login(credentials)
-  if (answer.twoFactor !== true) await router?.replace(safeRedirect(redirect))
+  // `totp_setup`: TOTP is required and not enrolled; route to the app's enrolment screen here once it exists.
+  if (answer.challenge === undefined) await router?.replace(safeRedirect(redirect))
   return answer
+}
+
+/** DevLogin's login (development builds only, see LoginRoute.vue): the dev user, then back. */
+export async function devLogin(id: string, redirect: Redirect): Promise<void> {
+  await session.devLogin(id)
+  await router?.replace(safeRedirect(redirect))
 }
 
 // govengers/auth has no change-password route: wire the app's own call here or drop the route.
 const change = async (): Promise<void> => { throw new Error('Changing the password is not available.') }
 
-const loginProps = (redirect: Redirect) => ({
+/** LoginPage's props for the way back in `redirect`; LoginRoute.vue binds them. */
+export const loginProps = (redirect: Redirect) => ({
   login: (credentials: LoginCredentials) => login(credentials, redirect),
   change,
   providers: providers.map((provider) => ({ name: provider.name, label: provider.label, href: session.loginHref(provider, redirect) })),
@@ -38,13 +46,12 @@ const loginProps = (redirect: Redirect) => ({
 
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/login', name: 'auth.login', component: () => import('./pages/LoginPage/LoginPage.vue'),
-    props: (route) => loginProps(route.query['redirect']),
+    path: '/login', name: 'auth.login', component: () => import('./LoginRoute.vue'),
     meta: { page: 'auth.login', title: 'Sign in', intent: 'Sign in', public: true },
   },
   {
-    path: '/logged-out', name: 'auth.loggedOut', component: () => import('./pages/LoginPage/LoginPage.vue'),
-    props: () => ({ state: 'loggedOut', ...loginProps(undefined) }),
+    path: '/logged-out', name: 'auth.loggedOut', component: () => import('./LoginRoute.vue'),
+    props: { state: 'loggedOut' },
     meta: { page: 'auth.loggedOut', title: 'Signed out', intent: 'See that the session ended', public: true },
   },
   {

@@ -26,7 +26,7 @@ try {
   copy('pages/LoginPage', 'src/pages/LoginPage')
   copy('demo/src/api/runtime.ts', 'src/api/runtime.ts') // stands in for the generated client
   copy('demo/src/api/vue.ts', 'src/api/vue.ts')
-  for (const file of ['main.ts', 'App.vue', 'session.ts', 'router.ts']) copy(`templates/project/${file}`, `src/${file}`)
+  for (const file of ['main.ts', 'App.vue', 'LoginRoute.vue', 'session.ts', 'router.ts']) copy(`templates/project/${file}`, `src/${file}`)
   copy('templates/project/Home.vue', 'src/pages/Home/Home.vue')
   copy('templates/project/vite.config.ts', 'vite.config.ts')
   copy('templates/project/app-map.ts', 'scripts/app-map.ts')

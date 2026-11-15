@@ -3,9 +3,10 @@
 import { createLivePair } from './api/runtime'
 import { createSession, type RedirectProvider } from './ui/session'
 
-/** The redirect logins the server mounts (govengers/auth oidc, github); keep only those. */
+/** The redirect logins the server mounts (govengers/auth oidc, github); keep only those. `name` is the provider's
+ *  identity name: the OIDC provider's `Name` (its default PathPrefix is /auth/oidc/<Name>), "github" for GitHub. */
 export const providers: RedirectProvider[] = [
-  // { name: 'oidc', label: 'Company SSO', prefix: '/auth/oidc/company' },
+  // { name: 'company', label: 'Company SSO', prefix: '/auth/oidc/company' },
   // { name: 'github', label: 'GitHub', prefix: '/auth/github' },
 ]
 

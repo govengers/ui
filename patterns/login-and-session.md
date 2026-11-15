@@ -22,16 +22,20 @@ changes who the app acts as (D56); `templates/project/session.ts`, `router.ts`, 
    `/login?redirect=<fullPath>`.
 3. Password: `LoginPage` gets `login` = `session.login` plus
    `router.replace(safeRedirect(redirect))`. A `totp` challenge shows the code step (TOTP or
-   backup code); `totp_setup` throws `totp_setup_required` for the app's enrolment screen.
+   backup code); `{ challenge: 'totp_setup' }` is for the app's enrolment screen.
 4. OIDC, GitHub: the provider buttons are links to `<prefix>/login?return_to=<path>`
    (`session.loginHref`, sanitised); the callback redirects to the path, the app starts and
    resumes.
-5. Development: `DevLogin` under the form, imported only in development builds (its card).
-6. Logout: `session.logout()` (redirect providers leave for `<prefix>/logout`, else
+5. Development: `DevLogin` in `LoginPage`'s `after` slot, imported only in development builds
+   (its card; `templates/project/LoginRoute.vue`).
+6. Logout: `session.logout()` (by the provider that made the session: redirect providers leave
+   for `<prefix>/logout`, dev login posts `/auth/dev/logout`, else
    `POST /auth/password/logout`), then the `auth.loggedOut` route.
 7. Impersonation: an admin's row action calls `session.impersonate(subject)`;
    `ImpersonationBanner` in the shell shows it and stops it.
 8. A 401 or a 4401 that leaves nobody: `onSignedOut` loads the login page with the way back.
+   Changes without either (another tab, an impersonation auth ended): `session.check()` on tab
+   focus and every minute while impersonating.
 9. API keys for scripts and agents: `ApiKeyManager` on the settings page, over livewire.
 
 ## Rules

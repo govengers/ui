@@ -14,11 +14,12 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     proxy: {
+      // Regex keys ("^/api/"): a plain '/api' is a prefix match and would proxy SPA routes such as /api-keys.
       // REST and the livewire socket (/api/v1/socket): ws upgrades the socket.
-      '/api': { target: backend, ws: true },
+      '^/api/': { target: backend, ws: true },
       // govengers/auth: password, TOTP, OIDC and GitHub redirects, dev login, impersonation, /auth/me.
       // OIDC and GitHub: set the provider's ExternalURL to this dev server's origin so the callback comes back here.
-      '/auth': { target: backend },
+      '^/auth/': { target: backend },
     },
   },
 })
