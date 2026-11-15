@@ -4,9 +4,9 @@
 // its resource). Columns and their order are computed here (board.ts); a move, by pointer
 // (drag.ts), by keyboard on the grip or by the card menu, calls the page's move mutation with the
 // moved card as the optimistic item.
-import { computed, nextTick, ref, shallowRef, useId, watchEffect } from 'vue'
+import { computed, nextTick, ref, shallowRef, useId, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { ListResponse, LiveTarget, MutationTarget } from '@/api/runtime'
+import type { ListResponse, LiveConnection, LiveTarget, MutationTarget } from '@/api/runtime'
 import { useLiveConnection, useLiveList, useLiveStatus, type UseLiveListOptions } from '@/api/vue'
 import Badge from '../../Badge/Badge.vue'
 import Banner from '../../Banner/Banner.vue'
@@ -20,9 +20,9 @@ import { useBoardDrag } from './drag'
 const props = withDefaults(defineProps<{
   /** The board-wide list read, e.g. `live.tasks`; its items carry the column and rank fields. */
   target: LiveTarget<Query, ListResponse<Item>>
-  /** The read's filter document, e.g. the cards of one board. Read once. */
+  /** The read's filter document, e.g. the cards of one board; a new value reloads the cards. */
   filter?: Query['filter'] | undefined
-  /** The read's sort; rank first keeps the right cards when the list is cut at `limit`. Read once. */
+  /** The read's sort; rank first keeps the right cards when the list is cut at `limit`. */
   sort?: Query['sort'] | undefined
   /** Cards loaded at most (the resource's MaximumLimit caps it); a cut list says so. */
   limit?: number | undefined
@@ -59,14 +59,22 @@ if (props.filter !== undefined) options.filter = props.filter
 if (props.sort !== undefined) options.sort = props.sort
 const list = useLiveList(props.target, options)
 const { error, retry, total } = list
+watch(() => props.filter, (filter) => (list.filter.value = filter))
+watch(() => props.sort, (sort) => (list.sort.value = sort as Query['sort']))
+watch(() => props.limit, (limit) => (list.limit.value = limit))
 
 const rankOf = (item: Item): number => Number(item[props.rankField])
 const columnOf = (item: Item): string => String(item[props.columnField])
-const items = shallowRef<Item[]>([])
+// useLiveList drops the cards while a new filter, sort or limit loads: keep the last ones on
+// screen meanwhile, but only those of the same connection, so no card outlives a logout or an
+// account switch.
+const held = shallowRef<{ connection: LiveConnection; items: Item[] }>({ connection: connection.value, items: [] })
 watchEffect(() => {
-  if (!list.loading.value) items.value = list.items.value
+  if (!list.loading.value) held.value = { connection: connection.value, items: list.items.value }
 })
+const items = computed(() => (list.loading.value && held.value.connection === connection.value ? held.value.items : list.items.value))
 const grouped = computed(() => group(items.value, props.columns, columnOf, rankOf))
+watch(grouped, () => restoreFocus(), { flush: 'post' })
 const keys = computed(() => props.columns.map((column) => column.key))
 const loading = computed(() => !error.value && list.loading.value && items.value.length === 0)
 const stale = computed(() => status.value !== 'open' && items.value.length > 0)
@@ -82,32 +90,66 @@ const cardsOf = (column: string): Item[] => grouped.value.get(column) ?? []
 const columnLabel = (key: string): string => props.columns.find((column) => column.key === key)?.label ?? key
 const spotOf = (item: Item): Spot => ({ column: columnOf(item), index: cardsOf(columnOf(item)).findIndex((card) => card.id === item.id) })
 const counts = computed(() => new Map(props.columns.map((column) => [column.key, without(cardsOf(column.key), lift.value?.id ?? '').length])))
-const where = (spot: Spot): string => t('ui.cardPosition', { column: columnLabel(spot.column), n: spot.index + 1, total: (counts.value.get(spot.column) ?? 0) + 1 })
+/** "Backlog, position 2 of 4" for card `id` at `spot`: the column's other cards plus this one. */
+const where = (spot: Spot, id: string): string => t('ui.cardPosition', { column: columnLabel(spot.column), n: spot.index + 1, total: without(cardsOf(spot.column), id).length + 1 })
+
+const gripOf = (id: string): HTMLElement | null => root.value?.querySelector<HTMLElement>(`[data-board-card="${CSS.escape(id)}"] [data-board-grip]`) ?? null
+
+// A move or a cancel remounts or moves the card, and the focused grip with it. The card whose
+// grip had focus gets it back after every render (the optimistic item, the push, a rollback)
+// until focus is somewhere else on purpose.
+let keepFocus: string | undefined
+function restoreFocus(): void {
+  if (keepFocus === undefined) return
+  const grip = gripOf(keepFocus)
+  const focused = document.activeElement
+  if (grip === null || focused === grip) return
+  // Focus in the card itself (the menu trigger it returned to) is still the move's.
+  const card = focused?.closest('[data-board-card]')
+  if (focused === null || focused === document.body || (card instanceof HTMLElement && card.dataset['boardCard'] === keepFocus)) grip.focus()
+  else keepFocus = undefined
+}
+function focusGrip(id: string): void {
+  keepFocus = id
+  void nextTick(restoreFocus)
+}
 
 function start(item: Item, mode: Lift['mode']): boolean {
   if (lift.value !== null) return false
   const from = spotOf(item)
   lift.value = { id: item.id, from, to: from, mode }
-  announcement.value = t('ui.cardLifted', { card: props.itemLabel(item), where: where(from) })
+  announcement.value = t('ui.cardLifted', { card: props.itemLabel(item), where: where(from, item.id) })
   return true
 }
 
 function cancel(): void {
+  const current = lift.value
   const item = lifted.value
   lift.value = null
-  if (item) announcement.value = t('ui.moveCancelled', { card: props.itemLabel(item) })
+  if (!current || !item) return
+  announcement.value = t('ui.moveCancelled', { card: props.itemLabel(item) })
+  if (current.mode === 'keyboard') focusGrip(item.id)
 }
 
 function drop(): void {
   const current = lift.value
   const item = lifted.value
   lift.value = null
-  if (current && item) void commit(item, current.to)
+  if (current && item) void commit(item, current.to, current.mode === 'keyboard')
 }
 
-/** Moves a card to a spot: the optimistic item at once, the mutation behind it; an error takes it back. */
-async function commit(item: Item, spot: Spot): Promise<void> {
+// A card removed by a push while lifted ends the lift, or every other move would stay refused.
+watch(lifted, (item) => {
+  if (item === undefined && lift.value !== null) lift.value = null
+})
+
+/**
+ * Moves a card to a spot: the optimistic item at once, the mutation behind it; an error takes it
+ * back. `refocus`: the move came from the keyboard or the menu, whose focus the move takes away.
+ */
+async function commit(item: Item, spot: Spot, refocus: boolean): Promise<void> {
   const name = props.itemLabel(item)
+  if (refocus) focusGrip(item.id)
   if (sameSpot(spotOf(item), spot)) {
     announcement.value = t('ui.moveCancelled', { card: name })
     return
@@ -115,7 +157,7 @@ async function commit(item: Item, spot: Spot): Promise<void> {
   const placement = place(cardsOf(spot.column), item.id, spot, rankOf)
   const optimistic = { ...item, [props.columnField]: spot.column, [props.rankField]: placement.rank } as Item
   const { parameters, body } = props.moveArgs(item, placement)
-  announcement.value = t('ui.cardMoved', { card: name, where: where(placement) })
+  announcement.value = t('ui.cardMoved', { card: name, where: where(placement, item.id) })
   try {
     await connection.value.call(props.move, parameters, body, { optimistic })
     emit('moved', item, placement)
@@ -139,13 +181,25 @@ const { ghost, onPointerdown } = useBoardDrag({
 })
 
 // Keyboard: Space or Enter on the grip lifts, arrows move, Space or Enter drops, Escape cancels.
+// A click on the grip (a screen reader's activation, a mouse) lifts and drops the same way.
+function toggle(item: Item): void {
+  const current = lift.value
+  if (current === null) start(item, 'keyboard')
+  else if (current.id === item.id) drop()
+}
+
+function onGripClick(event: MouseEvent, item: Item): void {
+  toggle(item)
+  // Safari does not focus a clicked button; the lift lives while its grip has focus.
+  if (lift.value !== null) (event.currentTarget as HTMLElement).focus()
+}
+
 function onGripKey(event: KeyboardEvent, item: Item): void {
   const current = lift.value
   if (event.isComposing || (current !== null && current.id !== item.id)) return
   if (event.key === ' ' || event.key === 'Enter') {
     event.preventDefault()
-    if (current === null) start(item, 'keyboard')
-    else drop()
+    toggle(item)
     return
   }
   if (current === null) return
@@ -159,14 +213,20 @@ function onGripKey(event: KeyboardEvent, item: Item): void {
   if (next === undefined) return
   event.preventDefault()
   lift.value = { ...current, to: next }
-  announcement.value = where(next)
+  announcement.value = where(next, item.id)
   // The card moved in the DOM; keep focus on its grip.
-  void nextTick(() => root.value?.querySelector<HTMLElement>(`[data-board-card="${CSS.escape(item.id)}"] [data-board-grip]`)?.focus())
+  focusGrip(item.id)
 }
 
-function onFocusout(event: FocusEvent): void {
-  const next = event.relatedTarget as Node | null
-  if (lift.value?.mode === 'keyboard' && next !== null && !root.value?.contains(next)) cancel()
+// A keyboard lift ends when focus leaves its grip, for anything but the grip's own remount
+// after an arrow (focusGrip puts it back first): another card, the page, a click on text.
+function onFocusout(): void {
+  const current = lift.value
+  if (current?.mode !== 'keyboard') return
+  void nextTick(() => {
+    const grip = gripOf(current.id)
+    if (lift.value === current && (grip === null || document.activeElement !== grip)) cancel()
+  })
 }
 
 function menuOf(item: Item): MenuItem[] {
@@ -177,12 +237,12 @@ function menuOf(item: Item): MenuItem[] {
     icon: 'arrow-right',
     action: props.move.name,
     disabled: column.key === from.column,
-    run: () => void commit(item, { column: column.key, index: counts.value.get(column.key) ?? 0 }),
+    run: () => void commit(item, { column: column.key, index: counts.value.get(column.key) ?? 0 }, true),
   }))
   moves.push(
     { label: '-' },
-    { label: t('ui.moveUp'), icon: 'arrow-up', action: props.move.name, disabled: from.index <= 0, run: () => void commit(item, { ...from, index: from.index - 1 }) },
-    { label: t('ui.moveDown'), icon: 'arrow-down', action: props.move.name, disabled: from.index >= last, run: () => void commit(item, { ...from, index: from.index + 1 }) },
+    { label: t('ui.moveUp'), icon: 'arrow-up', action: props.move.name, disabled: from.index <= 0, run: () => void commit(item, { ...from, index: from.index - 1 }, true) },
+    { label: t('ui.moveDown'), icon: 'arrow-down', action: props.move.name, disabled: from.index >= last, run: () => void commit(item, { ...from, index: from.index + 1 }, true) },
   )
   const extra = props.cardActions?.(item) ?? []
   return extra.length > 0 ? [...moves, { label: '-' }, ...extra] : moves
@@ -234,6 +294,7 @@ const overLimit = (column: BoardColumn): boolean => column.limit !== undefined &
                 :aria-pressed="lift?.id === entry.item.id"
                 :aria-describedby="`${uid}-help`"
                 @keydown="onGripKey($event, entry.item)"
+                @click="onGripClick($event, entry.item)"
               >
                 <Icon name="grip-vertical" />
               </button>
@@ -276,6 +337,8 @@ const overLimit = (column: BoardColumn): boolean => column.limit !== undefined &
   padding-block-end: var(--ui-space-2);
   scroll-snap-type: x proximity;
 }
+/* Snapping pulls every small auto-scroll step of a drag back to the column start. */
+.ui-board[data-state="moving"] .ui-board__columns { scroll-snap-type: none; }
 .ui-board__column {
   display: flex;
   flex: 0 0 18rem;

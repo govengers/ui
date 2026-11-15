@@ -13,7 +13,7 @@ laws: [jakobs-law, law-of-common-region, fittss-law, doherty-threshold]
 A kanban board over ONE board-wide livewire list read: columns and their order are computed on
 the client from a column field and a numeric rank field. Cards move by pointer drag (mouse and
 pen anywhere on the card, touch on the grip so the board still scrolls), by keyboard on the grip
-(Space lifts, arrows move, Space drops, Escape cancels) and by the card menu ("Move to <column>",
+(Space, Enter or a click lifts, arrows move, Space, Enter or a click drops, Escape cancels) and by the card menu ("Move to <column>",
 up, down). A move calls the page's move mutation with the moved card as the optimistic item.
 Column headers count their cards against an optional limit; empty, loading, refused, stale and
 cut states are built in; on phones each column takes most of the screen and swipes sideways.
@@ -40,9 +40,9 @@ Do not load:
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
 | `target` | `LiveTarget<Query, ListResponse<Item>>` | required | the board-wide list read, e.g. `live.tasks`; `Item` needs an `id` |
-| `filter` | `Query['filter'] \| undefined` | none | e.g. the cards of one board; read once |
-| `sort` | `Query['sort'] \| undefined` | none | rank first (`['position']`) so a cut list keeps the top cards; read once |
-| `limit` | `number` | `100` | cards loaded at most; the server clamps it to the resource's MaximumLimit; more cards show "Showing n of m cards" |
+| `filter` | `Query['filter'] \| undefined` | none | e.g. the cards of one board, an assignee, a search; a new value reloads the cards, the old ones stay until then |
+| `sort` | `Query['sort'] \| undefined` | none | rank first (`['position']`) so a cut list keeps the top cards; followed like `filter` |
+| `limit` | `number` | `100` | cards loaded at most, followed like `filter`; the server clamps it to the resource's MaximumLimit; more cards show "Showing n of m cards" |
 | `columns` | `BoardColumn[]` | required | `{ key, label, limit? }`; `key` is the value of the column field; cards of other values are not shown |
 | `columnField` | `keyof Item & string` | required | e.g. `status` |
 | `rankField` | `keyof Item & string` | required | a number, e.g. `position`; ties order by id |
@@ -86,7 +86,8 @@ that computes ranks itself.
 Every card menu item carries `data-action` = the move mutation's name; the menu is named
 "Actions for <card>". Grips are buttons named "Move <card>" with the keyboard help as their
 description. Each card is `[data-board-card="<id>"]`, each column `[data-board-column="<key>"]`.
-Moves and their outcome are announced in an assertive live region.
+Moves and their outcome are announced in an assertive live region. After a keyboard or menu move
+or a cancel, focus is back on the moved card's grip.
 
 ## Gotchas
 
@@ -94,6 +95,12 @@ Moves and their outcome are announced in an assertive live region.
   buttons inside a card do not start a drag.
 - A pointer drag hides the original card (`data-origin`) instead of unmounting it: touch keeps
   its implicit capture on the element the finger went down on.
-- Auto-scroll runs only while the pointer moves near the board's left or right edge.
-- `filter`, `sort` and `limit` are read at mount; key the component to change them.
+- Auto-scroll runs only while the pointer moves near the board's left or right edge; scroll
+  snapping is off while a card is lifted, or it would pull every step back.
+- A keyboard lift ends when focus leaves its grip (Tab, a click elsewhere), and when a push
+  removes the lifted card. While a card is lifted no other card lifts.
+- Cards stay on screen while a new `filter`, `sort` or `limit` loads, never across a new pair:
+  after a logout or an account switch the board shows skeletons until the new identity's cards.
+- Two boards on one page over the same read and pair show each other's optimistic card until the
+  push; give a second board a pair of its own.
 - `columnField` values must be the column `key`s; a card whose value has no column is invisible.

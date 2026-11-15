@@ -45,7 +45,13 @@ class Silent implements WebSocketLike {
   close(_code?: number, _reason?: string) {}
 }
 const loadingPair = createLivePair({ identity: () => 'demo:ada', client: { baseURL: '/api/v1', fetch: engine.fetch }, connection: { url: 'ws://fake/api/v1/socket', WebSocket: Silent } })
-onScopeDispose(() => loadingPair.end())
+// The filtered board gets a pair of its own: on the page's pair the first board's optimistic card
+// would show in it until the push (the runtime upserts into every live list of the resource).
+const emptyPair = createLivePair({ identity: () => 'demo:ada', client: { baseURL: '/api/v1', fetch: engine.fetch }, connection: { url: 'ws://fake/api/v1/socket', WebSocket: engine.WebSocket } })
+onScopeDispose(() => {
+  loadingPair.end()
+  emptyPair.end()
+})
 const WithPair = defineComponent({
   props: { pair: { type: Object as PropType<LivePair>, required: true } },
   setup(props, { slots }) {
@@ -98,7 +104,9 @@ const few = columns.slice(0, 3)
   </section>
   <section>
     <h2>Empty columns: no card matches the filter</h2>
-    <Board :target="live.tasks" :filter="nobody" :columns="few" column-field="status" rank-field="position" :item-label="(task) => task.title" :move="calls.moveTask" :move-args="moveArgs" />
+    <WithPair :pair="emptyPair">
+      <Board :target="live.tasks" :filter="nobody" :columns="few" column-field="status" rank-field="position" :item-label="(task) => task.title" :move="calls.moveTask" :move-args="moveArgs" />
+    </WithPair>
   </section>
 </template>
 
