@@ -39,7 +39,7 @@ export class ChangelogError extends Error {
 
 // A hyphen, an en dash or an em dash between the number and the rest; written as escapes so the
 // source carries neither dash character.
-const dash = String.raw`\s+[-–—]\s+`
+const dash = String.raw`\s+[-\u2013\u2014]\s+`
 const lineHeading = new RegExp(String.raw`^#\s+(\d+\.\d+)${dash}(.+)$`)
 const releaseHeading = new RegExp(String.raw`^##\s+(\d+\.\d+\.\d+)${dash}(\d{4}-\d{2}-\d{2})\s*$`)
 const groupHeading = /^###\s+(\S.*?)\s*$/
@@ -49,6 +49,11 @@ const bullet = /^[-*]\s+(.*)$/
 export function versionLine(version: string | null | undefined): string | undefined {
   const match = /^v?(\d+)\.(\d+)(?:\.\d+)?(?:[-+].*)?$/.exec((version ?? '').trim())
   return match ? `${Number(match[1])}.${Number(match[2])}` : undefined
+}
+
+/** The `major.minor.patch` of a version (`v2.4.1`, `2.4.1-rc.1`, `2.4.1+abc`), or undefined; what a release heading is compared with. */
+export function plainVersion(version: string | null | undefined): string | undefined {
+  return /^v?(\d+\.\d+\.\d+)(?:[-+].*)?$/.exec((version ?? '').trim())?.[1]
 }
 
 /** Orders two `major.minor` or `major.minor.patch` strings numerically. */
@@ -75,16 +80,27 @@ export function parseChangelog(file: string, text: string): ReleaseLine {
   let list: ChangeList | undefined
   const intro: string[] = []
   const seen = new Set<string>()
+  const named = /(?:^|\/)(\d+\.\d+)\.md$/.exec(file)?.[1]
+  let comment: number | undefined
 
   lines.forEach((raw, index) => {
     const number = index + 1
     const fail = (problem: string): never => { throw new ChangelogError(file, number, problem) }
     const text = raw.trimEnd()
+    if (comment !== undefined) {
+      if (text.includes('-->')) comment = undefined
+      return
+    }
+    if (text.trim().startsWith('<!--') && !text.includes('-->')) {
+      comment = number
+      return
+    }
     if (text.trim() === '' || /^<!--.*-->$/.test(text.trim())) return
     if (result === undefined) {
       const heading = lineHeading.exec(text)
       if (!heading) fail('expected "# <major>.<minor> - <title>" first')
       result = { line: heading![1]!, title: heading![2]!.trim(), intro: '', releases: [] }
+      if (named !== undefined && versionLine(named) !== versionLine(result.line)) fail(`the file is named for ${named}, the heading says ${result.line}`)
       return
     }
     if (text.startsWith('# ')) fail('a second "# " heading; one minor line per file')
@@ -129,6 +145,7 @@ export function parseChangelog(file: string, text: string): ReleaseLine {
     fail('expected a "### <group>" heading or a "- " bullet')
   })
 
+  if (comment !== undefined) throw new ChangelogError(file, comment, 'an HTML comment that never ends')
   if (result === undefined) throw new ChangelogError(file, 1, 'empty file')
   result.intro = intro.join(' ')
   for (const entry of result.releases) {

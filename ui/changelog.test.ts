@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { ChangelogError, compareVersions, decideWhatsNew, mergedGroups, parseChangelog, parseChangelogs, versionLine } from './changelog'
+import { ChangelogError, compareVersions, decideWhatsNew, mergedGroups, parseChangelog, parseChangelogs, plainVersion, versionLine } from './changelog'
 
 const line24 = `# 2.4 - Saved filters
 
@@ -43,7 +43,7 @@ describe('parseChangelog', () => {
 
   test('accepts an en or em dash in the headings, CRLF and comments', () => {
     expect(parseChangelog('2.3.md', line23).title).toBe('Columns')
-    const em = '# 1.0 — First\r\n<!-- keep -->\r\n## 1.0.0 — 2026-01-02\r\n### features\r\n- One\r\n'
+    const em = '# 1.0 \u2014 First\r\n<!-- keep -->\r\n## 1.0.0 \u2014 2026-01-02\r\n### features\r\n- One\r\n'
     expect(parseChangelog('1.0.md', em).releases[0]?.groups[0]).toEqual({ group: 'Features', items: ['One'] })
   })
 
@@ -61,6 +61,14 @@ describe('parseChangelog', () => {
   ])('refuses %j with its line', (text, problem) => {
     expect(() => parseChangelog('x.md', text)).toThrow(ChangelogError)
     expect(() => parseChangelog('x.md', text)).toThrow(problem)
+  })
+
+  test('refuses a file named for another line and a comment that never ends; skips a multi-line one', () => {
+    expect(() => parseChangelog('changelog/2.5.md', '# 2.4 - T\n## 2.4.0 - 2026-11-03\n### Features\n- a')).toThrow('changelog/2.5.md:1: the file is named for 2.5, the heading says 2.4')
+    expect(() => parseChangelog('2.4.md', '# 2.4 - T\n<!--\nnote\n')).toThrow('2.4.md:2: an HTML comment that never ends')
+    const commented = parseChangelog('2.4.md', '# 2.4 - T\n<!--\nnote\n-->\n## 2.4.0 - 2026-11-03\n### Features\n- a')
+    expect(commented.intro).toBe('')
+    expect(commented.releases).toHaveLength(1)
   })
 })
 
@@ -81,6 +89,14 @@ describe('versions', () => {
     expect(versionLine('2.04')).toBe('2.4')
     expect(versionLine('development')).toBeUndefined()
     expect(versionLine(null)).toBeUndefined()
+  })
+
+  test('plainVersion', () => {
+    expect(plainVersion('v2.4.1')).toBe('2.4.1')
+    expect(plainVersion('2.4.1-rc.1')).toBe('2.4.1')
+    expect(plainVersion('2.4.1+abc')).toBe('2.4.1')
+    expect(plainVersion('2.4')).toBeUndefined()
+    expect(plainVersion('development')).toBeUndefined()
   })
 
   test('compareVersions is numeric', () => {

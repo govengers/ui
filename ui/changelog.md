@@ -12,7 +12,7 @@ laws: [paradox-of-the-active-user, peak-end-rule]
 
 The parser for a project's `changelog/<major>.<minor>.md` files and the pure decision "show
 what's new?" (D56): `parseChangelog`, `parseChangelogs`, `mergedGroups`, `decideWhatsNew`,
-`versionLine`, `compareVersions`. A module without Vue; `WhatsNew` and the `Changelog` recipe
+`versionLine`, `plainVersion`, `compareVersions`. A module without Vue; `WhatsNew` and the `Changelog` recipe
 render what it returns. A single file, `ui/changelog.ts`; `ui-copy` copies the file.
 
 ## Load
@@ -53,6 +53,7 @@ One optional sentence about the line.
 - `# M.m - Title` once, first; `## M.m.p - YYYY-MM-DD` per patch of that line; `### Features`,
   `### Fixes`, `### Changes` or `### Security` (any case) under a release; `-` or `*` bullets, a
   wrapped bullet is indented. The dash may be a hyphen, an en dash or an em dash.
+- A file named `<M>.<m>.md` holds that line. HTML comments, also over several lines, are skipped.
 - Anything else is refused with `file:line: problem`, never dropped silently.
 
 ## API
@@ -64,6 +65,7 @@ One optional sentence about the line.
 | `mergedGroups(line)` | the line's groups merged over its releases, x.y.0 items first |
 | `decideWhatsNew(lines, running, seen)` | `{ show, remember }`, see below |
 | `versionLine(version)` | `v2.4.1-rc.1` to `2.4`; `undefined` for `development` |
+| `plainVersion(version)` | `v2.4.1-rc.1` to `2.4.1`, the form of a release heading; `undefined` for `development` |
 | `compareVersions(a, b)` | numeric order of `M.m` or `M.m.p` |
 
 ## The decision

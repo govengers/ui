@@ -2,17 +2,18 @@
 // Changelog recipe (D56): every minor line of the parsed changelog, newest first, one Card per
 // line with its releases, their dates and groups. The running release carries a "Current" badge;
 // every release has an anchor (#v2-4-1) a WhatsNew link or a support answer can point at.
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Badge from '../../ui/Badge/Badge.vue'
 import Card from '../../ui/Card/Card.vue'
 import EmptyState from '../../ui/EmptyState/EmptyState.vue'
 import Page from '../../ui/Page/Page.vue'
 import PageHeader from '../../ui/PageHeader/PageHeader.vue'
-import type { ChangeGroup, ReleaseLine } from '../../ui/changelog'
+import { plainVersion, type ChangeGroup, type ReleaseLine } from '../../ui/changelog'
 import { formatDate } from '../../ui/format'
 import { messages } from './messages'
 
-defineProps<{
+const props = defineProps<{
   /** parseChangelogs(files).lines, in a project from src/changelog.ts. */
   releases: readonly ReleaseLine[]
   /** The running build, import.meta.env.VITE_APP_VERSION: its release gets the "Current" badge. */
@@ -21,6 +22,8 @@ defineProps<{
 
 const { t, locale } = useI18n({ useScope: 'global', messages })
 const groupLabels: Record<ChangeGroup, string> = { Features: 'ui.groupFeatures', Fixes: 'ui.groupFixes', Changes: 'ui.groupChanges', Security: 'ui.groupSecurity' }
+// `v2.4.1` (git describe) and `2.4.1-rc.1` badge the 2.4.1 release, as WhatsNew and UpdateHint read them.
+const current = computed(() => plainVersion(props.version))
 const anchor = (version: string): string => `v${version.replaceAll('.', '-')}`
 // Noon local time, so a date-only value never shows as the day before west of UTC.
 const day = (date: string): string => formatDate(`${date}T12:00:00`, locale.value)
@@ -37,7 +40,7 @@ const day = (date: string): string => formatDate(`${date}T12:00:00`, locale.valu
           <h3 class="changelog__version">
             <a :href="`#${anchor(release.version)}`">{{ release.version }}</a>
             <time :datetime="release.date" class="changelog__date">{{ day(release.date) }}</time>
-            <Badge v-if="release.version === version" variant="accent" size="sm">{{ t('help.changelog.current') }}</Badge>
+            <Badge v-if="release.version === current" variant="accent" size="sm">{{ t('help.changelog.current') }}</Badge>
           </h3>
           <template v-for="list in release.groups" :key="list.group">
             <h4 class="changelog__group">{{ t(groupLabels[list.group]) }}</h4>

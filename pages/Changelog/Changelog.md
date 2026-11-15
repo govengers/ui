@@ -37,7 +37,7 @@ Do not load:
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
 | `releases` | `readonly ReleaseLine[]` | required | `parseChangelogs(files).lines` |
-| `version` | `string \| undefined` | none | the running build; its release gets the "Current" badge |
+| `version` | `string \| undefined` | none | the running build (`v2.4.1` and `2.4.1-rc.1` count as `2.4.1`); its release gets the "Current" badge |
 
 ## Agent
 
