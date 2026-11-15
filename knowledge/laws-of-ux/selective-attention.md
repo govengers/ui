@@ -2,7 +2,7 @@
 name: Selective Attention
 category: cognitive-bias
 summary: People notice what serves their goal and filter out the rest, ad-like notices included
-applies: [Banner, ConnectionBanner, Toast, StatusTile, SearchTable]
+applies: [Banner, ConnectionBanner, Toast, StatusTile, SearchTable, UpdateHint, NotificationInbox]
 ---
 
 # Selective Attention

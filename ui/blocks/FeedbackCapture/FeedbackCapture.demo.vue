@@ -38,8 +38,10 @@ function report(shot: boolean): void {
   open.value = true
 }
 
-// Opened on load, after a logged error, so the screenshot shows the form and the redacted preview.
-onMounted(() => setTimeout(() => { logError(); report(true) }, 300))
+// The inline preview mounts after a logged error, with its preview unfolded for the screenshot.
+logError()
+const inline = ref<HTMLElement | null>(null)
+onMounted(() => setTimeout(() => inline.value?.querySelector('details')?.setAttribute('open', ''), 100))
 </script>
 
 <template>
@@ -54,10 +56,14 @@ onMounted(() => setTimeout(() => { logError(); report(true) }, 300))
     <FeedbackCapture v-model="open" :send="calls.createFeedback" :screenshot="withShot ? screenshot : undefined" version="2.4.1" @sent="sent = $event" />
     <p v-if="sent" class="muted" role="status">Sent a {{ sent.type }} report with {{ sent.entries.length }} entries{{ sent.screenshot ? ' and a screenshot' : '' }}.</p>
   </section>
+
+  <section>
+    <h2>Inline preview: the logged error, redacted, in exactly what will be sent</h2>
+    <div ref="inline"><FeedbackCapture inline :send="calls.createFeedback" version="2.4.1" /></div>
+  </section>
 </template>
 
 <style scoped>
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-3); }
 .muted { margin-top: var(--ui-space-3); color: var(--ui-muted); font-size: var(--ui-text-sm); }
-section { min-height: 40rem; }
 </style>

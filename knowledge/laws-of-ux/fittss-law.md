@@ -2,7 +2,7 @@
 name: Fitts's Law
 category: heuristic
 summary: Bigger and closer targets are faster and safer to hit
-applies: [Button, Checkbox, PageHeader, Table, Dialog, ActionBar]
+applies: [Button, Checkbox, PageHeader, Table, Dialog, ActionBar, NotificationInbox]
 ---
 
 # Fitts's Law

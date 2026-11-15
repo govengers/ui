@@ -2,7 +2,7 @@
 name: Law of Common Region
 category: gestalt
 summary: Things inside one boundary read as one group
-applies: [Card, Table, FacetFilter, Dialog, ActionBar, SettingsPage]
+applies: [Card, Table, FacetFilter, Dialog, ActionBar, SettingsPage, Changelog]
 ---
 
 # Law of Common Region

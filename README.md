@@ -23,10 +23,10 @@ copying again; the header line in each copied file says where it came from.
 
 | Tier | What | Livewire |
 |------|------|----------|
-| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent` | no |
+| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent`, `changelog` | no |
 | layout | AppShell, Page, PageHeader, ActionBar, Banner | no |
-| block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, AgentDock; module `session` | yes |
-| page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard | yes |
+| block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, UpdateHint, NotificationInbox, FeedbackCapture, AgentDock; module `session` | yes |
+| page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard, Changelog | yes |
 | pattern | building a list page, a form, a settings page, live data, login and session, uploads and jobs, the in-app agent | |
 
 Dependencies a copy may need: `vue`, `vue-router`, `vue-i18n`, `date-fns` and the project's

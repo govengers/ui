@@ -28,6 +28,8 @@ const props = defineProps<{
   screenshot?: (() => Promise<string | null | undefined>) | undefined
   /** The build's version, for the environment. */
   version?: string | undefined
+  /** Open in the page flow through Dialog's inline, frozen at mount; docs and previews only. */
+  inline?: boolean | undefined
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [open: boolean]; sent: [report: FeedbackReport] }>()
@@ -50,7 +52,7 @@ const types = computed(() => [
 ])
 const severities = computed(() => (['low', 'medium', 'high', 'critical'] as const).map((value) => ({ value, label: t(`ui.severity${value[0]!.toUpperCase()}${value.slice(1)}`) })))
 
-watch(() => props.modelValue, async (open) => {
+watch(() => props.modelValue || props.inline, async (open) => {
   if (!open) return
   const mine = ++generation
   failure.value = undefined
@@ -69,7 +71,7 @@ watch(() => props.modelValue, async (open) => {
 }, { immediate: true })
 
 const open = computed({
-  get: () => Boolean(props.modelValue) && !capturing.value && snapshot.value !== undefined,
+  get: () => Boolean(props.modelValue || props.inline) && !capturing.value && snapshot.value !== undefined,
   set: (value: boolean) => { if (!value) emit('update:modelValue', false) },
 })
 const report = computed(() => (snapshot.value ? buildReport(form, snapshot.value, include) : undefined))
@@ -95,7 +97,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <Dialog v-model="open" class="ui-feedback-capture" :title="t('ui.feedback')" size="lg">
+  <Dialog v-model="open" class="ui-feedback-capture" :inline="inline" :title="t('ui.feedback')" size="lg">
     <div v-if="report" class="ui-feedback-capture__form">
       <Banner v-if="failure" variant="danger">{{ failure }}</Banner>
       <div class="ui-feedback-capture__row">

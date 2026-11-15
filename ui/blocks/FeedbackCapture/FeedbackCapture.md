@@ -43,6 +43,7 @@ Do not load:
 | `buffer` | `FeedbackBuffer \| undefined` | the installed one | where the entries come from; none installed means no entries |
 | `screenshot` | `() => Promise<string \| null \| undefined>` | none | captures the page as a data URL; runs before the dialog shows; a failure sends without one |
 | `version` | `string \| undefined` | none | the build, for the environment |
+| `inline` | `boolean` | `false` | open in the page flow through Dialog's `inline`, frozen at mount; docs and previews only |
 
 ## Events
 

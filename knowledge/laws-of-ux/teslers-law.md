@@ -2,7 +2,7 @@
 name: Tesler's Law
 category: principle
 summary: Some complexity cannot be removed; the system should carry it, not the user
-applies: [LiveForm, WorkflowStatus, FacetFilter, JobProgress, AgentCursor]
+applies: [LiveForm, WorkflowStatus, FacetFilter, JobProgress, AgentCursor, FeedbackCapture]
 ---
 
 # Tesler's Law

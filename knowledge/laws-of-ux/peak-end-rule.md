@@ -2,7 +2,7 @@
 name: Peak-End Rule
 category: cognitive-bias
 summary: People remember an experience by its most intense moment and by how it ended
-applies: [Toast, DetailForm, LiveForm, JobProgress, Banner]
+applies: [Toast, DetailForm, LiveForm, JobProgress, Banner, changelog, WhatsNew, FeedbackCapture]
 ---
 
 # Peak-End Rule
