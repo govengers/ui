@@ -67,6 +67,7 @@ const resources: Record<ListTable, { defaultSort: readonly string[]; cursor: boo
   jobs: { defaultSort: ['-createdAt'], cursor: false },
   files: { defaultSort: ['-createdAt'], cursor: false },
   conversation: { defaultSort: ['createdAt'], cursor: false },
+  apiKeys: { defaultSort: ['-createdAt'], cursor: false },
 }
 
 const listTargets = new Set(Object.values(reads).filter((target) => target.list).map((target) => target.target))

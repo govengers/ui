@@ -5,15 +5,15 @@ import type { AgentAction } from '../../ui/agent/types'
 
 export const login: AgentAction = {
   name: 'login',
-  description: 'Signs in with email and password, then a 6-digit code when two-factor is on.',
-  params: { email: 'The account email', password: 'The password', code: 'The one-time code, second step only' },
+  description: 'Signs in with user name or email and password, then a 6-digit code when two-factor is on.',
+  params: { identifier: 'The user name or email', password: 'The password', code: 'The one-time code or backup code, second step only' },
   page: 'auth.login',
   mutating: true,
 }
 
 export const loginSso: AgentAction = {
   name: 'loginSso',
-  description: 'Signs in through the company identity provider (single sign-on).',
+  description: 'Signs in through an identity provider (OIDC single sign-on or GitHub); data-provider names which.',
   page: 'auth.login',
   mutating: true,
 }

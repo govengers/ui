@@ -15,24 +15,30 @@ import Field from '../../ui/Field/Field.vue'
 import Input from '../../ui/Input/Input.vue'
 import Page from '../../ui/Page/Page.vue'
 import PageHeader from '../../ui/PageHeader/PageHeader.vue'
-import LoginForm, { type LoginCredentials } from '../../ui/blocks/LoginForm/LoginForm.vue'
+import LoginForm, { type LoginAnswer, type LoginCredentials, type LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
 import { messages } from './messages'
 
 const props = withDefaults(defineProps<{
   state?: 'login' | 'loggedOut' | 'changePassword' | undefined
-  /** Signs in (see LoginForm): answers { twoFactor: true } for the code step, throws an Error whose message is shown. */
-  login: (credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } | void>
+  /** Signs in (see LoginForm): answers { challenge: 'totp' } for the code step, throws an Error whose message is shown. */
+  login: (credentials: LoginCredentials) => Promise<LoginAnswer | void>
+  /** The redirect logins (OIDC, GitHub), hrefs from session.loginHref. */
+  providers?: readonly LoginProvider[] | undefined
+  /** `sso`: the providers first, the password form behind a link. */
+  layout?: 'password' | 'sso' | undefined
   /** Changes the password: throws an ApiError with fields (shown at the Fields) or an Error. */
   change: (passwords: { currentPassword: string; newPassword: string }) => Promise<void>
   /** Where "Sign in again" goes. */
   loginRoute?: RouteLocationRaw | undefined
   /** The app's version, shown in the corner. */
   version?: string | undefined
-}>(), { state: 'login', loginRoute: () => ({ name: 'auth.login' }) })
+}>(), { state: 'login', providers: () => [], layout: 'password', loginRoute: () => ({ name: 'auth.login' }) })
 
 defineSlots<{
   /** The app's logo in the top bar; the app name by default. */
   logo?(): unknown
+  /** Under the sign-in form: DevLogin in development builds (its card shows the guard). */
+  after?(): unknown
 }>()
 
 const { t } = useI18n({ useScope: 'global', messages })
@@ -79,14 +85,12 @@ async function submitChange(): Promise<void> {
       <!-- The h1 for assistive technology; the card's title says the same on screen. -->
       <PageHeader :title="heading" class="ui-visually-hidden" />
       <div class="login-page__column">
-        <LoginForm v-if="state === 'login'" :login="login">
-          <template #sso>
-            <Button block href="/auth/sso/start" data-action="loginSso">{{ t('auth.login.sso') }}</Button>
-          </template>
+        <LoginForm v-if="state === 'login'" :login="login" :providers="providers" :layout="layout">
           <template #footer>
             <a href="/auth/forgot">{{ t('auth.login.forgot') }}</a>
           </template>
         </LoginForm>
+        <slot v-if="state === 'login'" name="after" />
 
         <Card v-else-if="state === 'loggedOut'" :title="t('auth.loggedOut.title')" as="section">
           <div class="login-page__stack">
