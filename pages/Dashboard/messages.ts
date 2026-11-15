@@ -31,11 +31,6 @@ export const messages = {
           forbidden: 'Only the finance team can see billing.',
           plan: '{plan} plan, {seats} seats',
         },
-        whatsNew: {
-          heading: 'Version 1.0.0',
-          dashboard: 'A dashboard with live figures on the start page.',
-          settings: 'Settings in tabs: workspace, profile, notifications.',
-        },
       },
     },
   },
@@ -69,11 +64,6 @@ export const messages = {
           title: 'Abrechnung',
           forbidden: 'Die Abrechnung sieht nur das Finanzteam.',
           plan: 'Tarif {plan}, {seats} Plätze',
-        },
-        whatsNew: {
-          heading: 'Version 1.0.0',
-          dashboard: 'Ein Dashboard mit Live-Zahlen auf der Startseite.',
-          settings: 'Einstellungen in Tabs: Arbeitsbereich, Profil, Benachrichtigungen.',
         },
       },
     },

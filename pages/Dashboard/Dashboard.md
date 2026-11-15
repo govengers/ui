@@ -2,7 +2,7 @@
 name: Dashboard
 tier: page
 intent: [dashboard, home page, start page, overview, kpi tiles, metrics, recent activity, landing page after login]
-uses: [Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, WhatsNew, format]
+uses: [Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, format]
 livewire: true
 status: ready
 laws: [millers-law, pareto-principle]
@@ -13,7 +13,7 @@ laws: [millers-law, pareto-principle]
 The start page after login: a greeting with today's date, four live tiles (active customers,
 open orders, running jobs, revenue of the last 30 days), the five newest orders, the running
 jobs and a billing card that shows the forbidden state. Everything is live; a push moves a tile
-without a reload. The notes of a new version open once (`WhatsNew`).
+without a reload. The release notes (`WhatsNew`) belong to the shell, not to this page (D56).
 
 ## Load
 
@@ -21,7 +21,7 @@ without a reload. The notes of a new version open once (`WhatsNew`).
 |------|------|-----|
 | this card | always | the contract |
 | `Dashboard.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
-| the cards of `Page`, `PageHeader`, `Badge`, `Banner`, `Button`, `Card`, `EmptyState`, `Skeleton`, `Table`, `StatusTile`, `JobProgress`, `WhatsNew`, `format` | when their props show up here | what the composed pieces do |
+| the cards of `Page`, `PageHeader`, `Badge`, `Banner`, `Button`, `Card`, `EmptyState`, `Skeleton`, `Table`, `StatusTile`, `JobProgress`, `format` | when their props show up here | what the composed pieces do |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 | the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
 
@@ -76,7 +76,7 @@ the page's keys and the `ui.*` keys (`ui.retry`, `ui.stale`).
 1. `ui-copy Dashboard` lands it in `src/pages/Dashboard/`; rename the folder to the area
    (`src/pages/Home/`).
 2. Rewrite the descriptor line: `@/fake/api` becomes `@/api/api`.
-3. Resolve every `// REPLACE:`: the first name from the session, the version from the build.
+3. Resolve every `// REPLACE:`: the first name from the session.
 4. Swap the tiles' reads for the project's figures; keep a count as the `total` of a one-row page.
 5. Point the links (`/customers`, `/orders`) at the project's routes.
 6. Route: `{ path: '/', name: 'home.dashboard', component: Dashboard, meta: { page: 'home.dashboard', title: 'Dashboard', intent: 'See the figures of the day and what needs attention' } }`.
@@ -85,8 +85,6 @@ the page's keys and the `ui.*` keys (`ui.retry`, `ui.stale`).
 
 - The revenue tile sums at most one page of 100 orders in one currency. A project with more
   orders, or several currencies, serves the sum as its own live read and shows that.
-- `WhatsNew` opens on mount for an unseen version. If the app's shell mounts it already, delete
-  it here; the demo marks 1.0.0 seen and shows the notes inline instead.
 - The greeting picks morning, afternoon or evening from the hour when the page mounts.
 - A relative time (`{ relative: '-30d' }`) counts from the clock of each read, so the window
   moves with every push.
