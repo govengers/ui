@@ -11,16 +11,17 @@ const globals = globalThis as Record<string, unknown>
 // The DOM names the pieces and tests use; bun's own Event classes cannot be dispatched on jsdom nodes.
 for (const name of [
   'window', 'document', 'navigator', 'location', 'localStorage', 'sessionStorage', 'getComputedStyle', 'requestAnimationFrame', 'cancelAnimationFrame',
-  'Node', 'Element', 'HTMLElement', 'SVGElement', 'MathMLElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLDialogElement', 'Text', 'Comment', 'DocumentFragment', 'ShadowRoot', 'MutationObserver', 'Storage', 'DOMException',
+  'Node', 'Document', 'Element', 'HTMLElement', 'SVGElement', 'MathMLElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLDialogElement', 'Text', 'Comment', 'DocumentFragment', 'ShadowRoot', 'MutationObserver', 'Storage', 'DOMException',
   'Event', 'CustomEvent', 'UIEvent', 'KeyboardEvent', 'MouseEvent', 'PointerEvent', 'FocusEvent', 'InputEvent', 'ClipboardEvent',
 ]) {
   if (view[name] !== undefined) globals[name] = view[name]
 }
-// What jsdom lacks and the pieces call: CSS.escape, the popover API, element scrolling.
+// What jsdom lacks and the pieces call: CSS.escape, the popover API, element scrolling, hit testing.
 globals['CSS'] = { escape: (value: string) => value.replace(/["\\]/g, '\\$&'), supports: () => false }
 const proto = dom.window.HTMLElement.prototype as unknown as Record<string, unknown>
 for (const name of ['showPopover', 'hidePopover', 'togglePopover', 'scrollIntoView']) proto[name] ??= () => undefined
 dom.window.document.execCommand = () => false
+dom.window.document.elementFromPoint = () => null
 
 let next = 0
 plugin({
