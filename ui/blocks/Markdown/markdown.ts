@@ -24,17 +24,19 @@ export interface MarkdownRendererOptions {
  * An image source: the page's origin (relative or absolute), an origin of `hosts`, blob (a fresh
  * paste) or a raster data URL; never SVG or HTML data. Markdown written by someone else must not
  * make the reader's browser call a foreign host (tracking, exfiltration through the URL).
+ * Classified by the URL the browser loads, resolved like the browser does: its parser reads `\`
+ * as `/`, drops tabs and newlines and strips C0 controls, which a pattern on the text misses.
  */
 function safeImage(src: string, origin: string, hosts: readonly string[]): boolean {
-  if (/^data:/i.test(src)) return /^data:image\/(png|jpeg|gif|webp);/i.test(src)
-  if (/^blob:https?:/i.test(src)) return true
-  if (!/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(src)) return true // relative to the page
+  let url: URL
   try {
-    const url = new URL(src)
-    return (url.protocol === 'https:' || url.protocol === 'http:') && (url.origin === origin || hosts.includes(url.origin))
+    url = new URL(src, origin === '' || origin === 'null' ? undefined : `${origin}/`)
   } catch {
     return false
   }
+  if (url.protocol === 'data:') return /^data:image\/(png|jpeg|gif|webp);/i.test(url.href)
+  if (url.protocol === 'blob:') return /^blob:https?:/i.test(url.href)
+  return (url.protocol === 'https:' || url.protocol === 'http:') && (url.origin === origin || hosts.includes(url.origin))
 }
 
 /**

@@ -42,7 +42,8 @@ Copy: `MarkdownView` alone needs `MarkdownView.vue` and `markdown.ts`; `bun add 
 | `source` | `string` | required | the markdown; a prop, never a slot |
 
 Safety: raw HTML in the source is shown as text, never parsed; DOMPurify drops script URLs and
-event handlers; images load only from the page's own origin (relative or absolute), `blob:` and
+event handlers; images load only from the page's own origin (relative or absolute, judged by the
+URL the browser resolves, so `\`, tabs, control characters or character references hide no host), `blob:` and
 raster `data:image/` URLs (no SVG): markdown someone else wrote (a user, an agent that read a
 hostile page) cannot make the reader's browser call a foreign host. A storage or CDN host is
 named in `MarkdownView.vue`: `createMarkdownRenderer(window, { imageHosts: ['https://files.example'] })`;

