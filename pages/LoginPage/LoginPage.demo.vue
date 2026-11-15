@@ -2,21 +2,24 @@
 import { ref } from 'vue'
 import { ApiError } from '@/api/runtime'
 import LoginPage from './LoginPage.vue'
-import type { LoginCredentials } from '../../ui/blocks/LoginForm/LoginForm.vue'
+import type { LoginCredentials, LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
 
 const signedIn = ref<string>()
 const wait = () => new Promise((resolve) => setTimeout(resolve, 400))
 
-/** The demo's login: ada@example.com / secret signs in, bob@example.com / secret is asked for 123456, the rest fails. */
+const refused = (code: string): Error => Object.assign(new Error(code), { code })
+const providers: LoginProvider[] = [{ name: 'oidc', label: 'Company SSO', href: '#login' }]
+
+/** The demo's login: ada / secret signs in, bob / secret is asked for 123456, the rest fails. */
 async function login(credentials: LoginCredentials): Promise<{ twoFactor?: boolean } | void> {
   await wait()
-  if (credentials.email === 'bob@example.com' && credentials.password === 'secret') {
+  if (credentials.identifier === 'bob' && credentials.password === 'secret') {
     if (credentials.code === undefined) return { twoFactor: true }
-    if (credentials.code !== '123456') throw new Error('That code is not valid. Try the newest one.')
-  } else if (credentials.email !== 'ada@example.com' || credentials.password !== 'secret') {
-    throw new Error('Email or password is wrong.')
+    if (credentials.code !== '123456') throw refused('invalid_totp_code')
+  } else if (credentials.identifier !== 'ada' || credentials.password !== 'secret') {
+    throw refused('invalid_credentials')
   }
-  signedIn.value = credentials.email
+  signedIn.value = credentials.identifier
 }
 
 /** The demo's change: the current password is "secret"; anything else is refused at its field. */
@@ -33,9 +36,9 @@ const here = { hash: '#login' }
 
 <template>
   <section id="login">
-    <h2>Sign in (ada@example.com / secret; bob@example.com / secret asks for 123456)</h2>
+    <h2>Sign in (ada / secret; bob / secret asks for 123456)</h2>
     <p v-if="signedIn" class="note" role="status">Signed in as {{ signedIn }}.</p>
-    <div class="frame"><LoginPage :login="login" :change="change" :login-route="here" version="1.4.0" /></div>
+    <div class="frame"><LoginPage :login="login" :change="change" :providers="providers" :login-route="here" version="1.4.0" /></div>
   </section>
   <section>
     <h2>Logged out</h2>

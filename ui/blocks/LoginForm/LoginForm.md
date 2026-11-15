@@ -1,19 +1,20 @@
 ---
 name: LoginForm
 tier: block
-intent: [login form, sign in, log in, password login, two-factor, 2fa code, one-time code, remember me, sso button]
-uses: [Card, Banner, Button, Checkbox, Field, Input]
+intent: [login form, sign in, log in, password login, user name or email, two-factor, 2fa code, backup code, one-time code, sso button, oidc login, github login, sso first]
+uses: [Card, Banner, Button, Field, Input]
 livewire: false
 status: ready
-laws: [parkinsons-law]
+laws: [parkinsons-law, hicks-law]
 ---
 
 # LoginForm
 
-Email, password and "Remember me" in a Card. The page passes `login`, and the message of the
-error it throws shows in a danger Banner. When `login` answers `{ twoFactor: true }`, a second
-step asks for a 6-digit code and calls `login` again with it. Centre it with the `LoginPage`
-recipe.
+The sign-in card against govengers/auth (D57): user name or email and password, the redirect
+providers (OIDC, GitHub) as buttons from a prop, and the TOTP step with a switch to a backup
+code. `layout="sso"` puts the providers first and the password form behind a link. The page
+passes `login` (the session module's `login` plus the navigation); a refusal with a known
+govengers/auth `code` shows as its own sentence. Centre it with the `LoginPage` recipe.
 
 ## Load
 
@@ -21,9 +22,9 @@ recipe.
 |------|------|-----|
 | this card | always | the contract |
 | `LoginForm.vue` | to use it: skim; to change it: read | the behaviour |
-| the cards of `Card`, `Banner`, `Button`, `Checkbox`, `Field`, `Input` | when their props show up here | what the composed pieces do |
+| the cards of `Card`, `Banner`, `Button`, `Field`, `Input` | when their props show up here | what the composed pieces do |
+| `ui/session.md` | wiring `login` and `providers` | where both come from |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
-| `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
 
 Do not load:
 
@@ -32,23 +33,27 @@ Do not load:
 | `LoginForm.demo.vue`, `*.test.ts` | demo and tests are not copied and not needed to use it |
 | other pieces | one piece per need |
 
-
 ## Props
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `login` | `(credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } \| void>` | required | throws an `Error` (or `ApiError`) whose `message` is shown |
+| `login` | `(credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } \| void>` | required | throws an error; with a `code` below its sentence shows, else its `message` |
 | `title` | `string \| undefined` | `ui.signIn` | |
+| `providers` | `LoginProvider[]` | `[]` | `{ name, label, href }`; `href` from `session.loginHref(provider, redirect)` |
+| `layout` | `password \| sso` | `password` | `sso`: providers as primary buttons, "Sign in with a password" reveals the form |
 
-`LoginCredentials` is exported from `LoginForm.vue`: `{ email, password, remember, code? }`.
-`code` is set only in the second step.
+`LoginCredentials` (exported): `{ identifier, password, code?, backupCode? }`; `code` and
+`backupCode` only in the second step. `LoginProvider` is exported too.
+
+Codes shown as sentences: `invalid_credentials`, `invalid_totp_code`, `no_pending_login` (also
+returns to the first step), `totp_setup_required` (the session module's code for the
+`totp_setup` challenge).
 
 ## Slots
 
 | Slot | Content |
 |------|---------|
 | `logo` | above the title |
-| `sso` | above the fields, first step only: a `Button block` "Continue with SSO" |
 | `footer` | under the form: links (forgot password, sign up) |
 
 ## Events
@@ -57,31 +62,30 @@ None. `login` does the work; navigate from inside it once it succeeded.
 
 ## With livewire
 
-It has none: a livewire pair serves one identity (D66), and the identity exists only after the
-login. In `login`, end the old pair before the request that sets the session cookie, then make
-the new pair once the session answers.
+None: a pair serves one identity, which exists only after the login. The session module ends
+the pair before the request and builds the next one after it (`ui/session.md`):
 
 ```ts
 async function login(credentials: LoginCredentials) {
-  pair.value.end()
-  const answer = await signIn(credentials) // the app's own fetch to its auth route
-  if (answer.twoFactor) return { twoFactor: true }
-  pair.value = createLivePair(...)
-  await router.push(redirect)
+  const answer = await session.login(credentials)
+  if (!answer.twoFactor) await router.replace(safeRedirect(route.query.redirect))
+  return answer
 }
 ```
 
 ## Agent
 
-The fields are named `email`, `password`, `remember` and, in the second step, `code`. Submit is
-`data-action="login"`. The error Banner is `role="alert"`.
+Fields `identifier`, `password` and, in the second step, `code`. Submit is `data-action="login"`;
+each provider button is `data-action="loginSso"` with `data-provider="<name>"`. The error
+Banner is `role="alert"`.
 
 ## Gotchas
 
-- Native validation runs first: `required` and `type="email"` stop the submit before `login` is
-  called, and the code must match `[0-9]{6}`.
-- The code field has `autocomplete="one-time-code"` and `inputmode="numeric"`, and it takes the
-  focus when the second step opens.
+- govengers/auth has no "remember me": the session lives `MaximumAge` from the login, so the
+  form offers none (D57). The `ui.rememberMe` key stays for copies made before.
+- The identifier field is plain text (`autocomplete="username"`): govengers/auth accepts a user
+  name or an email, whichever its options enable.
+- The TOTP code must match `[0-9]{6}`; a backup code has no pattern.
 - There is no way back from the code step; a page that wants one remounts the form (`:key`).
-- Do not show the server's reason for a failed login ("no such user"); throw one sentence for
-  every wrong-credentials case.
+- Do not show the server's reason for a failed login; govengers/auth answers one code for every
+  wrong-credentials case and the form keeps it that way.
