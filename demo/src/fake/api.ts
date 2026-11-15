@@ -5,9 +5,9 @@
 // these descriptors as props (D5).
 
 import * as runtime from '../api/runtime'
-import type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+import type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, User, UserRole } from './data'
 
-export type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+export type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, User, UserRole } from './data'
 export { fields } from './data'
 
 /** A node of a filter document (D12): a condition, or and, or or not over nodes. */
@@ -95,6 +95,9 @@ export type ConversationSortTerm = SortTerm<'id' | 'role' | 'createdAt'>
 
 export type ApiKeysCondition = TextCondition<'id' | 'name'> | TimeCondition<'createdAt'>
 export type ApiKeysFilter = SearchableFilterDocument<ApiKeysCondition>
+export type NotificationsCondition = TextCondition<'id' | 'title'> | TimeCondition<'readAt' | 'createdAt'>
+export type NotificationsFilter = SearchableFilterDocument<NotificationsCondition>
+export type NotificationsSortTerm = SortTerm<'id' | 'title' | 'readAt' | 'createdAt'>
 
 /** The filter document of every target a stored filter may name (D13). */
 export interface FilterDocuments {
@@ -105,6 +108,7 @@ export interface FilterDocuments {
   files: FilesFilter
   conversation: ConversationFilter
   apiKeys: ApiKeysFilter
+  notifications: NotificationsFilter
 }
 
 /** The reserved parameters of a filterable list read. */
@@ -125,6 +129,12 @@ export type UsersListQuery = ListQuery<UsersFilter, UsersSortTerm>
 export type JobsListQuery = ListQuery<JobsFilter, JobsSortTerm>
 export type FilesListQuery = ListQuery<FilesFilter, FilesSortTerm>
 export type ConversationListQuery = ListQuery<ConversationFilter, ConversationSortTerm>
+export type NotificationsListQuery = ListQuery<NotificationsFilter, NotificationsSortTerm>
+
+/** The signed-in user's unread notifications, counted by the server (an object read beside the list). */
+export interface NotificationCount {
+  unread: number
+}
 
 export interface ItemParameters {
   id: string
@@ -168,6 +178,8 @@ export const reads = {
   files: runtime.liveRead<FilesListQuery, runtime.ListResponse<FileItem>>({ target: 'files', path: '/files', pathParameters: [], list: true }),
   conversation: runtime.liveRead<ConversationListQuery, runtime.ListResponse<Message>>({ target: 'conversation', path: '/conversation', pathParameters: [], list: true }),
   apiKeys: runtime.liveRead<runtime.NoParameters, runtime.ListResponse<ApiKey>>({ target: 'apiKeys', path: '/api-keys', pathParameters: [], list: true }),
+  notifications: runtime.liveRead<NotificationsListQuery, runtime.ListResponse<Notification>>({ target: 'notifications', path: '/notifications', pathParameters: [], list: true }),
+  notificationCount: runtime.liveRead<runtime.NoParameters, NotificationCount>({ target: 'notificationCount', path: '/notifications/count', pathParameters: [], list: false }),
   settings: runtime.liveRead<runtime.NoParameters, Settings>({ target: 'settings', path: '/settings', pathParameters: [], list: false }),
   billing: runtime.liveRead<runtime.NoParameters, Billing>({ target: 'billing', path: '/billing', pathParameters: [], list: false }),
 } as const
@@ -219,6 +231,21 @@ export interface SendMessage {
   mode?: AgentMode
 }
 
+/** A feedback report (FeedbackCapture): the block's FeedbackReport is this body. */
+export interface CreateFeedback {
+  type: 'bug' | 'idea' | 'question'
+  text: string
+  severity: 'low' | 'medium' | 'high' | 'critical' | null
+  environment: object | null
+  entries: object[]
+  screenshot: string | null
+}
+
+export interface FeedbackReceipt {
+  id: string
+  createdAt: string
+}
+
 /** Every mutation, for LiveConnection.call (the socket, with its optimistic effect, D36) and Client.call. */
 export const calls = {
   createCustomer: runtime.mutation<runtime.NoParameters, CreateCustomer, Customer>({ name: 'createCustomer', method: 'POST', path: '/customers', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'customers' }, clientID: 7 }),
@@ -231,6 +258,9 @@ export const calls = {
   createApiKey: runtime.mutation<runtime.NoParameters, CreateApiKey, CreatedApiKey>({ name: 'createApiKey', method: 'POST', path: '/api-keys', pathParameters: [], body: true, content: true }),
   revokeApiKey: runtime.mutation<ItemParameters, undefined, void>({ name: 'revokeApiKey', method: 'DELETE', path: '/api-keys/{id}', pathParameters: ['id'], body: false, content: false, effect: { kind: 'removes', target: 'apiKeys' } }),
   sendMessage: runtime.mutation<runtime.NoParameters, SendMessage, Message>({ name: 'sendMessage', method: 'POST', path: '/conversation', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'conversation' }, clientID: 7 }),
+  markNotificationRead: runtime.mutation<ItemParameters, undefined, Notification>({ name: 'markNotificationRead', method: 'POST', path: '/notifications/{id}/read', pathParameters: ['id'], body: false, content: true, effect: { kind: 'upserts', target: 'notifications' } }),
+  createFeedback: runtime.mutation<runtime.NoParameters, CreateFeedback, FeedbackReceipt>({ name: 'createFeedback', method: 'POST', path: '/feedback', pathParameters: [], body: true, content: true }),
+  markAllNotificationsRead: runtime.mutation<runtime.NoParameters, undefined, NotificationCount>({ name: 'markAllNotificationsRead', method: 'POST', path: '/notifications/read', pathParameters: [], body: false, content: true }),
 } as const
 
 export type UploadContentType = 'application/pdf' | 'image/png' | 'image/jpeg' | 'text/plain' | 'text/csv'

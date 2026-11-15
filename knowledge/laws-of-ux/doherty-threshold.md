@@ -2,7 +2,7 @@
 name: Doherty Threshold
 category: heuristic
 summary: Answer within about 400 ms, or show at once that work is happening, so neither side waits
-applies: [SearchTable, Skeleton, Button, JobProgress, FileUpload, ConnectionBanner]
+applies: [SearchTable, Skeleton, Button, JobProgress, FileUpload, ConnectionBanner, UpdateHint]
 ---
 
 # Doherty Threshold

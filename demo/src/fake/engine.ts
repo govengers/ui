@@ -68,6 +68,7 @@ const resources: Record<ListTable, { defaultSort: readonly string[]; cursor: boo
   files: { defaultSort: ['-createdAt'], cursor: false },
   conversation: { defaultSort: ['createdAt'], cursor: false },
   apiKeys: { defaultSort: ['-createdAt'], cursor: false },
+  notifications: { defaultSort: ['-createdAt'], cursor: false },
 }
 
 const listTargets = new Set(Object.values(reads).filter((target) => target.list).map((target) => target.target))
@@ -127,6 +128,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     const [name = '', kind = ''] = (target ?? '').split('.')
     if (kind === '' && name === 'settings') return tables.settings[0]
     if (kind === '' && name === 'billing') throw new Refusal('forbidden')
+    if (kind === '' && name === 'notificationCount') return { unread: tables.notifications.filter((notification) => notification.readAt === null).length }
     if (kind === '' && name === 'customerFacets') return handlers.customerFacets(filterOf('customers', parameters))
     if (!isListTable(name)) throw new Refusal('not_found')
     const rows: readonly Row[] = tables[name]

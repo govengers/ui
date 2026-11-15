@@ -19,14 +19,12 @@ import Skeleton from '../../ui/Skeleton/Skeleton.vue'
 import Table, { type TableColumn } from '../../ui/Table/Table.vue'
 import JobProgress from '../../ui/blocks/JobProgress/JobProgress.vue'
 import StatusTile from '../../ui/blocks/StatusTile/StatusTile.vue'
-import WhatsNew from '../../ui/blocks/WhatsNew/WhatsNew.vue'
 import { formatAge, formatCurrency, formatDateTime } from '../../ui/format'
 import { messages } from './messages'
 
 const { t, locale } = useI18n({ useScope: 'global', messages })
 
 const firstName = 'Ada' // REPLACE: the signed-in user's first name, from the session (/auth/me)
-const version = '1.0.0' // REPLACE: the app's version, e.g. import.meta.env.VITE_APP_VERSION
 const hour = new Date().getHours()
 const greeting = hour < 12 ? t('home.dashboard.morning', { name: firstName })
   : hour < 18 ? t('home.dashboard.afternoon', { name: firstName })
@@ -122,13 +120,6 @@ const statusVariant: Record<OrderStatus, 'neutral' | 'accent' | 'success' | 'war
       </Card>
     </div>
 
-    <WhatsNew :version="version">
-      <h3>{{ t('home.dashboard.whatsNew.heading') }}</h3>
-      <ul>
-        <li>{{ t('home.dashboard.whatsNew.dashboard') }}</li>
-        <li>{{ t('home.dashboard.whatsNew.settings') }}</li>
-      </ul>
-    </WhatsNew>
   </Page>
 </template>
 

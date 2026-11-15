@@ -302,3 +302,49 @@ switchable style presets.
   every project (the verify stages screenshot with Playwright or the `run` skill).
   `scripts/template-check.ts` scaffolds the templates into a temporary target and runs vue-tsc,
   ui-lint and app-map there in CI (about 2 s), so a template cannot rot again.
+
+## Product pieces (16.11.2026)
+
+- **D62 Release notes come from the changelog files, shown once per user per minor line.** A
+  project keeps `changelog/<major>.<minor>.md` (`# M.m - Title`, `## M.m.p - YYYY-MM-DD` per
+  patch, groups `### Features | Fixes | Changes | Security`), parsed by the `ui/changelog.ts`
+  module, which refuses anything else with `file:line` (a hyphen, en or em dash all count, so a
+  file is never dropped over the dash). `parseChangelogs` collects errors instead of throwing,
+  so a typo fails the project's test, not the running app. The pure `decideWhatsNew` shows the
+  running minor line when the user last saw an older line and the line has a Features item; a
+  first visit stores the line silently, a patch never shows, a dev build never shows. WhatsNew
+  takes the parsed lines and `readSeen`/`writeSeen` callbacks (default localStorage, once per
+  browser; a user setting makes it once per user) instead of slotted notes and a stored version,
+  and belongs in the shell, so the Dashboard recipe no longer mounts it. The `Changelog` page
+  recipe renders every line. Bullets are plain text: no markdown renderer for a list of
+  one-liners.
+- **D63 UpdateHint compares versions and never reloads by itself.** The bundle's version against
+  the server's, from a value a live read pushes or a `check` function (a version endpoint or a
+  read) run every 15 minutes while visible, on tab focus and on socket reconnect (a deploy
+  restarts the server, so every client reconnects), at most once a minute (half the interval
+  when shorter), and a trigger inside that gap runs once at its end. Any known version
+  other than the bundle's counts, a rollback too; `dev` and friends never do. An info banner with
+  Reload; a dismissed hint returns only for yet another version. Reloading on its own would drop
+  what the user is typing; chunk-load failures stay the app's `vite:preloadError` handler.
+- **D64 NotificationInbox: one list, an optional count read, optimistic marks.** The popover
+  reads the newest `limit` rows through one `useLiveList` (no per-state lists, the runtime's
+  optimistic upsert reaches every list of a target); the true unread total is a separate object
+  read (`{ unread }`), else the bell counts the loaded rows and says `3+` when that is a lower
+  bound. Mark read is the runtime's optimistic upsert; mark all marks the ids of the rows it showed
+  (not a createdAt threshold: a row committed later may carry an older time), keeps them, takes
+  them back on error, and forgets them when the connection changes. Mark all is disabled only
+  when the count read or the complete list proves nothing is unread.
+- **D65 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
+  buffer (`installFeedbackBuffer`, 50 entries) wraps console error and warn, `fetch` (not-ok
+  answers and network failures) and the uncaught error events, and redacts on entry: secret keys
+  masked with their subtree at any depth (also inside text that is JSON, or JSON in JSON, which
+  is parsed and redacted as a value), `key=value` with an object value's whole subtree, header
+  lines to their end, bearer tokens, JWTs and URL user info scrubbed from text, a console line
+  per argument and then as the whole printed line; the page URL keeps no query or fragment
+  value, a failed request's URL keeps the values that name no secret except `code`, `key` and
+  `state` (filters and pages are what a bug report needs). `push` redacts too. The dialog freezes buffer, environment
+  and the optional screenshot (taken before the dialog shows) on open; `buildReport`
+  deep-freezes the body the preview prints and Send posts. Unticking details removes them from
+  both. Sent through `pair.client` (REST) because the socket is often what is broken. The
+  screenshot is a hook given 3 s, so the block carries no dependency and a hanging hook cannot
+  keep the dialog shut; D34's `html2canvas-pro` is the project's choice.

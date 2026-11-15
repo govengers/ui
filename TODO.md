@@ -8,3 +8,4 @@ Defects and ideas seen on the way, one line each with a date. Fixed items are re
 - 02.11.2026 messages: `ui.step` and `ui.stepOf` carry the same text; keep one.
 - 16.11.2026 LoginPage: `change` is required even when the app has no change-password route; make it optional and hide the state.
 - 16.11.2026 govengers/auth: `IdentityResponse` carries no impersonation end; ImpersonationBanner needs the app to add `impersonationEndsAt`.
+- 16.11.2026 ui-lint: UL-003 flags `font-family: var(--ui-font-mono)`; the rule should accept the font tokens.
