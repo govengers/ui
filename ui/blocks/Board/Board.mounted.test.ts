@@ -119,6 +119,30 @@ describe('Board keyboard path', () => {
   })
 })
 
+describe('Board pointer path', () => {
+  const press = (target: EventTarget, type: string, x: number): void =>
+    void target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, isPrimary: true, pointerId: 1, pointerType: 'touch', button: 0, clientX: x, clientY: 0 }))
+
+  test('a drag by the grip takes over the lift a tap on a grip began', async () => {
+    const { root } = await mountBoard()
+    const [first, second] = cardsIn(root, 'backlog') as [string, string]
+    // A tap is a click: it lifts by keyboard and leaves focus on the grip.
+    grip(root, first).click()
+    await settle(1)
+    expect(grip(root, first).getAttribute('aria-pressed')).toBe('true')
+    for (const id of [first, second]) {
+      press(grip(root, id), 'pointerdown', 0)
+      press(window, 'pointermove', 10)
+      await settle(1)
+      expect(document.querySelector('.ui-board__ghost')).not.toBeNull()
+      expect(grip(root, id).getAttribute('aria-pressed')).toBe('true')
+      press(window, 'pointercancel', 10)
+      await settle(1)
+      expect(root.querySelector('.ui-board')?.getAttribute('data-state')).toBeNull()
+    }
+  })
+})
+
 describe('Board menu path', () => {
   test('Move to <column> keeps focus on the moved card', async () => {
     const { root } = await mountBoard()
@@ -128,6 +152,22 @@ describe('Board menu path', () => {
     await settle()
     expect(cardsIn(root, 'review')).toContain(id)
     expect(document.activeElement).toBe(grip(root, id))
+  })
+
+  test('after the move settled, a push of another change never takes focus back', async () => {
+    const { root, engine } = await mountBoard()
+    const [id, other] = cardsIn(root, 'backlog') as [string, string]
+    const item = [...root.querySelectorAll(`[data-board-card="${id}"] [role="menu"] button`)].find((button) => button.textContent?.includes('Review')) as HTMLElement
+    item.click()
+    await settle()
+    expect(document.activeElement).toBe(grip(root, id))
+    // A click on blank page: focus goes to the body. Then another user renames a card, twice.
+    grip(root, id).blur()
+    for (const title of ['Renamed', 'Renamed again']) {
+      engine.store.update('tasks', other, { title })
+      await settle()
+      expect(document.activeElement).toBe(document.body)
+    }
   })
 })
 
@@ -149,5 +189,27 @@ describe('Board live state', () => {
     mounted.pair.value = mounted.pairFor('test:bob')
     await nextTick()
     expect(mounted.root.querySelectorAll('[data-board-card]').length).toBe(0)
+  })
+
+  test('an ended connection keeps no card on screen, before any new pair', async () => {
+    const mounted = await mountBoard()
+    expect(mounted.root.querySelectorAll('[data-board-card]').length).toBeGreaterThan(0)
+    mounted.pair.value.end()
+    await settle()
+    expect(mounted.root.querySelectorAll('[data-board-card]').length).toBe(0)
+  })
+
+  test('no announcement naming a card of the old identity stays after an account switch', async () => {
+    const mounted = await mountBoard()
+    const id = cardsIn(mounted.root, 'backlog')[0]!
+    grip(mounted.root, id).focus()
+    key(grip(mounted.root, id), ' ')
+    await settle(1)
+    expect(live_(mounted.root)).not.toBe('')
+    mounted.pair.value.end()
+    mounted.pair.value = mounted.pairFor('test:bob')
+    await settle()
+    expect(live_(mounted.root)).toBe('')
+    expect(mounted.root.querySelector('.ui-board')?.getAttribute('data-state')).toBeNull()
   })
 })

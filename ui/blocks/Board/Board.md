@@ -87,7 +87,8 @@ Every card menu item carries `data-action` = the move mutation's name; the menu 
 "Actions for <card>". Grips are buttons named "Move <card>" with the keyboard help as their
 description. Each card is `[data-board-card="<id>"]`, each column `[data-board-column="<key>"]`.
 Moves and their outcome are announced in an assertive live region. After a keyboard or menu move
-or a cancel, focus is back on the moved card's grip.
+or a cancel, focus is back on the moved card's grip until the move settled (its call answered);
+later pushes never move focus, and a press or focus elsewhere ends the restore at once.
 
 ## Gotchas
 
@@ -98,9 +99,12 @@ or a cancel, focus is back on the moved card's grip.
 - Auto-scroll runs only while the pointer moves near the board's left or right edge; scroll
   snapping is off while a card is lifted, or it would pull every step back.
 - A keyboard lift ends when focus leaves its grip (Tab, a click elsewhere), and when a push
-  removes the lifted card. While a card is lifted no other card lifts.
-- Cards stay on screen while a new `filter`, `sort` or `limit` loads, never across a new pair:
-  after a logout or an account switch the board shows skeletons until the new identity's cards.
+  removes the lifted card. While a card is lifted by keyboard no other card lifts by keyboard; a
+  pointer drag takes over a lift a click or short press on a grip began (touch drags only by the
+  grip, so a tap must not block them).
+- Cards stay on screen while a new `filter`, `sort` or `limit` loads, never across the end of the
+  connection or a new pair: after a logout, an ended session (4401) or an account switch the board
+  shows no card of the old identity, no lift and no announcement naming one.
 - Two boards on one page over the same read and pair show each other's optimistic card until the
   push; give a second board a pair of its own.
 - `columnField` values must be the column `key`s; a card whose value has no column is invisible.
