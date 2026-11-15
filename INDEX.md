@@ -7,7 +7,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 |------|-------|
 | primitive | 26 |
 | layout | 5 |
-| block | 17 |
+| block | 18 |
 | page | 5 |
 | pattern | 7 |
 
@@ -61,6 +61,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md) | connection banner, connection lost, offline notice, reconnecting notice, socket status, live status banner | Banner, Button | yes | doherty-threshold, selective-attention | ready | The shell's connection notice (D34) over `useLiveStatus()`: a warning banner while the socket reconnects, a danger banner with Retry once the connection ended, and nothing while it is open, connecting for the first time or idle. Put it in `AppShell`'s banner slot. |
 | [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md) | detail drawer, record drawer, detail panel, side panel for a row, previous next record, row detail, quick view | Sheet, Button, Icon | yes | cognitive-load, flow, goal-gradient-effect, working-memory | ready | One record in a `Sheet`, with previous and next through the rows on screen (PDB's AgentDetailDrawer, D34): the header shows the title, "3 of 25" and two arrow buttons, also bound to ArrowLeft and ArrowRight. Given an item read as `target` it subscribes to the open record while open; otherwise the page passes the record as `item`. |
 | [DetailForm](ui/blocks/DetailForm/DetailForm.md) | detail form, edit form, edit record, record form, form card, save and cancel, unsaved changes, live edit form | Card, ActionBar, Banner, Button, Icon, Skeleton, LiveForm | no | flow, law-of-proximity, parkinsons-law, peak-end-rule, serial-position-effect, zeigarnik-effect | ready | The card of an edit form over a `useLiveForm` result. While the record loads it shows a skeleton, and a failed read shows a Banner with Retry. The page's Fields go in the default slot, a save failure no field explains shows under them, and the ActionBar with Cancel and Save follows. Enter submits through a real `<form>`. |
+| [DevLogin](ui/blocks/DevLogin/DevLogin.md) | dev login, development login, one click login, log in as user, switch test user, local login, seed users | Avatar, Badge, Banner, Button, Card, Skeleton, session | no | fittss-law, doherty-threshold | ready | The development users of govengers/auth's dev login provider (`GET /auth/dev/users`), one click each signs in (`POST /auth/dev/login`) (D58). A hint line says it is for development. It renders nothing when the server lists no users (no dev login: the session module answers `[]` for the 404). Put it under `LoginForm` on the login page, behind the production guard below. |
 | [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md) | facet filter, filter, filters, filter chips, filter bar, add filter, faceted search, live counts, filter panel, checkbox filter, FacetPanel, url filter | Popover, Button, Icon, Badge, Input, Checkbox, Field | yes | choice-overload, hicks-law, law-of-common-region, teslers-law, working-memory, zeigarnik-effect | ready | The list filter (D31): a "Filters" button with a count opens a cascade, the facets on the left, the values of the active facet on the right with a live count each. Every facet with ticked values becomes one chip ("Status is active, on hold, or 2 more"); the chip's operator switches between "is" and "is not", its values reopen the cascade inside that facet, its cross drops the facet. "Add filter" and Clear end the bar. `FacetPanel.vue` in the same directory shows the short facets as checkbox lists. OR inside a facet, AND across facets. |
 | [FileUpload](ui/blocks/FileUpload/FileUpload.md) | file upload, upload files, dropzone, drag and drop upload, attachments, upload progress, document upload, image upload | Badge, Button, Icon, format | yes | doherty-threshold, goal-gradient-effect, paradox-of-the-active-user | ready | A dropzone and the list of files being uploaded and uploaded. The dropzone is a `<label>` around the native file input, so a click, Enter and a drop all work. Each file shows its name, size, a progress bar, a status Badge and a remove button. Size and count limits are said inline. Uploads go through the pair's `Client.upload`. |
 | [JobProgress](ui/blocks/JobProgress/JobProgress.md) | job progress, background job, long running task, export progress, import status, progress bar, async result | Badge, Banner, Button, Skeleton, format | yes | doherty-threshold, goal-gradient-effect, peak-end-rule, teslers-law, zeigarnik-effect | ready | One background job (D29): what it does, its status badge, a progress bar while it runs, why it failed, and an "Open result" button once it succeeded with a result route. Follows the job live by id, or shows a job the page already reads; a compact `inline` variant fits a list row. |
@@ -197,7 +198,8 @@ Every intent keyword and the pieces that answer it.
 - **detail form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **detail page**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **detail panel**: [Sheet](ui/Sheet/Sheet.md), [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
-- **dev login**: [session](ui/session.md)
+- **dev login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md), [session](ui/session.md)
+- **development login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **dirty form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **do it for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
@@ -306,7 +308,9 @@ Every intent keyword and the pieces that answer it.
 - **loading placeholder**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **loading rows**: [Table](ui/Table/Table.md)
 - **loading state**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **local login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **log in**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
+- **log in as user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **logged out**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **login form**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
@@ -344,6 +348,7 @@ Every intent keyword and the pieces that answer it.
 - **onboarding flow**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **onboarding notice**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
 - **onboarding tour**: [Spotlight](ui/Spotlight/Spotlight.md)
+- **one click login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **one-time code**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **online status**: [Avatar](ui/Avatar/Avatar.md)
 - **opt in**: [Checkbox](ui/Checkbox/Checkbox.md)
@@ -416,6 +421,7 @@ Every intent keyword and the pieces that answer it.
 - **search table**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **searchable list**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **section container**: [Card](ui/Card/Card.md)
+- **seed users**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **segmented navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **select**: [Select](ui/Select/Select.md)
 - **select all**: [Checkbox](ui/Checkbox/Checkbox.md)
@@ -463,6 +469,7 @@ Every intent keyword and the pieces that answer it.
 - **subscription**: [Showing live data](patterns/showing-live-data.md)
 - **surface**: [Card](ui/Card/Card.md)
 - **switch**: [Switch](ui/Switch/Switch.md)
+- **switch test user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **symbol**: [Icon](ui/Icon/Icon.md)
 - **tab list**: [Tabs](ui/Tabs/Tabs.md)
 - **table**: [Table](ui/Table/Table.md)
