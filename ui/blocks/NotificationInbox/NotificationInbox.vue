@@ -2,8 +2,8 @@
 // NotificationInbox (D58): the bell with the unread count and a popover with the newest
 // notifications, live. Opening one marks it read and follows its route; each unread row has its
 // own mark-read button, the header marks all read. One list subscription plus an optional count
-// read; mark read shows at once (optimistic upsert), mark all at once until the server answers.
-import { computed, ref } from 'vue'
+// read; mark read shows at once (optimistic upsert), mark all at once for the rows shown.
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import type { ListResponse, LiveTarget, MutationTarget, NoParameters } from '@/api/runtime'
@@ -15,7 +15,7 @@ import Icon from '../../Icon/Icon.vue'
 import Popover from '../../Popover/Popover.vue'
 import Skeleton from '../../Skeleton/Skeleton.vue'
 import { formatAge } from '../../format'
-import { isUnread, newest, unreadCount, type ListQuery, type NotificationLike } from './inbox'
+import { isUnread, unreadCount, useMarkAll, type ListQuery, type NotificationLike } from './inbox'
 
 const props = withDefaults(defineProps<{
   /** The user's notifications, newest first by the read's default sort, e.g. live.notifications. */
@@ -35,40 +35,36 @@ const { t, locale } = useI18n()
 const connection = useLiveConnection()
 const list = useLiveList(props.target, { limit: props.limit })
 const counted = props.count ? useLive(props.count) : undefined
-const allReadUpTo = ref<string>()
-const markingAll = ref(false)
+const markAll = useMarkAll(connection, (current) => current.call(props.markAllRead, {}, undefined))
 const failure = ref<string>()
+watch(connection, () => { failure.value = undefined })
 
 const items = computed(() => list.items.value)
 const count = computed(() => unreadCount(items.value, {
   server: counted?.data.value?.unread,
   total: list.total.value,
-  allReadUpTo: allReadUpTo.value,
-  markingAll: markingAll.value,
+  covered: markAll.covered.value,
+  markingAll: markAll.marking.value,
 }))
-const unread = (item: NotificationLike): boolean => isUnread(item, allReadUpTo.value)
+const unread = (item: NotificationLike): boolean => isUnread(item, markAll.covered.value)
 
 async function read(item: NotificationLike): Promise<void> {
   if (!unread(item)) return
+  const mine = connection.value
   failure.value = undefined
   try {
-    await connection.value.call(props.markRead, { id: item.id }, undefined, { optimistic: { ...item, readAt: new Date().toISOString() } })
+    await mine.call(props.markRead, { id: item.id }, undefined, { optimistic: { ...item, readAt: new Date().toISOString() } })
   } catch (error) {
-    failure.value = (error as Error).message
+    if (connection.value === mine) failure.value = (error as Error).message
   }
 }
 
 async function readAll(): Promise<void> {
   failure.value = undefined
-  markingAll.value = true
-  allReadUpTo.value = newest(items.value)
   try {
-    await connection.value.call(props.markAllRead, {}, undefined)
+    await markAll.run(items.value) // rethrows only for the current connection
   } catch (error) {
-    allReadUpTo.value = undefined
     failure.value = (error as Error).message
-  } finally {
-    markingAll.value = false
   }
 }
 
@@ -100,7 +96,7 @@ function follow(item: NotificationLike, close: () => void): void {
       <div class="ui-notification-inbox__panel">
         <header class="ui-notification-inbox__head">
           <h2 class="ui-notification-inbox__heading">{{ t('ui.notifications') }}</h2>
-          <Button variant="ghost" size="sm" :disabled="count.n === 0" :loading="markingAll" :data-action="markAllRead.name" @click="readAll">
+          <Button variant="ghost" size="sm" :disabled="count.n === 0 && count.exact" :loading="markAll.marking.value" :data-action="markAllRead.name" @click="readAll">
             {{ t('ui.markAllRead') }}
           </Button>
         </header>

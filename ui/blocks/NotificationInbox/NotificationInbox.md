@@ -44,8 +44,9 @@ Do not load:
 | `to` | `RouteLocationRaw \| undefined` | none | the full notifications page, "All notifications" |
 
 `NotificationLike` (`inbox.ts`): `{ id, title, body?, route?, createdAt, readAt: string | null }`.
-`inbox.ts` also exports `isUnread`, `newest` and `unreadCount` (the bell's number and label:
-`99+` above the cap, `3+` when the loaded page is all unread and the list has more).
+`inbox.ts` also exports `isUnread`, `unreadCount` (the bell's number and label: `99+` above the
+cap, `3+` when the loaded page is all unread and the list has more; `exact` when the number is the
+whole truth) and `useMarkAll` (the mark-all state of one connection).
 
 ## Exposes
 
@@ -68,8 +69,11 @@ calls.markAllNotificationsRead  // POST /notifications/read
 ```
 
 Mark read is optimistic through the runtime (the row turns read at once, an error takes it back).
-Mark all shows every loaded row up to the newest one read until the server answers; rows that
-arrive meanwhile stay unread; an error takes it back and shows the message.
+Mark all shows the rows it was pressed on read at once and keeps them so; rows that arrive later
+stay unread whatever their createdAt; an error takes it back and shows the message. Another
+connection (another identity) forgets it, and the answer of a call made before changes nothing.
+Mark all is disabled only when nothing can be unread: the count read says 0, or the whole list is
+loaded and none is unread.
 
 ## Agent
 

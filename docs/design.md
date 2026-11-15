@@ -329,9 +329,10 @@ switchable style presets.
   reads the newest `limit` rows through one `useLiveList` (no per-state lists, the runtime's
   optimistic upsert reaches every list of a target); the true unread total is a separate object
   read (`{ unread }`), else the bell counts the loaded rows and says `3+` when that is a lower
-  bound. Mark read is the runtime's optimistic upsert; mark all marks every loaded row up to the
-  newest createdAt it showed (the server's clock, not the browser's) until the call answers, and
-  takes it back on error.
+  bound. Mark read is the runtime's optimistic upsert; mark all marks the ids of the rows it showed
+  (not a createdAt threshold: a row committed later may carry an older time), keeps them, takes
+  them back on error, and forgets them when the connection changes. Mark all is disabled only
+  when the count read or the complete list proves nothing is unread.
 - **D59 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
   buffer (`installFeedbackBuffer`, 50 entries) wraps console error and warn, `fetch` (not-ok
   answers and network failures) and the uncaught error events, and redacts on entry: secret keys
