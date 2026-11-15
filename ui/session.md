@@ -58,7 +58,7 @@ the login page), `fetch` and `navigate` (tests). A redirect provider's `name` is
 |--------|-------|-------|
 | `pair`, `identity` | | shallow refs; `livePlugin(session.pair)`; `identity` is `null` for nobody |
 | `resume()` | `GET /auth/me` | call before mounting, and on the route an OIDC or GitHub login returns to |
-| `check()` | `GET /auth/me` | a new pair only when the identity changed; runs on tab focus and every minute while impersonating |
+| `check()` | `GET /auth/me` | takes the fresh identity (roles, name); a new pair only when the key changed; runs on tab or window focus and every minute while impersonating |
 | `login({ identifier, password })` | `POST /auth/password/login` | `{ challenge: 'totp' }` (a code is owed) or `{ challenge: 'totp_setup' }` (enrol first), else `{}` |
 | `login({ ..., code, backupCode })` | `POST /auth/password/totp/verify` | the second step |
 | `logout()` | redirect provider: `GET <prefix>/logout`; dev login: `POST /auth/dev/logout`; else `POST /auth/password/logout` | by the provider of whoever made the session (the impersonator while impersonating); the password route ends any session but needs the password provider mounted |
@@ -84,5 +84,5 @@ error even when the read after it fails too.
 - govengers/auth's `/auth/me` does not answer the impersonation end; an app that wants the
   countdown adds `impersonationEndsAt` to its own `/auth/me` handler. Without it the banner has
   no countdown, and the minute poll notices the end.
-- A redirect logout navigates away; the promise resolves before the page unloads.
+- A redirect logout navigates away; the promise resolves before the page unloads, and the session serves nobody after it (no retry or check brings the identity back).
 - Never store a token: the cookie is the session.

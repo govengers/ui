@@ -253,8 +253,8 @@ switchable style presets.
   login posts `/auth/dev/logout`, any other `POST /auth/password/logout`, which ends whatever
   session the request has. govengers/auth also changes the identity without a 401 or 4401 (an
   impersonation past `MaximumDuration` ends in place; another tab signs in or out), so
-  `check()` re-reads `/auth/me` on tab focus and every minute while impersonating and builds a
-  new pair only when the key changed. The anonymous pair's unauthorized callback is ignored.
+  `check()` re-reads `/auth/me` on tab or window focus and every minute while impersonating,
+  takes the fresh identity (roles, name) and builds a new pair only when the key changed. The anonymous pair's unauthorized callback is ignored.
   An unreadable `/auth/me` leaves the pair ended and retries with backoff (1 s to 30 s); a
   refused change keeps its own error. `login` answers auth's challenge name
   (`{ challenge?: 'totp' | 'totp_setup' }`) so a further challenge is a new value, not a
@@ -285,7 +285,8 @@ switchable style presets.
   declares; the block takes the descriptors (D5). The create mutation answers the row plus the
   secret and must not declare an `upserts` effect, or the runtime would put the secret into
   every live list until the next push. The secret lives only in the dialog's state and is
-  forgotten on close and on a new connection (another identity); a create answering after
+  forgotten on close, on a new connection (another identity) and when the connection ends; a
+  create answering after
   either is dropped. A key must
   not manage keys; the card says to mount the operations behind a session-only check.
 - **D61 The starter is checked by script.** `templates/project` gains `router.ts` (lazy
