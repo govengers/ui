@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // ApiKeyCreate: the ApiKeyManager's create dialog. Name, scopes and expiry, then the secret the
-// create call answered, shown once with a copy button; closing forgets it (D60).
-import { reactive, ref, useId } from 'vue'
+// create call answered, shown once with a copy button; closing or another identity forgets it,
+// also when the create answers later (D60).
+import { reactive, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError, type MutationTarget, type NoParameters } from '@/api/runtime'
 import { useLiveConnection } from '@/api/vue'
@@ -13,7 +14,7 @@ import Field from '../../Field/Field.vue'
 import Icon from '../../Icon/Icon.vue'
 import Input from '../../Input/Input.vue'
 import Select from '../../Select/Select.vue'
-import { expiresAtFor, type ApiKeyScope } from './apiKeys'
+import { attempts, expiresAtFor, type ApiKeyScope } from './apiKeys'
 
 const props = defineProps<{
   create: MutationTarget<NoParameters, { name: string; scopes: string[]; expiresAt: string | null }, { secret: string }>
@@ -33,20 +34,23 @@ const failure = ref<string>()
 const saving = ref(false)
 const secret = ref<string>()
 const copied = ref(false)
+const tries = attempts()
 const expiryOptions = props.expiryDays.map((days) => ({ value: days, label: days === 0 ? t('ui.never') : t('ui.inDays', { n: days }) }))
 
 async function submit(): Promise<void> {
   errors.value = {}
   failure.value = undefined
   saving.value = true
+  const current = tries.begin()
   try {
     const created = await connection.value.call(props.create, {}, { name: form.name.trim(), scopes: [...form.scopes], expiresAt: expiresAtFor(form.days, Date.now()) })
-    secret.value = created.secret
+    if (current()) secret.value = created.secret
   } catch (error) {
+    if (!current()) return
     if (error instanceof ApiError && Object.keys(error.fields).length > 0) errors.value = { ...error.fields }
     else failure.value = error instanceof Error ? error.message : String(error)
   } finally {
-    saving.value = false
+    if (current()) saving.value = false
   }
 }
 
@@ -60,14 +64,22 @@ async function copy(): Promise<void> {
   }
 }
 
-/** Closing forgets the secret and the form, so reopening starts clean. */
+/** Closing forgets the secret, the form and a create still running, so reopening starts clean. */
 function closed(): void {
+  tries.forget()
+  saving.value = false
   secret.value = undefined
   copied.value = false
   Object.assign(form, { name: '', scopes: [], days: props.expiryDays[0] ?? 0 })
   errors.value = {}
   failure.value = undefined
 }
+
+// Another identity (logout, switch, impersonation): its pair is a new connection; the old secret must not stay.
+watch(connection, () => {
+  closed()
+  open.value = false
+})
 </script>
 
 <template>

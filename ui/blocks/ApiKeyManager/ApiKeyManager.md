@@ -72,7 +72,9 @@ drive mode pauses on both (D52); an agent never creates its own credentials.
 ## Gotchas
 
 - The secret lives only in the dialog's state; closing it (Done, Escape is off while it shows)
-  forgets it. Nothing writes it to storage.
+  forgets it, and so does a new connection (another identity: logout, user switch,
+  impersonation), which also closes both dialogs. A create that answers after either is dropped
+  (`attempts`). Nothing writes it to storage.
 - Copy uses `navigator.clipboard` (secure contexts only); without it the read-only field stays
   selectable by hand.
 - Expiry is computed on the client from the chosen days (`expiresAtFor`); the server validates

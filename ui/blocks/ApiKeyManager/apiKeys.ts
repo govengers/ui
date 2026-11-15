@@ -41,3 +41,18 @@ export function expiresAtFor(days: number, now: number): string | null {
 export function newestFirst<Key extends Pick<ApiKeyRow, 'createdAt'>>(keys: readonly Key[]): Key[] {
   return [...keys].sort((left, right) => right.createdAt.localeCompare(left.createdAt))
 }
+
+/**
+ * Counts the create dialog's attempts: `begin` marks one, `forget` (close, another identity)
+ * makes every earlier one stale, so a create answering late cannot bring a forgotten secret back.
+ */
+export function attempts(): { begin(): () => boolean; forget(): void } {
+  let current = 0
+  return {
+    begin: () => {
+      const mine = current
+      return () => mine === current
+    },
+    forget: () => { current += 1 },
+  }
+}

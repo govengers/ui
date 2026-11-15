@@ -2,7 +2,7 @@
 // ApiKeyManager: the user's API keys over livewire (D60). A live list (name, prefix, scopes,
 // created, last used, expiry), "New API key" (ApiKeyCreate: the secret shown once) and revoke
 // behind a danger confirmation. The block holds no rows of its own: pushes re-render it.
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ListResponse, LiveTarget, MutationTarget, NoParameters } from '@/api/runtime'
 import { useLiveConnection, useLiveList } from '@/api/vue'
@@ -54,6 +54,12 @@ function askRevoke(row: ApiKeyRow): void {
   revokeError.value = undefined
   revokeOpen.value = true
 }
+
+// Another identity: a revoke asked for under the old one must not run under the new one.
+watch(connection, () => {
+  revokeOpen.value = false
+  revoking.value = undefined
+})
 
 async function confirmRevoke(): Promise<void> {
   if (revoking.value === undefined) return

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { expiresAtFor, keyState, newestFirst } from './apiKeys'
+import { attempts, expiresAtFor, keyState, newestFirst } from './apiKeys'
 
 const now = Date.parse('2026-11-16T12:00:00Z')
 const inDays = (days: number): string => new Date(now + days * 86_400_000).toISOString()
@@ -25,5 +25,14 @@ describe('apiKeys', () => {
     const keys = [{ createdAt: '2026-01-01T00:00:00Z' }, { createdAt: '2026-03-01T00:00:00Z' }]
     expect(newestFirst(keys).map((key) => key.createdAt)).toEqual(['2026-03-01T00:00:00Z', '2026-01-01T00:00:00Z'])
     expect(keys[0]?.createdAt).toBe('2026-01-01T00:00:00Z')
+  })
+
+  test('attempts: a create answering after forget is stale', () => {
+    const tries = attempts()
+    const early = tries.begin()
+    expect(early()).toBe(true)
+    tries.forget() // the dialog closed or the identity changed while the create ran
+    expect(early()).toBe(false)
+    expect(tries.begin()()).toBe(true)
   })
 })
