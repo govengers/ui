@@ -84,9 +84,21 @@ export function defaultStorage(): Storage | undefined {
   }
 }
 
-/** The storage key of one identity's recent picks: a pick never shows to the next account on the browser. */
+/**
+ * The storage key of one identity's recent picks: a pick never shows to the next account on the
+ * browser. None without a prefix or an identity: an anonymous pair would share them with everyone.
+ */
 export function recentKey(prefix: string, identity: string): string {
-  return prefix === '' ? '' : `${prefix}:${identity}`
+  return prefix === '' || identity === '' ? '' : `${prefix}:${identity}`
+}
+
+/** Removes one identity's recent picks; a refusing storage keeps them. */
+export function removeRecent(storage: Pick<Storage, 'removeItem'> | undefined, key: string): void {
+  try {
+    storage?.removeItem(key)
+  } catch {
+    // ponytail: a storage that refuses the removal keeps the picks
+  }
 }
 
 /** Stores the recent picks; a full or refusing storage keeps them for this page only. */

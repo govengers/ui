@@ -4,11 +4,11 @@
 // answer wins) and filters the actions. One keydown handler on the dialog runs the keyboard.
 import { computed, onMounted, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useLiveConnection, useLivePair } from '@/api/vue'
+import { useLiveConnection, useLivePair, useLiveStatus } from '@/api/vue'
 import Icon from '../../Icon/Icon.vue'
 import type { IconName } from '../../Icon/icons'
 import { boundActions, type BoundAction } from '../../agent/registry'
-import { addRecent, defaultStorage, humanize, matchActions, moveActive, readRecent, recentKey, writeRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
+import { addRecent, defaultStorage, humanize, matchActions, moveActive, readRecent, recentKey, removeRecent, writeRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
 
 const props = withDefaults(defineProps<{
   groups: PaletteGroup[]
@@ -44,14 +44,24 @@ const { t } = useI18n()
 const uid = useId()
 const connection = useLiveConnection()
 const pair = useLivePair()
+const status = useLiveStatus()
 const dialog = ref<HTMLDialogElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 const text = ref('')
-const active = ref(-1)
+/** The active option's id, kept by id so an answer arriving above it does not move it under the user. */
+const activeId = ref<string>()
 const storage = defaultStorage()
-const storageKey = computed(() => recentKey(props.storageKey ?? '', pair.value.identity))
+// An ended connection (logout, 4401) has no identity to show picks of.
+const storageKey = computed(() => (status.value === 'ended' ? '' : recentKey(props.storageKey ?? '', pair.value.identity)))
 const recent = ref<RecentPick[]>([])
 watch(storageKey, (key) => (recent.value = key ? readRecent(storage, key) : []), { immediate: true })
+// The runtime removes an ended identity's snapshots (D66); its recent picks go with them. Each
+// pair is followed until the palette unmounts, also after a newer pair replaced it.
+const stops: Array<() => void> = []
+watch(pair, (current) => {
+  const key = recentKey(props.storageKey ?? '', current.identity)
+  if (key) stops.push(current.connection.onStatus((changed) => changed === 'ended' && removeRecent(storage, key)))
+}, { immediate: true })
 const found = shallowRef<Record<string, { state: Section['state']; results: PaletteResult[] }>>({})
 
 // Searches: 150 ms after the last key, every group at once; a newer text aborts the older reads.
@@ -60,7 +70,7 @@ let controller: AbortController | undefined
 watch(text, (value) => {
   clearTimeout(debounce)
   controller?.abort()
-  active.value = value.trim() === '' ? -1 : 0
+  activeId.value = undefined
   if (value.trim() === '') {
     found.value = {}
     return
@@ -69,8 +79,11 @@ watch(text, (value) => {
   debounce = setTimeout(() => search(value.trim()), 150)
 })
 
-// A new pair (logout, account switch): nothing found for the old identity stays.
-watch(connection, () => {
+// The end of the connection or a new pair (logout, 4401, account switch): nothing typed or
+// found for the old identity stays, and no search of it answers.
+watch([connection, () => status.value === 'ended'], () => {
+  clearTimeout(debounce)
+  controller?.abort()
   text.value = ''
   found.value = {}
 })
@@ -132,11 +145,14 @@ const sections = computed<Section[]>(() => {
 const options = computed(() => sections.value.flatMap((section) => section.options))
 const optionId = (index: number): string => `${uid}-option-${index}`
 const indexOf = (option: Option): number => options.value.indexOf(option)
-const nothing = computed(() => text.value.trim() !== '' && options.value.length === 0 && sections.value.every((section) => section.state !== 'loading'))
-// Typing makes the first option active, also when the options arrive after the text (a paste).
-watch(() => options.value.length, (count) => {
-  if (active.value >= count) active.value = count - 1
-  else if (active.value < 0 && count > 0 && text.value.trim() !== '') active.value = 0
+const active = computed(() => options.value.findIndex((option) => option.id === activeId.value))
+const searching = computed(() => sections.value.some((section) => section.state === 'loading'))
+const nothing = computed(() => text.value.trim() !== '' && options.value.length === 0 && !searching.value)
+// Typing (or a paste) makes the first option active once every group answered: before, the top
+// is an action the results would push down, and Enter would run it instead of opening a result.
+watch([options, searching], () => {
+  if (text.value.trim() === '' || active.value >= 0) return
+  activeId.value = searching.value ? undefined : options.value[0]?.id
 })
 
 // One handler on the dialog: arrows, Home, End and Enter; Escape is the dialog's own cancel.
@@ -152,7 +168,7 @@ function onKeydown(event: KeyboardEvent): void {
   if (next === undefined || ((event.key === 'Home' || event.key === 'End') && text.value !== '')) return
   event.preventDefault()
   event.stopPropagation()
-  active.value = next
+  activeId.value = options.value[next]?.id
   document.getElementById(optionId(next))?.scrollIntoView({ block: 'nearest' })
 }
 
@@ -166,7 +182,7 @@ function sync(value: boolean): void {
   if (props.inline) return
   if (value && element && !element.open) {
     text.value = ''
-    active.value = -1
+    activeId.value = undefined
     element.showModal()
     input.value?.focus()
   } else if (!value && element?.open) {
@@ -184,6 +200,7 @@ function onGlobalKey(event: KeyboardEvent): void {
 }
 window.addEventListener('keydown', onGlobalKey)
 onScopeDispose(() => {
+  for (const stop of stops) stop()
   window.removeEventListener('keydown', onGlobalKey)
   clearTimeout(debounce)
   controller?.abort()
@@ -246,7 +263,7 @@ function onBackdropClick(event: MouseEvent): void {
           class="ui-command-palette__option"
           :aria-selected="indexOf(option) === active"
           :data-action="option.action"
-          @pointermove="active = indexOf(option)"
+          @pointermove="activeId = option.id"
           @mousedown.prevent
           @click="option.run()"
         >

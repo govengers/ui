@@ -38,7 +38,7 @@ Do not load:
 | `groups` | `PaletteGroup[]` | required | built with `searchGroup` (below); shown in this order; while a text is typed above the actions |
 | `v-model:open` | `boolean` | `false` | the hotkey and Escape drive it too |
 | `hotkey` | `string` | `'k'` | Cmd or Ctrl plus this key toggles the palette; `''` for none |
-| `storageKey` | `string` | `'ui.palette.recent'` | localStorage key prefix of the last 6 picks; the pair's identity is appended (`ui.palette.recent:<identity>`), so a pick never shows to the next account on the browser; `''` keeps none |
+| `storageKey` | `string` | `'ui.palette.recent'` | localStorage key prefix of the last 6 picks; the pair's identity is appended (`ui.palette.recent:<identity>`), so a pick never shows to the next account on the browser; removed when the identity's connection ends; `''` keeps none |
 | `placeholder` | `string \| undefined` | `ui.paletteSearch` | |
 | `inline` | `boolean` | `false` | open in the page flow without `showModal()`; docs and previews only |
 
@@ -71,10 +71,16 @@ results are `role="option"` with their label as text.
 ## Gotchas
 
 - Nothing is active on an empty query (Enter does nothing until an arrow key); typing or pasting
-  makes the first option active, and the results come before the actions, so Enter opens the top
-  hit. A text no result matches leaves the matching actions first.
-- A new pair (logout, account switch) clears the text and the results and loads that identity's
-  recent picks. A storage that is blocked or full keeps the picks for the page only.
+  makes the first option active once every group answered, and the results come before the
+  actions, so Enter opens the top hit. Enter while a group still searches does nothing (unless an
+  arrow key chose an option): the top would be an action the results push down. The active option
+  is kept by id, so an answer never moves the highlight. A text no result matches leaves the
+  matching actions first.
+- The end of the connection (logout, 4401) or a new pair (account switch) clears the text and the
+  results and aborts the searches; the end also removes that identity's recent picks from storage
+  (as the runtime removes its snapshots, D66), a new pair loads its own. A pair without an
+  identity keeps none. The palette removes them only while it is mounted: mount it in the shell. A
+  storage that is blocked or full keeps the picks for the page only.
 - One keydown handler on the dialog; it stops the keys it handles, so page hotkeys do not fire
   under it. Composition (IME) keys are ignored.
 - Home and End move the active option only while the input is empty; otherwise they move the

@@ -35,6 +35,7 @@ describe('recent picks', () => {
     expect(() => writeRecent({ setItem: () => { throw new Error('QuotaExceededError') } }, 'k', [])).not.toThrow()
     expect(recentKey('ui.palette.recent', 'user:1')).toBe('ui.palette.recent:user:1')
     expect(recentKey('', 'user:1')).toBe('')
+    expect(recentKey('ui.palette.recent', '')).toBe('')
   })
 })
 
