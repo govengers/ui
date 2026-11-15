@@ -7,7 +7,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 |------|-------|
 | primitive | 26 |
 | layout | 5 |
-| block | 16 |
+| block | 17 |
 | page | 5 |
 | pattern | 7 |
 
@@ -68,6 +68,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [LoginForm](ui/blocks/LoginForm/LoginForm.md) | login form, sign in, log in, password login, two-factor, 2fa code, one-time code, remember me, sso button | Card, Banner, Button, Checkbox, Field, Input | no | parkinsons-law | ready | Email, password and "Remember me" in a Card. The page passes `login`, and the message of the error it throws shows in a danger Banner. When `login` answers `{ twoFactor: true }`, a second step asks for a 6-digit code and calls `login` again with it. Centre it with the `LoginPage` recipe. |
 | [RangePicker](ui/blocks/RangePicker/RangePicker.md) | time range, date range, range picker, time filter, last 7 days, quick ranges, from to, grafana time picker, created between | Popover, Button, Icon, Field, Input | no | choice-overload, hicks-law, jakobs-law, parkinsons-law | ready | A Grafana-style time range: a button showing the range ("Any time", "Last 7 days", "Today", "02.11.26, 10:00 - 02.11.26, 12:00") opens quick ranges (any time; last 5 minutes to last 90 days; today, yesterday, this week, this month) and an absolute form with two native date-time inputs. The value is livewire time values, so a page ANDs `rangeToConditions(field, range)` straight into its filter. |
 | [SearchTable](ui/blocks/SearchTable/SearchTable.md) | search table, live list, live table, list page, searchable list, filtered list, paginated list, cursor pagination list, list with bulk actions, list with row menu, list toolbar | Table, Pagination, Input, Button, Icon, Menu, Banner, EmptyState | yes | cognitive-load, doherty-threshold, flow, parkinsons-law, postels-law, selective-attention | ready | The live list of the `ListPage` recipe (D32) over one livewire list read: a debounced search box, a toolbar and a chip row for the page's filter kit, the `Table` with sort, selection, a bulk bar and a row menu, and the pager in offset or cursor mode. Loading, refused, empty and stale states are built in. The facet filter is a sibling block: the page passes its document in as `filter`. |
+| [session](ui/session.md) | session, login, logout, current user, who am i, sign out, identity change, livewire pair, impersonate, dev login, redirect after login |  | yes | teslers-law | ready | `createSession(options)` is the one place an application changes who it acts as, against govengers/auth as it is (D56): password login with the TOTP step, logout, development login, impersonation start and stop, and the livewire pair that follows the identity. Every change ends the pair before the request that changes the cookie and builds the next pair from what `GET /auth/me` answers afterwards, whatever the change did (livewire D66). Changes run one after the other. A single file, `ui/session.ts`, with `safeRedirect` for the return path. |
 | [StatusTile](ui/blocks/StatusTile/StatusTile.md) | status tile, dashboard tile, kpi, metric, stat card, number card, lamp, delta, trend | Card, Icon, Skeleton, format | no | selective-attention | ready | One number on a dashboard (D34): a label, the value with its unit, the change against the period before (arrow and tone), a lamp for its state, and room for a sentence or a sparkline. With `to` the whole tile is a link card. It reads nothing itself: the page passes values, live or static. |
 | [Stepper](ui/blocks/Stepper/Stepper.md) | stepper, wizard, multi-step form, steps, onboarding flow, checkout steps, save then watch | ActionBar, Button, Icon | no | chunking, goal-gradient-effect, law-of-uniform-connectedness, zeigarnik-effect | ready | A multi-step form frame: the step list (numbers, a check on done steps, the current one highlighted; a compact vertical list in a narrow container), the current step's content, and a Back / Continue / Finish bar. The page owns the current step and decides when it may be left. |
 | [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md) | whats new, release notes, changelog dialog, announcement, new version, onboarding notice | Button, Dialog | no | jakobs-law, paradox-of-the-active-user | ready | The release notes dialog, shown once per version: it opens on mount while the version stored in `localStorage` differs, and stores the version when it closes, however it closes (Got it, X, Escape, backdrop). |
@@ -173,6 +174,7 @@ Every intent keyword and the pieces that answer it.
 - **create form**: [Building a form](patterns/building-a-form.md)
 - **created between**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
 - **currency**: [format](ui/format.md)
+- **current user**: [session](ui/session.md)
 - **cursor pagination**: [Pagination](ui/Pagination/Pagination.md)
 - **cursor pagination list**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **custom dropdown**: [Popover](ui/Popover/Popover.md)
@@ -194,6 +196,7 @@ Every intent keyword and the pieces that answer it.
 - **detail form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **detail page**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **detail panel**: [Sheet](ui/Sheet/Sheet.md), [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
+- **dev login**: [session](ui/session.md)
 - **dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **dirty form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **do it for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
@@ -257,7 +260,9 @@ Every intent keyword and the pieces that answer it.
 - **home page**: [Dashboard](pages/Dashboard/Dashboard.md)
 - **icon**: [Icon](ui/Icon/Icon.md)
 - **icon button**: [Button](ui/Button/Button.md)
+- **identity change**: [session](ui/session.md)
 - **image upload**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
+- **impersonate**: [session](ui/session.md)
 - **impersonation banner**: [Banner](ui/Banner/Banner.md)
 - **import**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
 - **import status**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
@@ -292,6 +297,7 @@ Every intent keyword and the pieces that answer it.
 - **live status banner**: [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
 - **live table**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **live updates**: [Showing live data](patterns/showing-live-data.md)
+- **livewire pair**: [session](ui/session.md)
 - **load more**: [Pagination](ui/Pagination/Pagination.md)
 - **loading and error states**: [Showing live data](patterns/showing-live-data.md)
 - **loading button**: [Button](ui/Button/Button.md)
@@ -300,10 +306,10 @@ Every intent keyword and the pieces that answer it.
 - **loading state**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **log in**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **logged out**: [LoginPage](pages/LoginPage/LoginPage.md)
-- **login**: [Login and session](patterns/login-and-session.md)
+- **login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **login form**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **login page**: [LoginPage](pages/LoginPage/LoginPage.md)
-- **logout**: [Login and session](patterns/login-and-session.md)
+- **logout**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **logout page**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **long running task**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
 - **long-running task**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
@@ -384,6 +390,7 @@ Every intent keyword and the pieces that answer it.
 - **record drawer**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
 - **record form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **record page**: [DetailPage](pages/DetailPage/DetailPage.md)
+- **redirect after login**: [session](ui/session.md)
 - **related records**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **relative time**: [format](ui/format.md)
 - **release notes**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
@@ -410,7 +417,7 @@ Every intent keyword and the pieces that answer it.
 - **segmented navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **select**: [Select](ui/Select/Select.md)
 - **select all**: [Checkbox](ui/Checkbox/Checkbox.md)
-- **session**: [Login and session](patterns/login-and-session.md)
+- **session**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **session expired**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **settings**: [Building a settings page](patterns/building-a-settings-page.md)
 - **settings page**: [SettingsPage](pages/SettingsPage/SettingsPage.md)
@@ -424,6 +431,7 @@ Every intent keyword and the pieces that answer it.
 - **sidebar**: [AppShell](ui/AppShell/AppShell.md)
 - **sign in**: [LoginForm](ui/blocks/LoginForm/LoginForm.md), [Login and session](patterns/login-and-session.md)
 - **sign in page**: [LoginPage](pages/LoginPage/LoginPage.md)
+- **sign out**: [session](ui/session.md)
 - **signed out**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **skeleton**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **slide-over**: [Sheet](ui/Sheet/Sheet.md)
@@ -494,6 +502,7 @@ Every intent keyword and the pieces that answer it.
 - **walkthrough**: [Spotlight](ui/Spotlight/Spotlight.md)
 - **websocket**: [Showing live data](patterns/showing-live-data.md)
 - **whats new**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **who am i**: [session](ui/session.md)
 - **wizard**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **workflow**: [WorkflowStatus](ui/blocks/WorkflowStatus/WorkflowStatus.md)
 - **zero state**: [EmptyState](ui/EmptyState/EmptyState.md)
