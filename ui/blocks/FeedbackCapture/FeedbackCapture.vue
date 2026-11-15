@@ -79,7 +79,7 @@ const report = computed(() => (snapshot.value ? buildReport(form, snapshot.value
 async function submit(): Promise<void> {
   const body = report.value
   if (body === undefined) return
-  textError.value = body.text === '' ? t('ui.feedbackText') : undefined
+  textError.value = body.text === '' ? t('ui.feedbackTextMissing') : undefined
   if (textError.value) return
   sending.value = true
   failure.value = undefined

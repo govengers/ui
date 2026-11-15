@@ -96,7 +96,7 @@ like every mutation in drive mode (D52).
 ## Messages
 
 `ui.feedback`, `ui.feedbackType`, `ui.feedbackBug`, `ui.feedbackIdea`, `ui.feedbackQuestion`,
-`ui.severity`, `ui.severityLow` to `ui.severityCritical`, `ui.feedbackText`, `ui.includeTechnical`,
+`ui.severity`, `ui.severityLow` to `ui.severityCritical`, `ui.feedbackText`, `ui.feedbackTextMissing`, `ui.includeTechnical`,
 `ui.includeTechnicalHint`, `ui.includeScreenshot`, `ui.screenshotAlt`, `ui.whatIsSent`,
 `ui.send`, `ui.sendFailed`, `ui.cancel`.
 
