@@ -261,3 +261,18 @@ switchable style presets.
   keystroke would churn the server. Its quick actions are the bound agent actions without
   params (D24, D48), so the palette, the dock and the driver share one vocabulary.
 
+- **D59 Mounted tests for what only shows mounted.** D16 kept component tests out; the first
+  review of Board, Markdown and CommandPalette found focus loss, a lift without an end, a file
+  drop left to the browser and a pick lost to a full storage, all invisible to model tests.
+  `bun test` now preloads `scripts/test/setup.ts` (`bunfig.toml`): a jsdom document as the global
+  DOM and a loader compiling `.vue` script and template (no styles). `scripts/test/mount.ts`
+  mounts a piece with vue-i18n and a pair on a fake engine without latency. A piece gets a
+  `<Name>.mounted.test.ts` when it has behaviour a user meets through events: focus, keyboard,
+  events, storage, identity switches. Logic stays in model tests (D16); layout, scrolling and
+  CSS states stay with local browser probes, out of CI. Budget: the whole suite under 2 s, no
+  browser in CI, debounces driven by fake timers, never by waiting.
+- **D60 Images in rendered markdown load from the page's own origin.** `createMarkdownRenderer`
+  takes `imageHosts` (origins); other absolute image sources lose their `src`. Markdown written
+  by another user or by an agent that read hostile content would otherwise make every reader's
+  browser call a foreign host (tracking, exfiltration in the URL). Supersedes D56's
+  "http(s) images".
