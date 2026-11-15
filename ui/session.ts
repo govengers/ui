@@ -25,20 +25,23 @@ export interface SessionIdentity {
 
 /** A login that leaves the page: OIDC (`/auth/oidc/<name>`) or GitHub (`/auth/github`). */
 export interface RedirectProvider {
-  /** The identity's `provider` after this login, "oidc" or "github" unless the app renamed it. */
+  /** The identity's `provider` after this login: the OIDC provider's `Name` ("company" for /auth/oidc/company), "github" for GitHub. */
   name: string
   label: string
   /** The provider's PathPrefix; login is GET `<prefix>/login?return_to=`, logout GET `<prefix>/logout`. */
   prefix: string
 }
 
-/** A user the development login offers (GET /auth/dev/users). */
+/** A user the development login offers (GET /auth/dev/users answers `{ users: DevUser[] }`). */
 export interface DevUser {
   id: string
   name: string
-  email?: string | undefined
-  roles?: string[] | undefined
+  /** A hint such as "admin" or "no projects". */
+  description?: string | undefined
 }
+
+/** The second step a password login owes: a TOTP code, or enrolling TOTP first (TOTP required, none set up). */
+export type LoginChallenge = 'totp' | 'totp_setup'
 
 export interface PasswordCredentials {
   /** User name or email, whichever the auth provider accepts. */
@@ -61,7 +64,7 @@ export interface SessionOptions {
   createPair: (identity: string, onUnauthorized: () => void) => LivePair
   providers?: readonly RedirectProvider[] | undefined
   paths?: Partial<SessionPaths> | undefined
-  /** Runs when a 401 or a 4401 ended a signed-in identity: route to the login page. */
+  /** Runs when a signed-in identity ended without the app asking (401, 4401, another tab): route to the login page. */
   onSignedOut?: (() => void) | undefined
   fetch?: typeof fetch | undefined
   /** Full-page navigation for redirect logouts; `location.assign` by default. */
@@ -88,8 +91,10 @@ export interface Session {
   identity: ShallowRef<SessionIdentity | null>
   /** Builds the pair of whoever GET /auth/me answers: at start and after a callback login. */
   resume(): Promise<void>
-  /** Password login, then the TOTP step; answers `{ twoFactor: true }` when a code is needed. */
-  login(credentials: PasswordCredentials): Promise<{ twoFactor?: boolean }>
+  /** Re-reads GET /auth/me and replaces the pair only when the identity changed (on tab focus and while impersonating by itself). */
+  check(): Promise<void>
+  /** Password login, then the TOTP step; answers auth's `challenge` when a second step is owed. */
+  login(credentials: PasswordCredentials): Promise<{ challenge?: LoginChallenge }>
   logout(): Promise<void>
   /** The development users; [] when the server has no dev login (404). */
   devUsers(): Promise<DevUser[]>
@@ -99,6 +104,12 @@ export interface Session {
   /** The href of a redirect provider's login that comes back to `redirect` (sanitised). */
   loginHref(provider: RedirectProvider, redirect?: unknown): string
 }
+
+/** govengers/auth's provider name of a dev login (auth.ProviderDev). */
+const devProvider = 'dev_login'
+const impersonationPoll = 60_000
+const retryFirst = 1_000
+const retryLast = 30_000
 
 const defaultPaths: SessionPaths = { me: '/auth/me', password: '/auth/password', impersonation: '/auth/impersonation', dev: '/auth/dev' }
 
@@ -132,14 +143,15 @@ export function createSession(options: SessionOptions): Session {
   const pair = shallowRef<LivePair>(build(''))
   // Identity changes run one after the other, so no pair is live while a cookie changes.
   let transitions: Promise<unknown> = Promise.resolve()
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
+  let retryDelay = 0
+  let pollTimer: ReturnType<typeof setInterval> | undefined
 
   function build(key: string): LivePair {
     const built: LivePair = options.createPair(key, () => {
-      if (pair.value !== built) return
-      const wasSignedIn = identity.value !== null
-      serial(() => Promise.resolve())
-        .then(() => { if (wasSignedIn && identity.value === null) options.onSignedOut?.() })
-        .catch(() => undefined) // /auth/me unreadable: the ended pair stays, the next resume retries
+      // Nobody cannot be signed out: resuming the anonymous pair would only build it again.
+      if (pair.value !== built || key === '') return
+      void follow(true).catch(() => undefined)
     })
     return built
   }
@@ -151,11 +163,30 @@ export function createSession(options: SessionOptions): Session {
     return await response.json() as SessionIdentity
   }
 
-  async function resumeNow(): Promise<void> {
-    pair.value.end()
-    const current = await read()
+  /** Serves `current`: its identity, its pair, and the poll while it is an impersonation. */
+  function adopt(current: SessionIdentity | null): void {
     identity.value = current
     pair.value = build(identityKey(current))
+    clearInterval(pollTimer)
+    pollTimer = undefined
+    // auth ends an impersonation in place (MaximumDuration) without a 401 or 4401: look again now and then.
+    if (current?.impersonator !== undefined) pollTimer = setInterval(() => { void follow(false).catch(() => undefined) }, impersonationPoll)
+  }
+
+  /** Ends the pair and serves whoever GET /auth/me answers; an unreadable answer leaves the pair ended and retries with backoff. */
+  async function resumeNow(): Promise<void> {
+    pair.value.end()
+    clearTimeout(retryTimer)
+    let current: SessionIdentity | null
+    try {
+      current = await read()
+    } catch (error) {
+      retryDelay = Math.min(retryDelay === 0 ? retryFirst : retryDelay * 2, retryLast)
+      retryTimer = setTimeout(() => { void follow(true).catch(() => undefined) }, retryDelay)
+      throw error
+    }
+    retryDelay = 0
+    adopt(current)
   }
 
   /** Ends the pair, runs the change, then serves whoever the session is afterwards, also when the change failed. */
@@ -165,13 +196,46 @@ export function createSession(options: SessionOptions): Session {
       let result: Result
       try {
         result = await change()
-      } finally {
-        await resumeNow()
+      } catch (error) {
+        // The change's own refusal is the answer, also when the read after it fails too.
+        await resumeNow().catch(() => undefined)
+        throw error
       }
+      await resumeNow()
       return result
     })
     transitions = run.catch(() => undefined)
     return run
+  }
+
+  /**
+   * A change the app did not make: a 401 or 4401 (force), another tab, an ended impersonation, a
+   * retry. Without force it reads first and keeps the pair when the identity is the same.
+   * `onSignedOut` runs when it leaves nobody where someone was signed in.
+   */
+  function follow(force: boolean): Promise<void> {
+    const run = transitions.then(async () => {
+      const before = identity.value
+      // After an unreadable answer the pair is ended: rebuild it whatever the identity is.
+      if (force || retryDelay !== 0) {
+        await resumeNow()
+      } else {
+        const current = await read()
+        if (identityKey(current) === identityKey(before)) return
+        pair.value.end()
+        adopt(current)
+      }
+      if (before !== null && identity.value === null) options.onSignedOut?.()
+    })
+    transitions = run.catch(() => undefined)
+    return run
+  }
+
+  // Back to a tab: another tab may have signed in, out, or as someone else meanwhile.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') void follow(false).catch(() => undefined)
+    })
   }
 
   async function expect(response: Response): Promise<Response> {
@@ -189,34 +253,40 @@ export function createSession(options: SessionOptions): Session {
     pair,
     identity,
     resume: () => serial(() => Promise.resolve()),
-    login: (credentials) => serial(async () => {
+    check: () => follow(false),
+    login: (credentials) => serial(async (): Promise<{ challenge?: LoginChallenge }> => {
       if (credentials.code !== undefined) {
         await expect(await send(`${paths.password}/totp/verify`, json('POST', { code: credentials.code, backupCode: credentials.backupCode === true })))
         return {}
       }
       const response = await expect(await send(`${paths.password}/login`, json('POST', { identifier: credentials.identifier, password: credentials.password })))
       if (response.status !== 202) return {}
-      const { challenge } = await response.json() as { challenge?: string }
-      // totp_setup: TOTP is required and the user has none; enrolment is the app's own screen.
-      if (challenge === 'totp') return { twoFactor: true }
-      throw new AuthError(202, 'totp_setup_required', 'two-factor setup required')
+      const { challenge } = await response.json() as { challenge?: unknown }
+      if (challenge === 'totp' || challenge === 'totp_setup') return { challenge }
+      throw new AuthError(202, 'internal', `unknown login challenge ${String(challenge)}`)
     }),
     logout: () => {
-      const redirect = options.providers?.find((provider) => provider.name === identity.value?.provider)
+      // While impersonating, the session belongs to the impersonator: log out where they signed in.
+      const owner = identity.value?.impersonator ?? identity.value
+      const redirect = options.providers?.find((provider) => provider.name === owner?.provider)
       if (redirect !== undefined) {
         // The provider's logout ends the session and leaves for the identity provider; the page unloads.
+        clearInterval(pollTimer)
         pair.value.end()
         identity.value = null
         navigate(`${redirect.prefix}/logout`)
         return Promise.resolve()
       }
-      // The password route ends the request's session whatever provider made it.
-      return serial(async () => { await expect(await send(`${paths.password}/logout`, { method: 'POST' })) })
+      // A dev login logs out at its own provider; the password route ends any session, so it covers the rest.
+      const path = owner?.provider === devProvider ? `${paths.dev}/logout` : `${paths.password}/logout`
+      return serial(async () => { await expect(await send(path, { method: 'POST' })) })
     },
     devUsers: async () => {
       const response = await send(`${paths.dev}/users`)
       if (response.status === 404) return []
-      return await (await expect(response)).json() as DevUser[]
+      const body = await (await expect(response)).json() as { users?: unknown }
+      if (!Array.isArray(body.users)) throw new AuthError(response.status, 'internal', `GET ${paths.dev}/users answered no users list`)
+      return body.users as DevUser[]
     },
     devLogin: (id) => serial(async () => { await expect(await send(`${paths.dev}/login`, json('POST', { id }))) }),
     impersonate: (subject) => serial(async () => { await expect(await send(paths.impersonation, json('POST', { subject }))) }),

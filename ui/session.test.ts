@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, jest, test } from 'bun:test'
 import type { LivePair } from '@/api/runtime'
 import { AuthError, createSession, identityKey, safeRedirect, type SessionIdentity, type SessionOptions } from './session'
 
@@ -12,9 +12,11 @@ function fixture(routes: Record<string, Route>, extra: Partial<SessionOptions> =
   const log: string[] = []
   const pairs: { key: string; ended: boolean; unauthorized: () => void }[] = []
   let me: SessionIdentity | null = null
+  let meStatus = 200
   const fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const key = `${init?.method ?? 'GET'} ${String(input)}`
     log.push(key)
+    if (key === 'GET /auth/me' && meStatus !== 200) return reply(meStatus, { code: 'internal' })
     if (key === 'GET /auth/me') return me === null ? reply(401, { code: 'unauthenticated' }) : reply(200, me)
     const route = routes[key]
     return route === undefined ? reply(404, { code: 'not_found' }) : route(init)
@@ -29,7 +31,12 @@ function fixture(routes: Record<string, Route>, extra: Partial<SessionOptions> =
     },
     ...extra,
   })
-  return { session, log, pairs, signIn: (identity: SessionIdentity | null) => { me = identity } }
+  return {
+    session, log, pairs,
+    signIn: (identity: SessionIdentity | null) => { me = identity },
+    /** Makes GET /auth/me answer `status` (200: the signed-in identity again). */
+    meAnswers: (status: number) => { meStatus = status },
+  }
 }
 
 function reply(status: number, body?: unknown): Response {
@@ -60,16 +67,18 @@ describe('session', () => {
       'POST /auth/password/login': () => reply(202, { challenge: 'totp' }),
       'POST /auth/password/totp/verify': (init) => { sent = JSON.parse(String(init?.body)); box.signIn(ada); return reply(200, ada) },
     })
-    expect(await box.session.login({ identifier: 'ada', password: 'secret' })).toEqual({ twoFactor: true })
+    expect(await box.session.login({ identifier: 'ada', password: 'secret' })).toEqual({ challenge: 'totp' })
     expect(box.session.identity.value).toBeNull()
     await box.session.login({ identifier: 'ada', password: 'secret', code: 'ab12-cd34', backupCode: true })
     expect(sent).toEqual({ code: 'ab12-cd34', backupCode: true })
     expect(box.session.identity.value?.subject).toBe('u-1')
   })
 
-  test('a required TOTP setup is refused with its own code', async () => {
+  test('a required TOTP setup answers its challenge, an unknown one is refused', async () => {
     const { session } = fixture({ 'POST /auth/password/login': () => reply(202, { challenge: 'totp_setup' }) })
-    await expect(session.login({ identifier: 'ada', password: 'secret' })).rejects.toMatchObject({ code: 'totp_setup_required' })
+    expect(await session.login({ identifier: 'ada', password: 'secret' })).toEqual({ challenge: 'totp_setup' })
+    const unknown = fixture({ 'POST /auth/password/login': () => reply(202, { challenge: 'webauthn' }) })
+    await expect(unknown.session.login({ identifier: 'ada', password: 'secret' })).rejects.toMatchObject({ code: 'internal' })
   })
 
   test('a refused login throws the closed code and still serves nobody', async () => {
@@ -96,8 +105,8 @@ describe('session', () => {
 
   test('a redirect provider logs out by leaving the page', async () => {
     const left: string[] = []
-    const box = fixture({}, { providers: [{ name: 'oidc', label: 'Company SSO', prefix: '/auth/oidc/company' }], navigate: (href) => left.push(href) })
-    box.signIn({ ...ada, provider: 'oidc' })
+    const box = fixture({}, { providers: [{ name: 'company', label: 'Company SSO', prefix: '/auth/oidc/company' }], navigate: (href) => left.push(href) })
+    box.signIn({ ...ada, provider: 'company' })
     await box.session.resume()
     await box.session.logout()
     expect(left).toEqual(['/auth/oidc/company/logout'])
@@ -105,15 +114,42 @@ describe('session', () => {
     expect(box.pairs.at(-1)?.ended).toBe(true)
   })
 
-  test('dev login lists users, logs one in; no dev login answers no users', async () => {
+  test('logout while impersonating follows the provider that made the session', async () => {
+    const left: string[] = []
+    const providers = [{ name: 'company', label: 'Company SSO', prefix: '/auth/oidc/company' }]
+    const box = fixture({ 'POST /auth/password/logout': () => { box.signIn(null); return reply(204) } }, { providers, navigate: (href) => left.push(href) })
+    box.signIn({ ...bob, provider: 'company', impersonator: ada }) // a password admin acting as an SSO user
+    await box.session.resume()
+    await box.session.logout()
+    expect(left).toEqual([])
+    expect(box.log).toContain('POST /auth/password/logout')
+
+    const sso = fixture({}, { providers, navigate: (href) => left.push(href) })
+    sso.signIn({ ...bob, impersonator: { ...ada, provider: 'company' } }) // an SSO admin acting as a password user
+    await sso.session.resume()
+    await sso.session.logout()
+    expect(left).toEqual(['/auth/oidc/company/logout'])
+  })
+
+  test('dev login lists users from auth\'s envelope, logs one in and out; no dev login answers no users', async () => {
+    const dev = { ...bob, provider: 'dev_login' }
     const box = fixture({
-      'GET /auth/dev/users': () => reply(200, [{ id: 'u-2', name: 'Bob' }]),
-      'POST /auth/dev/login': (init) => { expect(JSON.parse(String(init?.body))).toEqual({ id: 'u-2' }); box.signIn(bob); return reply(200, bob) },
+      'GET /auth/dev/users': () => reply(200, { users: [{ id: 'u-2', name: 'Bob', description: 'member' }] }),
+      'POST /auth/dev/login': (init) => { expect(JSON.parse(String(init?.body))).toEqual({ id: 'u-2' }); box.signIn(dev); return reply(200, dev) },
+      'POST /auth/dev/logout': () => { box.signIn(null); return reply(204) },
     })
-    expect(await box.session.devUsers()).toEqual([{ id: 'u-2', name: 'Bob' }])
+    expect(await box.session.devUsers()).toEqual([{ id: 'u-2', name: 'Bob', description: 'member' }])
     await box.session.devLogin('u-2')
     expect(box.session.identity.value?.username).toBe('bob')
+    await box.session.logout() // no password provider mounted: its logout would answer 404
+    expect(box.log).toContain('POST /auth/dev/logout')
+    expect(box.session.identity.value).toBeNull()
     expect(await fixture({}).session.devUsers()).toEqual([])
+  })
+
+  test('a dev users body without a users list is refused, not shown as empty', async () => {
+    const { session } = fixture({ 'GET /auth/dev/users': () => reply(200, [{ id: 'u-2', name: 'Bob' }]) })
+    await expect(session.devUsers()).rejects.toMatchObject({ code: 'internal' })
   })
 
   test('impersonation is an identity change with its own pair key', async () => {
@@ -141,6 +177,88 @@ describe('session', () => {
     await box.session.resume()
     expect(signedOut).toBe(1)
     expect(box.session.identity.value).toBeNull()
+  })
+
+  test('an anonymous pair\'s 401 or 4401 does not resume', async () => {
+    const box = fixture({})
+    await box.session.resume()
+    const before = box.log.length
+    box.pairs.at(-1)!.unauthorized()
+    box.pairs.at(-1)!.unauthorized()
+    await box.session.check()
+    expect(box.log.slice(before)).toEqual(['GET /auth/me'])
+    expect(box.pairs.length).toBe(2)
+  })
+
+  test('check replaces the pair only when the identity changed', async () => {
+    let signedOut = 0
+    const box = fixture({}, { onSignedOut: () => { signedOut += 1 } })
+    box.signIn({ ...bob, impersonator: ada })
+    await box.session.resume()
+    await box.session.check()
+    expect(box.pairs.length).toBe(2)
+    box.signIn(ada) // auth ended the impersonation in place (MaximumDuration): no 401, no 4401
+    await box.session.check()
+    expect(box.session.identity.value?.impersonator).toBeUndefined()
+    expect(box.session.pair.value.identity).toBe('password:u-1')
+    expect(box.pairs.map((pair) => pair.ended)).toEqual([true, true, false])
+    box.signIn(null) // another tab signed out
+    await box.session.check()
+    expect(box.session.identity.value).toBeNull()
+    expect(signedOut).toBe(1)
+  })
+
+  test('an impersonation is looked at again every minute', async () => {
+    jest.useFakeTimers()
+    try {
+      const box = fixture({})
+      box.signIn({ ...bob, impersonator: ada })
+      await box.session.resume()
+      box.signIn(ada)
+      jest.advanceTimersByTime(60_000)
+      await box.session.check() // waits for the poll queued before it
+      expect(box.session.pair.value.identity).toBe('password:u-1')
+      const reads = box.log.filter((entry) => entry === 'GET /auth/me').length
+      jest.advanceTimersByTime(120_000) // no impersonation: no poll
+      await box.session.check()
+      expect(box.log.filter((entry) => entry === 'GET /auth/me').length).toBe(reads + 1)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  test('a refused change keeps its own error when /auth/me fails too', async () => {
+    jest.useFakeTimers()
+    try {
+      const box = fixture({ 'POST /auth/password/login': () => reply(401, { code: 'invalid_credentials' }) })
+      box.meAnswers(502)
+      await expect(box.session.login({ identifier: 'ada', password: 'wrong' })).rejects.toMatchObject({ code: 'invalid_credentials' })
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  test('an unreadable /auth/me after a 4401 retries until a pair serves again', async () => {
+    jest.useFakeTimers()
+    try {
+      let signedOut = 0
+      const box = fixture({}, { onSignedOut: () => { signedOut += 1 } })
+      box.signIn(ada)
+      await box.session.resume()
+      box.meAnswers(503)
+      box.pairs.at(-1)!.unauthorized()
+      await box.session.check().catch(() => undefined) // the 4401's resume failed: the pair is ended
+      expect(box.pairs.at(-1)?.ended).toBe(true)
+      box.meAnswers(200)
+      box.signIn(null)
+      jest.advanceTimersByTime(30_000)
+      await box.session.check()
+      expect(box.pairs.at(-1)?.ended).toBe(false)
+      expect(box.session.identity.value).toBeNull()
+      expect(signedOut).toBe(1)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   test('identityKey', () => {
