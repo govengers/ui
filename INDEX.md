@@ -7,7 +7,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 |------|-------|
 | primitive | 26 |
 | layout | 5 |
-| block | 18 |
+| block | 19 |
 | page | 5 |
 | pattern | 7 |
 
@@ -64,6 +64,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [DevLogin](ui/blocks/DevLogin/DevLogin.md) | dev login, development login, one click login, log in as user, switch test user, local login, seed users | Avatar, Badge, Banner, Button, Card, Skeleton, session | no | fittss-law, doherty-threshold | ready | The development users of govengers/auth's dev login provider (`GET /auth/dev/users`), one click each signs in (`POST /auth/dev/login`) (D58). A hint line says it is for development. It renders nothing when the server lists no users (no dev login: the session module answers `[]` for the 404). Put it under `LoginForm` on the login page, behind the production guard below. |
 | [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md) | facet filter, filter, filters, filter chips, filter bar, add filter, faceted search, live counts, filter panel, checkbox filter, FacetPanel, url filter | Popover, Button, Icon, Badge, Input, Checkbox, Field | yes | choice-overload, hicks-law, law-of-common-region, teslers-law, working-memory, zeigarnik-effect | ready | The list filter (D31): a "Filters" button with a count opens a cascade, the facets on the left, the values of the active facet on the right with a live count each. Every facet with ticked values becomes one chip ("Status is active, on hold, or 2 more"); the chip's operator switches between "is" and "is not", its values reopen the cascade inside that facet, its cross drops the facet. "Add filter" and Clear end the bar. `FacetPanel.vue` in the same directory shows the short facets as checkbox lists. OR inside a facet, AND across facets. |
 | [FileUpload](ui/blocks/FileUpload/FileUpload.md) | file upload, upload files, dropzone, drag and drop upload, attachments, upload progress, document upload, image upload | Badge, Button, Icon, format | yes | doherty-threshold, goal-gradient-effect, paradox-of-the-active-user | ready | A dropzone and the list of files being uploaded and uploaded. The dropzone is a `<label>` around the native file input, so a click, Enter and a drop all work. Each file shows its name, size, a progress bar, a status Badge and a remove button. Size and count limits are said inline. Uploads go through the pair's `Client.upload`. |
+| [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md) | impersonation, impersonate, act as user, login as user, support mode, admin acting as, stop impersonating, view as | Badge, Banner, Button, format, session | no | von-restorff-effect, selective-attention | ready | The shell's notice while an admin acts as another user through govengers/auth's impersonation (D59): "You are acting as Bob on behalf of Ada", the time left when the end is known, a Read-only badge when the app forbids writes, and "Stop acting as Bob". Renders nothing while the identity has no impersonator. Put it into `AppShell`'s `banners` slot next to `ConnectionBanner`. |
 | [JobProgress](ui/blocks/JobProgress/JobProgress.md) | job progress, background job, long running task, export progress, import status, progress bar, async result | Badge, Banner, Button, Skeleton, format | yes | doherty-threshold, goal-gradient-effect, peak-end-rule, teslers-law, zeigarnik-effect | ready | One background job (D29): what it does, its status badge, a progress bar while it runs, why it failed, and an "Open result" button once it succeeded with a result route. Follows the job live by id, or shows a job the page already reads; a compact `inline` variant fits a list row. |
 | [LiveForm](ui/blocks/LiveForm/LiveForm.md) | live form, edit form state, useLiveForm, touched fields, dirty form, unsaved changes, save only changed fields, patch form, edit conflict, form field errors |  | yes | peak-end-rule, postels-law, teslers-law, zeigarnik-effect | ready | `useLiveForm` in `liveForm.ts`, a composable, not a component: the state of an edit form over one live record (D33). Save sends only the touched fields. A push refills only the untouched ones; a touched field keeps the user's text. Field errors come from `ApiError.fields`, and a retried save keeps its Idempotency-Key. Render it with `DetailForm` or with your own Field stack. |
 | [LoginForm](ui/blocks/LoginForm/LoginForm.md) | login form, sign in, log in, password login, user name or email, two-factor, 2fa code, backup code, one-time code, sso button, oidc login, github login, sso first | Card, Banner, Button, Field, Input | no | parkinsons-law, hicks-law | ready | The sign-in card against govengers/auth (D57): user name or email and password, the redirect providers (OIDC, GitHub) as buttons from a prop, and the TOTP step with a switch to a backup code. `layout="sso"` puts the providers first and the password form behind a link. The page passes `login` (the session module's `login` plus the navigation); a refusal with a known govengers/auth `code` shows as its own sentence. Centre it with the `LoginPage` recipe. |
@@ -104,10 +105,12 @@ Every intent keyword and the pieces that answer it.
 - **2fa code**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **accept terms**: [Checkbox](ui/Checkbox/Checkbox.md)
 - **account page**: [SettingsPage](pages/SettingsPage/SettingsPage.md), [Building a settings page](patterns/building-a-settings-page.md)
+- **act as user**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **action**: [Button](ui/Button/Button.md)
 - **action menu**: [Menu](ui/Menu/Menu.md)
 - **action registry**: [agent](ui/agent/agent.md)
 - **add filter**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
+- **admin acting as**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **agent actions**: [agent](ui/agent/agent.md)
 - **agent clicks for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **agent cursor**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
@@ -266,7 +269,8 @@ Every intent keyword and the pieces that answer it.
 - **icon button**: [Button](ui/Button/Button.md)
 - **identity change**: [session](ui/session.md)
 - **image upload**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
-- **impersonate**: [session](ui/session.md)
+- **impersonate**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md), [session](ui/session.md)
+- **impersonation**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **impersonation banner**: [Banner](ui/Banner/Banner.md)
 - **import**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
 - **import status**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
@@ -313,6 +317,7 @@ Every intent keyword and the pieces that answer it.
 - **log in as user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **logged out**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
+- **login as user**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **login form**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **login page**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **logout**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
@@ -464,9 +469,11 @@ Every intent keyword and the pieces that answer it.
 - **stepper**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **steps**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **sticky bottom bar**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **stop impersonating**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **sub navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **submit**: [Button](ui/Button/Button.md)
 - **subscription**: [Showing live data](patterns/showing-live-data.md)
+- **support mode**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **surface**: [Card](ui/Card/Card.md)
 - **switch**: [Switch](ui/Switch/Switch.md)
 - **switch test user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
@@ -508,6 +515,7 @@ Every intent keyword and the pieces that answer it.
 - **validation**: [Building a form](patterns/building-a-form.md)
 - **validation error**: [Field](ui/Field/Field.md)
 - **view and edit**: [DetailPage](pages/DetailPage/DetailPage.md)
+- **view as**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **visible automation**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **visible columns**: [ColumnsPicker](ui/blocks/ColumnsPicker/ColumnsPicker.md)
 - **walkthrough**: [Spotlight](ui/Spotlight/Spotlight.md)
