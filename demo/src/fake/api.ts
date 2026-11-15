@@ -5,9 +5,9 @@
 // these descriptors as props (D5).
 
 import * as runtime from '../api/runtime'
-import type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+import type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
 
-export type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+export type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
 export { fields } from './data'
 
 /** A node of a filter document (D12): a condition, or and, or or not over nodes. */
@@ -93,6 +93,9 @@ export type ConversationCondition = TextCondition<'id' | 'text'> | EnumCondition
 export type ConversationFilter = SearchableFilterDocument<ConversationCondition>
 export type ConversationSortTerm = SortTerm<'id' | 'role' | 'createdAt'>
 
+export type ApiKeysCondition = TextCondition<'id' | 'name'> | TimeCondition<'createdAt'>
+export type ApiKeysFilter = SearchableFilterDocument<ApiKeysCondition>
+
 /** The filter document of every target a stored filter may name (D13). */
 export interface FilterDocuments {
   customers: CustomersFilter
@@ -101,6 +104,7 @@ export interface FilterDocuments {
   jobs: JobsFilter
   files: FilesFilter
   conversation: ConversationFilter
+  apiKeys: ApiKeysFilter
 }
 
 /** The reserved parameters of a filterable list read. */
@@ -163,6 +167,7 @@ export const reads = {
   'jobs.item': runtime.liveRead<ItemParameters, Job>({ target: 'jobs.item', path: '/jobs/{id}', pathParameters: ['id'], list: false }),
   files: runtime.liveRead<FilesListQuery, runtime.ListResponse<FileItem>>({ target: 'files', path: '/files', pathParameters: [], list: true }),
   conversation: runtime.liveRead<ConversationListQuery, runtime.ListResponse<Message>>({ target: 'conversation', path: '/conversation', pathParameters: [], list: true }),
+  apiKeys: runtime.liveRead<runtime.NoParameters, runtime.ListResponse<ApiKey>>({ target: 'apiKeys', path: '/api-keys', pathParameters: [], list: true }),
   settings: runtime.liveRead<runtime.NoParameters, Settings>({ target: 'settings', path: '/settings', pathParameters: [], list: false }),
   billing: runtime.liveRead<runtime.NoParameters, Billing>({ target: 'billing', path: '/billing', pathParameters: [], list: false }),
 } as const
@@ -199,6 +204,15 @@ export interface StartJob {
 /** The dock mode a message is sent in (D25); background runs server side and sends none. */
 export type AgentMode = 'chat' | 'guide' | 'drive'
 
+export interface CreateApiKey {
+  name: string
+  scopes: string[]
+  expiresAt: string | null
+}
+
+/** The create answer: the key's row plus its secret, the only time the secret is sent. */
+export type CreatedApiKey = ApiKey & { secret: string }
+
 export interface SendMessage {
   id?: string
   text: string
@@ -213,6 +227,9 @@ export const calls = {
   createOrder: runtime.mutation<runtime.NoParameters, CreateOrder, Order>({ name: 'createOrder', method: 'POST', path: '/orders', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'orders' }, clientID: 7 }),
   updateSettings: runtime.mutation<runtime.NoParameters, UpdateSettings, Settings>({ name: 'updateSettings', method: 'PATCH', path: '/settings', pathParameters: [], body: true, content: true }),
   startJob: runtime.mutation<runtime.NoParameters, StartJob, Job>({ name: 'startJob', method: 'POST', path: '/jobs', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'jobs' } }),
+  // No upserts effect: the answer carries the secret, which must not enter a live list; the push brings the row.
+  createApiKey: runtime.mutation<runtime.NoParameters, CreateApiKey, CreatedApiKey>({ name: 'createApiKey', method: 'POST', path: '/api-keys', pathParameters: [], body: true, content: true }),
+  revokeApiKey: runtime.mutation<ItemParameters, undefined, void>({ name: 'revokeApiKey', method: 'DELETE', path: '/api-keys/{id}', pathParameters: ['id'], body: false, content: false, effect: { kind: 'removes', target: 'apiKeys' } }),
   sendMessage: runtime.mutation<runtime.NoParameters, SendMessage, Message>({ name: 'sendMessage', method: 'POST', path: '/conversation', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'conversation' }, clientID: 7 }),
 } as const
 

@@ -85,6 +85,19 @@ export interface Message {
   createdAt: string
 }
 
+/** An API key as its owner sees it (ApiKeyManager): never the secret, only its leading part. */
+export interface ApiKey {
+  id: string
+  name: string
+  /** The non-secret start of the key ("demo_01JX..."), to recognise it. */
+  prefix: string
+  /** Permissions in text form, "customers:read". */
+  scopes: string[]
+  expiresAt: string | null
+  lastUsedAt: string | null
+  createdAt: string
+}
+
 /** The value counts of every customer facet, each under the filter without its own clauses (D31). */
 export interface CustomerFacets {
   status: DistinctValue[]
@@ -101,6 +114,7 @@ export interface Tables {
   jobs: Job[]
   files: FileItem[]
   conversation: Message[]
+  apiKeys: ApiKey[]
   settings: Settings[]
 }
 
@@ -159,6 +173,11 @@ export const fields: Record<ListTable, readonly FieldMeta[]> = {
     { name: 'id', type: 'string', filter: true, sort: true, search: false },
     { name: 'role', type: 'enum', enum: ['user', 'agent'], filter: true, sort: true, search: false },
     { name: 'text', type: 'text', filter: true, sort: false, search: true },
+    { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
+  ],
+  apiKeys: [
+    { name: 'id', type: 'string', filter: true, sort: true, search: false },
+    { name: 'name', type: 'string', filter: true, sort: true, search: true },
     { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
   ],
 }
@@ -272,5 +291,9 @@ export function seedTables(seed = 1): Tables {
     id: 'settings', companyName: 'Govengers Demo GmbH', supportEmail: 'support@demo.example', timezone: 'Europe/Berlin',
     language: 'en', notifyByEmail: true, weeklyDigest: false,
   }]
-  return { customers, orders, users, jobs, files, conversation, settings }
+  const apiKeys: ApiKey[] = [
+    { id: 'key-1', name: 'CI pipeline', prefix: 'demo_key-1', scopes: ['customers:read', 'orders:read'], expiresAt: new Date(seededNow + 60 * day).toISOString(), lastUsedAt: at(0.1), createdAt: at(40) },
+    { id: 'key-2', name: 'Old import script', prefix: 'demo_key-2', scopes: ['customers:write'], expiresAt: at(3), lastUsedAt: null, createdAt: at(120) },
+  ]
+  return { customers, orders, users, jobs, files, conversation, apiKeys, settings }
 }

@@ -5,7 +5,7 @@
 
 import { uuidv7 } from '../api/runtime'
 import { uploads } from './api'
-import { currencyOf, fields, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type User } from './data'
+import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type User } from './data'
 import type { FakeStore } from './engine'
 import { Refusal, parseFilter, withoutField } from './query'
 
@@ -110,6 +110,22 @@ export function createHandlers(context: HandlerContext): Handlers {
       const job = insert('jobs', { id: uuidv7(), kind: String(input['kind']), status: 'queued', progress: 0, resultRoute: null, createdAt: now() })
       runJob(job.id)
       return { status: 201, payload: job }
+    },
+    createApiKey: (_, body) => {
+      const input = objectBody(body)
+      const expiresAt: Rule = (value) => (value === null || (typeof value === 'string' && !Number.isNaN(Date.parse(value))) ? undefined : 'must be a time or null')
+      validate(input, { name: nonEmpty, scopes: stringList, expiresAt }, ['name', 'scopes'])
+      const id = uuidv7()
+      const key: ApiKey = {
+        id, name: String(input['name']), prefix: `demo_${id.slice(0, 8)}`, scopes: input['scopes'] as string[],
+        expiresAt: (input['expiresAt'] as string | null | undefined) ?? null, lastUsedAt: null, createdAt: now(),
+      }
+      const secret = Array.from({ length: 32 }, () => Math.floor(random() * 16).toString(16)).join('')
+      return { status: 201, payload: { ...insert('apiKeys', key), secret: `${key.prefix}.${secret}` } }
+    },
+    revokeApiKey: ({ id }) => {
+      if (!remove('apiKeys', id ?? '')) throw new Refusal('not_found')
+      return { status: 204 }
     },
     sendMessage: (_, body) => {
       const input = objectBody(body)

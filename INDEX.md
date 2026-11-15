@@ -7,7 +7,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 |------|-------|
 | primitive | 26 |
 | layout | 5 |
-| block | 19 |
+| block | 20 |
 | page | 5 |
 | pattern | 7 |
 
@@ -57,6 +57,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | Name | Intent | Uses | Livewire | Laws | Status | Summary |
 |------|--------|------|----------|------|--------|---------|
 | [AgentDock](ui/blocks/AgentDock/AgentDock.md) | agent dock, assistant, chat panel, chatbot, in-app agent, ask the assistant, guide mode, drive mode, take over | AgentCursor, Spotlight, Avatar, Banner, Button, Icon, Skeleton, Textarea, agent, format | yes | cognitive-bias, paradox-of-the-active-user | ready | The in-app agent's panel for the AppShell's `dock` slot (D25, D26): the conversation, a composer, and a mode switch (Chat, Guide, Drive). An agent message with a plan gets "Show me", which walks it with the Spotlight while the user clicks, and "Do it", which runs it with the AgentCursor while the user watches. A Take over button stops a running plan. |
+| [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md) | api keys, api tokens, personal access tokens, create api key, revoke key, machine access, agent access, key scopes, key expiry | Badge, Banner, Button, Checkbox, Dialog, EmptyState, Field, Icon, Input, Select, Table, format | yes | peak-end-rule, cognitive-load | ready | The signed-in user's API keys over livewire (D60): a live table (name and non-secret prefix, scopes, created, last used, expiry with an expiring or expired badge), "New API key" (name, scopes, expiry) that shows the secret once with a copy button, and revoke behind a danger confirmation. Fits govengers/auth's issued keys (`<prefix>_<id>.<secret>`, scopes as permissions, optional expiry, last use); the app declares the three livewire operations. |
 | [ColumnsPicker](ui/blocks/ColumnsPicker/ColumnsPicker.md) | columns, column picker, show columns, hide columns, visible columns, table columns, column chooser, customize table | Popover, Button, Icon, Checkbox | no | choice-overload, cognitive-bias, millers-law, parkinsons-law, working-memory | ready | Which columns a table shows: a ghost icon button opens a list of checkboxes, one per column, and a Reset item. Required columns stay ticked and disabled. With `storageKey` the choice survives a reload in localStorage. |
 | [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md) | connection banner, connection lost, offline notice, reconnecting notice, socket status, live status banner | Banner, Button | yes | doherty-threshold, selective-attention | ready | The shell's connection notice (D34) over `useLiveStatus()`: a warning banner while the socket reconnects, a danger banner with Retry once the connection ended, and nothing while it is open, connecting for the first time or idle. Put it in `AppShell`'s banner slot. |
 | [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md) | detail drawer, record drawer, detail panel, side panel for a row, previous next record, row detail, quick view | Sheet, Button, Icon | yes | cognitive-load, flow, goal-gradient-effect, working-memory | ready | One record in a `Sheet`, with previous and next through the rows on screen (PDB's AgentDetailDrawer, D34): the header shows the title, "3 of 25" and two arrow buttons, also bound to ArrowLeft and ArrowRight. Given an item read as `target` it subscribes to the open record while open; otherwise the page passes the record as `item`. |
@@ -111,6 +112,7 @@ Every intent keyword and the pieces that answer it.
 - **action registry**: [agent](ui/agent/agent.md)
 - **add filter**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
 - **admin acting as**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
+- **agent access**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **agent actions**: [agent](ui/agent/agent.md)
 - **agent clicks for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **agent cursor**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
@@ -119,6 +121,8 @@ Every intent keyword and the pieces that answer it.
 - **alert dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **anchored panel**: [Popover](ui/Popover/Popover.md)
 - **announcement**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **api keys**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
+- **api tokens**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **app map**: [agent](ui/agent/agent.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
 - **app shell**: [AppShell](ui/AppShell/AppShell.md)
 - **approval**: [WorkflowStatus](ui/blocks/WorkflowStatus/WorkflowStatus.md)
@@ -176,6 +180,7 @@ Every intent keyword and the pieces that answer it.
 - **counted tabs**: [Tabs](ui/Tabs/Tabs.md), [ListPage](pages/ListPage/ListPage.md)
 - **counted tabs row**: [PageHeader](ui/PageHeader/PageHeader.md)
 - **CountedTabs**: [Tabs](ui/Tabs/Tabs.md)
+- **create api key**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **create form**: [Building a form](patterns/building-a-form.md)
 - **created between**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
 - **currency**: [format](ui/format.md)
@@ -280,6 +285,8 @@ Every intent keyword and the pieces that answer it.
 - **inline edit**: [DetailPage](pages/DetailPage/DetailPage.md), [Building a form](patterns/building-a-form.md)
 - **job progress**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
 - **kebab menu**: [Menu](ui/Menu/Menu.md)
+- **key expiry**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
+- **key scopes**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **kpi**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **kpi tiles**: [Dashboard](pages/Dashboard/Dashboard.md)
 - **label**: [Field](ui/Field/Field.md)
@@ -324,6 +331,7 @@ Every intent keyword and the pieces that answer it.
 - **logout page**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **long running task**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
 - **long-running task**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
+- **machine access**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **main menu**: [AppShell](ui/AppShell/AppShell.md)
 - **maintenance notice**: [Banner](ui/Banner/Banner.md)
 - **menu**: [Menu](ui/Menu/Menu.md)
@@ -377,6 +385,7 @@ Every intent keyword and the pieces that answer it.
 - **password login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **patch form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **percent**: [format](ui/format.md)
+- **personal access tokens**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **picker**: [Select](ui/Select/Select.md)
 - **picker panel**: [Popover](ui/Popover/Popover.md)
 - **pictogram**: [Icon](ui/Icon/Icon.md)
@@ -410,6 +419,7 @@ Every intent keyword and the pieces that answer it.
 - **replay steps**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **required**: [Field](ui/Field/Field.md)
 - **responsive table**: [Table](ui/Table/Table.md)
+- **revoke key**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **row actions**: [Menu](ui/Menu/Menu.md), [Table](ui/Table/Table.md)
 - **row detail**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
 - **row selection**: [Table](ui/Table/Table.md)
