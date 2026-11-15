@@ -2,7 +2,8 @@
 // UpdateHint (D57): tells the user a newer build was deployed and offers a reload. Compares the
 // bundle's version with the server's: a value pushed over livewire (`latest`), or a `check` it
 // runs every `interval`, when the tab is shown again and when the socket reconnects (a deploy
-// restarts the server), at most once a minute (or per interval when shorter). Never reloads by itself: the user may be typing.
+// restarts the server), at most once a minute (or per half interval when shorter); a trigger inside
+// that gap runs at its end. Never reloads by itself: the user may be typing.
 import { computed, onBeforeUnmount, onMounted, ref, watch, type MaybeRefOrGetter } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { LiveConnection } from '@/api/runtime'
@@ -35,7 +36,7 @@ const shown = computed(() => outdated(props.version, current.value) && current.v
 
 watch(() => props.latest, (value) => { if (value) server.value = value }, { immediate: true })
 
-const versions = props.check ? createVersionCheck(props.check, Math.min(60_000, props.interval)) : undefined
+const versions = props.check ? createVersionCheck(props.check, Math.min(60_000, props.interval / 2)) : undefined
 async function run(): Promise<void> {
   const version = await versions?.run()
   if (version) server.value = version
@@ -60,6 +61,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   clearInterval(timer)
+  versions?.stop()
   document.removeEventListener('visibilitychange', onVisibility)
 })
 

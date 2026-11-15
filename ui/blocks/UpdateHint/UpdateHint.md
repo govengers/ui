@@ -13,7 +13,8 @@ laws: [doherty-threshold, selective-attention]
 Tells the user that a newer build was deployed and offers a reload (D57). It compares the
 bundle's version with the server's: a value pushed over livewire (`latest`), or a `check` it runs
 every `interval`, when the tab becomes visible and when the socket reconnects (a deploy restarts
-the server, so every client reconnects), at most once a minute. An info banner with Reload; a
+the server, so every client reconnects), at most once a minute (half the interval when that
+is shorter); a trigger inside that gap runs at its end, so a reconnect is never dropped. An info banner with Reload; a
 dismissed hint stays away until the server reports yet another version. Never reloads by itself.
 
 ## Load
@@ -47,7 +48,8 @@ Do not load:
 
 `updateHint.ts`: `outdated(bundle, server)` (a known version other than the bundle's, a rollback
 included; `''`, `dev`, `development`, `local` never count) and `createVersionCheck(check, gap,
-now?)` (one call in flight, at most one start per gap, failures answer `undefined`).
+now?, schedule?)` (one call in flight, at most one start per gap, a trigger inside the gap runs
+once at its end, failures answer `undefined`; `stop()` drops the scheduled run).
 
 ## Events
 

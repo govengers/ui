@@ -321,7 +321,8 @@ switchable style presets.
 - **D57 UpdateHint compares versions and never reloads by itself.** The bundle's version against
   the server's, from a value a live read pushes or a `check` function (a version endpoint or a
   read) run every 15 minutes while visible, on tab focus and on socket reconnect (a deploy
-  restarts the server, so every client reconnects), at most once a minute. Any known version
+  restarts the server, so every client reconnects), at most once a minute (half the interval
+  when shorter), and a trigger inside that gap runs once at its end. Any known version
   other than the bundle's counts, a rollback too; `dev` and friends never do. An info banner with
   Reload; a dismissed hint returns only for yet another version. Reloading on its own would drop
   what the user is typing; chunk-load failures stay the app's `vite:preloadError` handler.

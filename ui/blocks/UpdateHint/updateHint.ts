@@ -16,24 +16,56 @@ export function outdated(bundle: string, server: string | null | undefined): boo
 }
 
 export interface VersionCheck {
-  /** Runs the check unless one is in flight or the last started less than `gap` ms ago; resolves to the version, undefined when skipped or failed. */
+  /**
+   * Runs the check unless one is in flight (answers that one) or the last started less than `gap`
+   * ms ago: then one run is scheduled for the end of the gap and answered, so a trigger is never
+   * lost. Resolves to the version, undefined when the check failed.
+   */
   run(): Promise<string | undefined>
+  /** Drops the scheduled run (unmount). */
+  stop(): void
+}
+
+/** Starts `run` after `ms`, answers its cancel. */
+export type Schedule = (run: () => void, ms: number) => () => void
+
+const timeout: Schedule = (run, ms) => {
+  const id = setTimeout(run, ms)
+  return () => clearTimeout(id)
 }
 
 /** A failed check answers undefined; the next trigger tries again once the gap has passed. */
-export function createVersionCheck(check: () => Promise<string | null | undefined>, gap: number, now: () => number = Date.now): VersionCheck {
+export function createVersionCheck(check: () => Promise<string | null | undefined>, gap: number, now: () => number = Date.now, schedule: Schedule = timeout): VersionCheck {
   let last: number | undefined
   let inFlight: Promise<string | undefined> | undefined
+  let trailing: Promise<string | undefined> | undefined
+  let cancel: (() => void) | undefined
+  const due = (): boolean => last === undefined || now() - last >= gap
+  const start = (): Promise<string | undefined> => {
+    last = now()
+    inFlight = Promise.resolve()
+      .then(check)
+      .then((version) => version ?? undefined, () => undefined)
+      .finally(() => { inFlight = undefined })
+    return inFlight
+  }
   return {
     run() {
       if (inFlight !== undefined) return inFlight
-      if (last !== undefined && now() - last < gap) return Promise.resolve(undefined)
-      last = now()
-      inFlight = Promise.resolve()
-        .then(check)
-        .then((version) => version ?? undefined, () => undefined)
-        .finally(() => { inFlight = undefined })
-      return inFlight
+      if (due()) return start()
+      trailing ??= new Promise((resolve) => {
+        cancel = schedule(() => {
+          trailing = undefined
+          cancel = undefined
+          resolve(inFlight ?? (due() ? start() : undefined))
+        }, last! + gap - now())
+      })
+      return trailing
+    },
+    stop() {
+      cancel?.()
+      cancel = undefined
+      trailing = undefined
     },
   }
 }
