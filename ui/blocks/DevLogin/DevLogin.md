@@ -2,7 +2,7 @@
 name: DevLogin
 tier: block
 intent: [dev login, development login, one click login, log in as user, switch test user, local login, seed users]
-uses: [Avatar, Badge, Banner, Button, Card, Skeleton, session]
+uses: [Avatar, Banner, Button, Card, Skeleton, session]
 livewire: false
 status: ready
 laws: [fittss-law, doherty-threshold]
@@ -13,7 +13,8 @@ laws: [fittss-law, doherty-threshold]
 The development users of govengers/auth's dev login provider (`GET /auth/dev/users`), one click
 each signs in (`POST /auth/dev/login`) (D58). A hint line says it is for development. It
 renders nothing when the server lists no users (no dev login: the session module answers `[]`
-for the 404). Put it under `LoginForm` on the login page, behind the production guard below.
+for the 404). Put it in `LoginPage`'s `after` slot (under the form), behind the production guard
+below; `templates/project/LoginRoute.vue` does exactly that.
 
 ## Load
 
@@ -21,7 +22,7 @@ for the 404). Put it under `LoginForm` on the login page, behind the production 
 |------|------|-----|
 | this card | always | the contract |
 | `DevLogin.vue` | to use it: skim; to change it: read | the behaviour |
-| the cards of `Avatar`, `Badge`, `Banner`, `Button`, `Card`, `Skeleton` | when their props show up here | what the composed pieces do |
+| the cards of `Avatar`, `Banner`, `Button`, `Card`, `Skeleton` | when their props show up here | what the composed pieces do |
 | `ui/session.md` | wiring `users` and `login` | where both come from |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 
@@ -36,7 +37,7 @@ Do not load:
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `users` | `() => Promise<DevUser[]>` | required | `session.devUsers`; `DevUser` is `{ id, name, email?, roles? }` from `ui/session.ts` |
+| `users` | `() => Promise<DevUser[]>` | required | `session.devUsers`; `DevUser` is `{ id, name, description? }` from `ui/session.ts` |
 | `login` | `(id: string) => Promise<void>` | required | `session.devLogin(id)` then the navigation; its error's message shows |
 
 ## Keeping it out of production
@@ -71,5 +72,9 @@ Like `login`, it is never bound: drive mode pauses on it (D52).
 
 - The list loads once on mount; a failed load shows a Banner with Retry.
 - While one login runs, every button is disabled; the clicked one is `aria-busy`.
-- The response shape of `GET /auth/dev/users` is an array of `DevUser`; a server that answers
-  another shape is mapped in the session module, not here.
+- `GET /auth/dev/users` answers `{ "users": [{ "id", "name", "description" }] }` (govengers/auth
+  `devlogin`); the session unwraps `users` and refuses any other body, so a mismatch shows as the
+  error Banner instead of an empty card. The description (a hint such as "admin") shows under the
+  name. A server that answers another shape is mapped in the session module, not here.
+- A dev login session logs out at `POST /auth/dev/logout` (`session.logout()` picks it by the
+  identity's provider `dev_login`).

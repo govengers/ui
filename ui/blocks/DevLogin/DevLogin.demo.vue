@@ -5,9 +5,9 @@ import type { DevUser } from '../../session'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const people: DevUser[] = [
-  { id: 'u-1', name: 'Ada Admin', email: 'ada@example.com', roles: ['admin'] },
-  { id: 'u-2', name: 'Bob Member', email: 'bob@example.com', roles: ['member'] },
-  { id: 'u-3', name: 'Build Agent', roles: ['agent'] },
+  { id: 'u-1', name: 'Ada Admin', description: 'admin' },
+  { id: 'u-2', name: 'Bob Member', description: 'member, no projects' },
+  { id: 'u-3', name: 'Build Agent' },
 ]
 const signedIn = ref<string>()
 

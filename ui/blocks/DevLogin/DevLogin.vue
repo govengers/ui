@@ -5,7 +5,6 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Avatar from '../../Avatar/Avatar.vue'
-import Badge from '../../Badge/Badge.vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
 import Card from '../../Card/Card.vue'
@@ -72,10 +71,7 @@ onMounted(load)
             <Avatar :name="user.name" size="sm" />
             <span class="ui-dev-login__who">
               <span class="ui-dev-login__name">{{ user.name }}</span>
-              <span v-if="user.email" class="ui-dev-login__email">{{ user.email }}</span>
-            </span>
-            <span class="ui-dev-login__roles">
-              <Badge v-for="role in user.roles ?? []" :key="role" size="sm">{{ role }}</Badge>
+              <span v-if="user.description" class="ui-dev-login__description">{{ user.description }}</span>
             </span>
           </button>
         </li>
@@ -109,6 +105,5 @@ onMounted(load)
 .ui-dev-login__user[aria-busy='true'] { border-color: var(--ui-accent); }
 .ui-dev-login__who { display: grid; flex: 1; min-width: 0; }
 .ui-dev-login__name { font-weight: var(--ui-weight-medium); }
-.ui-dev-login__email { color: var(--ui-muted); font-size: var(--ui-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-dev-login__roles { display: flex; flex-wrap: wrap; gap: var(--ui-space-1); }
+.ui-dev-login__description { color: var(--ui-muted); font-size: var(--ui-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
