@@ -7,7 +7,7 @@ import { computed, onScopeDispose, ref, shallowRef, watch, watchEffect } from 'v
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 import type { ListResponse, LiveTarget } from '@/api/runtime'
-import { useLiveList, useLiveStatus } from '@/api/vue'
+import { useLiveConnection, useLiveList, useLiveStatus } from '@/api/vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
 import EmptyState from '../../EmptyState/EmptyState.vue'
@@ -92,11 +92,14 @@ watch(() => composeFilter(props.filter, search.value), (filter) => (list.filter.
 watch(sort, (value) => (list.sort.value = sortTerms(value) as Query['sort']))
 
 // useLiveList drops the rows while a new sort, search or page loads: keep the last ones on
-// screen meanwhile, so only the first load shows skeleton rows.
-const loaded = shallowRef<Item[]>([])
+// screen meanwhile, so only the first load shows skeleton rows. Never across a new pair: no row
+// outlives a logout or an account switch.
+const connection = useLiveConnection()
+const held = shallowRef<{ connection: unknown; items: Item[] }>({ connection: connection.value, items: [] })
 watchEffect(() => {
-  if (!list.loading.value) loaded.value = list.items.value
+  if (!list.loading.value) held.value = { connection: connection.value, items: list.items.value }
 })
+const loaded = computed(() => (list.loading.value && held.value.connection === connection.value ? held.value.items : list.items.value))
 
 // Cursor mode: useLiveList tiles pages (load more); previous and next step through the loaded
 // tiles and load the next one when stepping past them. ponytail: every visited page stays
