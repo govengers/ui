@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { ApiError } from '@/api/runtime'
 import LoginPage from './LoginPage.vue'
-import type { LoginCredentials, LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
+import type { LoginAnswer, LoginCredentials, LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
 
 const signedIn = ref<string>()
 const wait = () => new Promise((resolve) => setTimeout(resolve, 400))
@@ -11,10 +11,10 @@ const refused = (code: string): Error => Object.assign(new Error(code), { code }
 const providers: LoginProvider[] = [{ name: 'oidc', label: 'Company SSO', href: '#login' }]
 
 /** The demo's login: ada / secret signs in, bob / secret is asked for 123456, the rest fails. */
-async function login(credentials: LoginCredentials): Promise<{ twoFactor?: boolean } | void> {
+async function login(credentials: LoginCredentials): Promise<LoginAnswer | void> {
   await wait()
   if (credentials.identifier === 'bob' && credentials.password === 'secret') {
-    if (credentials.code === undefined) return { twoFactor: true }
+    if (credentials.code === undefined) return { challenge: 'totp' }
     if (credentials.code !== '123456') throw refused('invalid_totp_code')
   } else if (credentials.identifier !== 'ada' || credentials.password !== 'secret') {
     throw refused('invalid_credentials')

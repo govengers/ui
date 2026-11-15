@@ -15,13 +15,13 @@ import Field from '../../ui/Field/Field.vue'
 import Input from '../../ui/Input/Input.vue'
 import Page from '../../ui/Page/Page.vue'
 import PageHeader from '../../ui/PageHeader/PageHeader.vue'
-import LoginForm, { type LoginCredentials, type LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
+import LoginForm, { type LoginAnswer, type LoginCredentials, type LoginProvider } from '../../ui/blocks/LoginForm/LoginForm.vue'
 import { messages } from './messages'
 
 const props = withDefaults(defineProps<{
   state?: 'login' | 'loggedOut' | 'changePassword' | undefined
-  /** Signs in (see LoginForm): answers { twoFactor: true } for the code step, throws an Error whose message is shown. */
-  login: (credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } | void>
+  /** Signs in (see LoginForm): answers { challenge: 'totp' } for the code step, throws an Error whose message is shown. */
+  login: (credentials: LoginCredentials) => Promise<LoginAnswer | void>
   /** The redirect logins (OIDC, GitHub), hrefs from session.loginHref. */
   providers?: readonly LoginProvider[] | undefined
   /** `sso`: the providers first, the password form behind a link. */
@@ -37,6 +37,8 @@ const props = withDefaults(defineProps<{
 defineSlots<{
   /** The app's logo in the top bar; the app name by default. */
   logo?(): unknown
+  /** Under the sign-in form: DevLogin in development builds (its card shows the guard). */
+  after?(): unknown
 }>()
 
 const { t } = useI18n({ useScope: 'global', messages })
@@ -88,6 +90,7 @@ async function submitChange(): Promise<void> {
             <a href="/auth/forgot">{{ t('auth.login.forgot') }}</a>
           </template>
         </LoginForm>
+        <slot v-if="state === 'login'" name="after" />
 
         <Card v-else-if="state === 'loggedOut'" :title="t('auth.loggedOut.title')" as="section">
           <div class="login-page__stack">

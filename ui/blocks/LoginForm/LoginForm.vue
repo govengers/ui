@@ -19,6 +19,11 @@ export interface LoginCredentials {
   backupCode?: boolean
 }
 
+/** What a login answers: the second step govengers/auth asks for, if any (`totp`: a code; `totp_setup`: enrol first). */
+export interface LoginAnswer {
+  challenge?: 'totp' | 'totp_setup' | undefined
+}
+
 /** A login that leaves the page; `href` already carries the sanitised return path. */
 export interface LoginProvider {
   name: string
@@ -27,7 +32,7 @@ export interface LoginProvider {
 }
 
 const props = withDefaults(defineProps<{
-  login: (credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } | void>
+  login: (credentials: LoginCredentials) => Promise<LoginAnswer | void>
   title?: string | undefined
   providers?: readonly LoginProvider[] | undefined
   /** `sso`: the providers first, the password form behind a link. */
@@ -46,7 +51,6 @@ const reasons: Record<string, string> = {
   invalid_credentials: 'ui.wrongCredentials',
   invalid_totp_code: 'ui.wrongCode',
   no_pending_login: 'ui.loginExpired',
-  totp_setup_required: 'ui.totpSetupRequired',
 }
 
 const { t } = useI18n()
@@ -68,11 +72,13 @@ async function submit(): Promise<void> {
     const credentials: LoginCredentials = { identifier: identifier.value, password: password.value }
     if (step.value === 'code') Object.assign(credentials, { code: code.value, backupCode: backupCode.value })
     const answer = await props.login(credentials)
-    if (answer?.twoFactor === true && step.value === 'credentials') {
+    if (answer?.challenge === 'totp' && step.value === 'credentials') {
       step.value = 'code'
       await nextTick()
       codeInput.value?.focus()
     }
+    // Enrolment is the app's screen; its `login` navigates there, this is the fallback sentence.
+    if (answer?.challenge === 'totp_setup') error.value = t('ui.totpSetupRequired')
   } catch (failure) {
     const reason = typeof failure === 'object' && failure !== null && 'code' in failure ? reasons[String(failure.code)] : undefined
     error.value = reason !== undefined ? t(reason) : failure instanceof Error ? failure.message : String(failure)
@@ -130,8 +136,8 @@ async function switchCode(): Promise<void> {
               name="code"
               :inputmode="backupCode ? 'text' : 'numeric'"
               :autocomplete="backupCode ? 'off' : 'one-time-code'"
-              :pattern="backupCode ? undefined : '[0-9]{6}'"
-              :maxlength="backupCode ? 64 : 6"
+              :pattern="backupCode ? undefined : '[0-9]{6,8}'"
+              :maxlength="backupCode ? 64 : 8"
             />
           </Field>
           <Button variant="ghost" size="sm" @click="switchCode">{{ backupCode ? t('ui.useAuthenticator') : t('ui.useBackupCode') }}</Button>

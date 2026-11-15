@@ -37,17 +37,19 @@ Do not load:
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `login` | `(credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } \| void>` | required | throws an error; with a `code` below its sentence shows, else its `message` |
+| `login` | `(credentials: LoginCredentials) => Promise<LoginAnswer \| void>` | required | answers `{ challenge }` for a second step; throws an error, with a `code` below its sentence shows, else its `message` |
 | `title` | `string \| undefined` | `ui.signIn` | |
 | `providers` | `LoginProvider[]` | `[]` | `{ name, label, href }`; `href` from `session.loginHref(provider, redirect)` |
 | `layout` | `password \| sso` | `password` | `sso`: providers as primary buttons, "Sign in with a password" reveals the form |
 
 `LoginCredentials` (exported): `{ identifier, password, code?, backupCode? }`; `code` and
-`backupCode` only in the second step. `LoginProvider` is exported too.
+`backupCode` only in the second step. `LoginAnswer` (exported): `{ challenge?: 'totp' |
+'totp_setup' }`, govengers/auth's challenge names; `totp` opens the code step, `totp_setup`
+shows `ui.totpSetupRequired` (the app's `login` routes to its enrolment screen instead).
+`LoginProvider` is exported too.
 
 Codes shown as sentences: `invalid_credentials`, `invalid_totp_code`, `no_pending_login` (also
-returns to the first step), `totp_setup_required` (the session module's code for the
-`totp_setup` challenge).
+returns to the first step).
 
 ## Slots
 
@@ -68,7 +70,7 @@ the pair before the request and builds the next one after it (`ui/session.md`):
 ```ts
 async function login(credentials: LoginCredentials) {
   const answer = await session.login(credentials)
-  if (!answer.twoFactor) await router.replace(safeRedirect(route.query.redirect))
+  if (answer.challenge === undefined) await router.replace(safeRedirect(route.query.redirect))
   return answer
 }
 ```
@@ -85,7 +87,8 @@ Banner is `role="alert"`.
   form offers none (D57). The `ui.rememberMe` key stays for copies made before.
 - The identifier field is plain text (`autocomplete="username"`): govengers/auth accepts a user
   name or an email, whichever its options enable.
-- The TOTP code must match `[0-9]{6}`; a backup code has no pattern.
+- The TOTP code must match `[0-9]{6,8}` (govengers/auth's `TOTP.Digits` is 6 or 8); a backup
+  code has no pattern.
 - There is no way back from the code step; a page that wants one remounts the form (`:key`).
 - Do not show the server's reason for a failed login; govengers/auth answers one code for every
   wrong-credentials case and the form keeps it that way.

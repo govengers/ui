@@ -38,7 +38,7 @@ Do not load:
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
 | `state` | `login \| loggedOut \| changePassword` | `login` | the screen; one route per state |
-| `login` | `(credentials: LoginCredentials) => Promise<{ twoFactor?: boolean } \| void>` | required | `session.login` plus the navigation to `safeRedirect(route.query.redirect)` (see `LoginForm`, `ui/session.md`) |
+| `login` | `(credentials: LoginCredentials) => Promise<LoginAnswer \| void>` | required | `session.login` plus the navigation to `safeRedirect(route.query.redirect)` (see `LoginForm`, `ui/session.md`) |
 | `providers` | `LoginProvider[]` | `[]` | the redirect logins, hrefs from `session.loginHref` |
 | `layout` | `password \| sso` | `password` | `sso`: providers first, the password form behind a link |
 | `change` | `(passwords: { currentPassword, newPassword }) => Promise<void>` | required | throws an `ApiError` whose `fields` show at the Fields, or an `Error` whose message shows in a Banner |
@@ -50,6 +50,7 @@ Do not load:
 | Slot | Content |
 |------|---------|
 | `logo` | the app's logo in the top bar; the app name (`auth.app`) by default |
+| `after` | under the sign-in form (state `login` only): `DevLogin` in development builds, as `templates/project/LoginRoute.vue` does |
 
 ## Agent
 

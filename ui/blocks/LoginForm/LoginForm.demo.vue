@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import LoginForm, { type LoginCredentials, type LoginProvider } from './LoginForm.vue'
+import LoginForm, { type LoginAnswer, type LoginCredentials, type LoginProvider } from './LoginForm.vue'
 
 const signedIn = ref<string>()
 const refused = (code: string): Error => Object.assign(new Error(code), { code })
@@ -10,10 +10,10 @@ const providers: LoginProvider[] = [
 ]
 
 /** The demo's login: ada / secret signs in, bob / secret is asked for 123456 or the backup code abcd-1234, the rest fails. */
-async function login(credentials: LoginCredentials): Promise<{ twoFactor?: boolean } | void> {
+async function login(credentials: LoginCredentials): Promise<LoginAnswer | void> {
   await new Promise((resolve) => setTimeout(resolve, 400))
   if (credentials.identifier === 'bob' && credentials.password === 'secret') {
-    if (credentials.code === undefined) return { twoFactor: true }
+    if (credentials.code === undefined) return { challenge: 'totp' }
     if (credentials.code !== (credentials.backupCode ? 'abcd-1234' : '123456')) throw refused('invalid_totp_code')
   } else if (credentials.identifier !== 'ada' || credentials.password !== 'secret') {
     throw refused('invalid_credentials')
