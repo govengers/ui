@@ -41,7 +41,7 @@ Do not load:
 | `modelValue` | `boolean` | `false` | open state, `v-model` |
 | `send` | `MutationTarget<NoParameters, FeedbackReport, unknown>` | required | the create call, e.g. `calls.createFeedback`; the report is its body |
 | `buffer` | `FeedbackBuffer \| undefined` | the installed one | where the entries come from; none installed means no entries |
-| `screenshot` | `() => Promise<string \| null \| undefined>` | none | captures the page as a data URL; runs before the dialog shows; a failure sends without one |
+| `screenshot` | `() => Promise<string \| null \| undefined>` | none | captures the page as a data URL; runs before the dialog shows; a failure or no answer within 3 s sends without one |
 | `version` | `string \| undefined` | none | the build, for the environment |
 | `inline` | `boolean` | `false` | open in the page flow through Dialog's `inline`, frozen at mount; docs and previews only |
 
@@ -52,18 +52,27 @@ Do not load:
 | `update:modelValue` | `false` | Cancel, Escape, X, or after a successful send |
 | `sent` | `FeedbackReport` | the server accepted the report; show a toast |
 
+## Exposes
+
+`capturing` (a ref): true while the screenshot hook runs, before the dialog shows; a trigger
+button can show it as loading.
+
 ## The modules
 
 `feedback.ts`: `installFeedbackBuffer({ size = 50, levels = ['error', 'warn'], host?, now? })`
 wraps `console`, `fetch` (records answers that are not ok, and network failures; not aborts) and
-listens to `error` and `unhandledrejection`; it answers `{ entries, push, clear, uninstall }`.
+listens to `error` and `unhandledrejection`; it answers `{ entries, push, clear, uninstall }`; `push` redacts and clips like the recorded
+entries, so a failed socket call can go in as it is.
 Called again without a host it answers the installed buffer (hot reload). `collectEnvironment`
-(URL, user agent, language, time zone, viewport, screen, pixel ratio, colour scheme, online,
-version), `buildReport` (frozen), `previewText`.
+(URL with every query and fragment value masked, user agent, language, time zone, viewport, screen, pixel ratio, colour scheme, online,
+version), `runScreenshotHook` (the hook with a 3 s limit), `buildReport` (frozen), `previewText`.
 
 `redact.ts`: `secretKey`, `redactValue` (secret keys masked with their subtree at any depth,
-cycles and depth cut, errors as name, message, stack) and `redactText` (`key=value`, `"key":
-"value"`, `Bearer x`, JWTs, `user:pass@` in URLs). Substring matching over-redacts on purpose.
+cycles and depth cut, errors as name, message, stack), `redactText` (text that is JSON is
+redacted as a value, also JSON inside JSON; else `key=value`, `"key": "value"` and escaped
+`\"key\"` pairs, an object or array value with its whole subtree, `Authorization:` and `Cookie:`
+lines to their end, `Bearer x`, JWTs, `user:pass@` in URLs) and `redactUrl`. Substring matching
+over-redacts on purpose. A console line is cut to 8000 characters before it is scrubbed.
 
 ## With livewire
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { buildReport, collectEnvironment, installFeedbackBuffer, previewText, type EnvironmentHost, type FeedbackHost, type FeedbackSnapshot } from './feedback'
+import { buildReport, collectEnvironment, installFeedbackBuffer, previewText, runScreenshotHook, type EnvironmentHost, type FeedbackHost, type FeedbackSnapshot } from './feedback'
 
 function fakeHost(answer: (url: string) => Promise<Response>) {
   const printed: unknown[][] = []
@@ -49,6 +49,30 @@ describe('installFeedbackBuffer', () => {
     ])
   })
 
+  test('secrets in serialized JSON never reach the buffer', () => {
+    const { host } = fakeHost(async () => new Response())
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    host.console.error('Login answered ' + '{"session":{"id":"S3CR3T-SESSION"},"tokens":["tok-AAA111","tok-BBB222"]}')
+    host.console.error('POST /login failed', JSON.stringify({ url: '/login', body: JSON.stringify({ email: 'ada@example.com', password: 'hunter2' }) }))
+    host.console.error('retry with', { init: { body: JSON.stringify({ auth: { user: 'ada', pass: 'hunter2' } }) } })
+    host.console.error('{"credentials":{"value":"secret456"}}')
+    host.console.warn('Cookie: theme=dark; refresh=secret789')
+    const texts = buffer.entries().map((entry) => (entry.kind === 'console' ? entry.text : ''))
+    for (const secret of ['S3CR3T', 'tok-', 'hunter2', 'secret456', 'secret789']) expect(texts.join('\n')).not.toContain(secret)
+    expect(texts[0]).toBe('Login answered {"session":"[redacted]","tokens":"[redacted]"}')
+  })
+
+  test('push redacts and clips like the recorded entries', () => {
+    const { host } = fakeHost(async () => new Response())
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    buffer.push({ kind: 'console', level: 'error', at: 'x', text: 'socket call failed: token=RAW-TOKEN' })
+    buffer.push({ kind: 'request', at: 'x', method: 'GET', url: '/a?token=RAW', status: null, error: 'password=RAW', ms: 1 })
+    expect(buffer.entries()).toEqual([
+      { kind: 'console', level: 'error', at: 'x', text: 'socket call failed: token=[redacted]' },
+      { kind: 'request', at: 'x', method: 'GET', url: '/a?token=[redacted]', status: null, error: 'password=[redacted]', ms: 1 },
+    ])
+  })
+
   test('uncaught errors and rejections; uninstall restores everything', () => {
     const { host, listeners } = fakeHost(async () => new Response())
     const original = host.console.error
@@ -83,5 +107,15 @@ describe('report', () => {
     const idea = buildReport({ type: 'idea', text: 'More', severity: 'high' }, snapshot, { technical: false, screenshot: true })
     expect(idea).toMatchObject({ severity: null, environment: null, entries: [], screenshot: 'data:image/png;base64,AAAA' })
     expect(previewText(idea)).toContain('"screenshot": "[image, 1 KB, shown below]"')
+  })
+})
+
+describe('runScreenshotHook', () => {
+  const now = (done: () => void) => done()
+  test('a hanging or failing hook answers null; a fast one its image', async () => {
+    expect(await runScreenshotHook(() => new Promise(() => undefined), 3000, now)).toBeNull()
+    expect(await runScreenshotHook(() => Promise.reject(new Error('no canvas')))).toBeNull()
+    expect(await runScreenshotHook(async () => 'data:image/png;base64,AA')).toBe('data:image/png;base64,AA')
+    expect(await runScreenshotHook(async () => undefined)).toBeNull()
   })
 })

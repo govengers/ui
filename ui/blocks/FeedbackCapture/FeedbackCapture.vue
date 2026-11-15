@@ -15,7 +15,7 @@ import Dialog from '../../Dialog/Dialog.vue'
 import Field from '../../Field/Field.vue'
 import Select from '../../Select/Select.vue'
 import Textarea from '../../Textarea/Textarea.vue'
-import { buildReport, collectEnvironment, feedbackBuffer, previewText, type FeedbackBuffer, type FeedbackReport, type FeedbackSeverity, type FeedbackSnapshot, type FeedbackType } from './feedback'
+import { buildReport, collectEnvironment, runScreenshotHook, feedbackBuffer, previewText, type FeedbackBuffer, type FeedbackReport, type FeedbackSeverity, type FeedbackSnapshot, type FeedbackType } from './feedback'
 
 const props = defineProps<{
   /** Open state (v-model). */
@@ -24,7 +24,7 @@ const props = defineProps<{
   send: MutationTarget<NoParameters, FeedbackReport, unknown>
   /** The ring buffer; the one installFeedbackBuffer() put on the page by default. */
   buffer?: FeedbackBuffer | undefined
-  /** Captures the page as a data URL (html2canvas-pro in the project); runs before the dialog opens. */
+  /** Captures the page as a data URL (html2canvas-pro in the project); runs before the dialog opens, given up after 3 s. */
   screenshot?: (() => Promise<string | null | undefined>) | undefined
   /** The build's version, for the environment. */
   version?: string | undefined
@@ -58,13 +58,7 @@ watch(() => props.modelValue || props.inline, async (open) => {
   failure.value = undefined
   capturing.value = true
   const frozen: FeedbackSnapshot = { environment: collectEnvironment(props.version), entries: (props.buffer ?? feedbackBuffer())?.entries() ?? [], screenshot: null }
-  if (props.screenshot) {
-    try {
-      frozen.screenshot = (await props.screenshot()) ?? null
-    } catch {
-      // no screenshot: the report goes without one
-    }
-  }
+  if (props.screenshot) frozen.screenshot = await runScreenshotHook(props.screenshot)
   if (mine !== generation) return
   snapshot.value = frozen
   capturing.value = false
@@ -74,6 +68,7 @@ const open = computed({
   get: () => Boolean(props.modelValue || props.inline) && !capturing.value && snapshot.value !== undefined,
   set: (value: boolean) => { if (!value) emit('update:modelValue', false) },
 })
+defineExpose({ capturing })
 const report = computed(() => (snapshot.value ? buildReport(form, snapshot.value, include) : undefined))
 
 async function submit(): Promise<void> {

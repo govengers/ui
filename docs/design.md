@@ -336,9 +336,12 @@ switchable style presets.
 - **D59 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
   buffer (`installFeedbackBuffer`, 50 entries) wraps console error and warn, `fetch` (not-ok
   answers and network failures) and the uncaught error events, and redacts on entry: secret keys
-  masked with their subtree at any depth, `key=value`, bearer tokens, JWTs and URL user info
-  scrubbed from text. The dialog freezes buffer, environment and the optional screenshot (taken
-  before the dialog shows) on open; `buildReport` deep-freezes the body the preview prints and
-  Send posts. Unticking details removes them from both. Sent through `pair.client` (REST)
-  because the socket is often what is broken. The screenshot is a hook, so the block carries no
-  dependency; D34's `html2canvas-pro` is the project's choice.
+  masked with their subtree at any depth (also inside text that is JSON, or JSON in JSON, which
+  is parsed and redacted as a value), `key=value` with an object value's whole subtree, header
+  lines to their end, bearer tokens, JWTs and URL user info scrubbed from text; the page URL
+  keeps no query or fragment value. `push` redacts too. The dialog freezes buffer, environment
+  and the optional screenshot (taken before the dialog shows) on open; `buildReport`
+  deep-freezes the body the preview prints and Send posts. Unticking details removes them from
+  both. Sent through `pair.client` (REST) because the socket is often what is broken. The
+  screenshot is a hook given 3 s, so the block carries no dependency and a hanging hook cannot
+  keep the dialog shut; D34's `html2canvas-pro` is the project's choice.

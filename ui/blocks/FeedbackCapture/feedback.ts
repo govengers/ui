@@ -2,7 +2,7 @@
 // requests (installed once in main.ts), the environment, and the report exactly as it is sent.
 // Everything is redacted when it enters the buffer (redact.ts), so a secret never sits in memory
 // longer than the console line that printed it.
-import { redactText, redactValue } from './redact'
+import { redactText, redactUrl, redactValue } from './redact'
 
 export type ConsoleLevel = 'error' | 'warn' | 'info' | 'log'
 
@@ -29,6 +29,7 @@ export type FeedbackEntry = ConsoleEntry | RequestEntry
 export interface FeedbackBuffer {
   /** A copy of the entries, oldest first. */
   entries(): FeedbackEntry[]
+  /** Adds an entry (a failed socket call, say), redacted and clipped like the recorded ones. */
   push(entry: FeedbackEntry): void
   clear(): void
   /** Puts console and fetch back as they were. */
@@ -60,9 +61,15 @@ function clip(text: string): string {
   return text.length > maxText ? `${text.slice(0, maxText)}... [${text.length - maxText} more]` : text
 }
 
+// Cut before scrubbing so one huge console line costs little; a value the cut splits is still
+// masked (an open quote or bracket runs to the end).
+function scrub(text: string): string {
+  return redactText(text.length > 4 * maxText ? text.slice(0, 4 * maxText) : text)
+}
+
 function describe(value: unknown): string {
-  if (typeof value === 'string') return redactText(value)
-  if (value instanceof Error) return redactText(`${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ''}`)
+  if (typeof value === 'string') return scrub(value)
+  if (value instanceof Error) return scrub(`${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ''}`)
   try {
     return JSON.stringify(redactValue(value)) ?? String(value)
   } catch {
@@ -108,7 +115,7 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
     host.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const started = now()
       const method = (init?.method ?? (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET')).toUpperCase()
-      const url = clip(redactText(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url))
+      const url = clip(scrub(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url))
       const entry = (status: number | null, error: string | null): RequestEntry => ({ kind: 'request', at: stamp(), method, url, status, error, ms: now() - started })
       try {
         const response = await Reflect.apply(originalFetch, host, [input, init]) as Response
@@ -129,7 +136,9 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
 
   const buffer: FeedbackBuffer = {
     entries: () => ring.map((item) => ({ ...item })),
-    push,
+    push: (entry) => push(entry.kind === 'console'
+      ? { ...entry, text: clip(scrub(entry.text)) }
+      : { ...entry, url: clip(scrub(entry.url)), error: entry.error === null ? null : clip(scrub(entry.error)) }),
     clear: () => { ring.length = 0 },
     uninstall: () => {
       for (const [level, original] of originals) host.console[level] = original
@@ -149,7 +158,7 @@ export function feedbackBuffer(): FeedbackBuffer | undefined {
 }
 
 export interface FeedbackEnvironment {
-  /** The page, its query redacted. */
+  /** The page, every query and fragment value masked. */
   url: string
   userAgent: string
   language: string
@@ -168,7 +177,7 @@ export type EnvironmentHost = Pick<Window, 'location' | 'navigator' | 'innerWidt
 
 export function collectEnvironment(version?: string, host: EnvironmentHost = window, now: () => number = Date.now): FeedbackEnvironment {
   return {
-    url: redactText(host.location.href),
+    url: redactUrl(host.location.href),
     userAgent: host.navigator.userAgent,
     language: host.navigator.language,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -203,6 +212,19 @@ export interface FeedbackSnapshot {
   environment: FeedbackEnvironment
   entries: FeedbackEntry[]
   screenshot: string | null
+}
+
+/**
+ * Runs the screenshot hook, giving up after `ms` (default 3 s): a slow or hanging hook must not
+ * keep the dialog from opening. A failure or a timeout answers null.
+ */
+export async function runScreenshotHook(hook: () => Promise<string | null | undefined>, ms = 3000, timer: (done: () => void, ms: number) => unknown = setTimeout): Promise<string | null> {
+  const timeout = new Promise<null>((resolve) => { timer(() => resolve(null), ms) })
+  try {
+    return (await Promise.race([hook(), timeout])) ?? null
+  } catch {
+    return null
+  }
 }
 
 function deepFreeze<Value>(value: Value): Value {

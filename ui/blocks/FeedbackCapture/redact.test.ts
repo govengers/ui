@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { redactText, redactValue, secretKey } from './redact'
+import { redactText, redactUrl, redactValue, secretKey } from './redact'
 
 describe('secretKey', () => {
-  test.each(['password', 'newPassword', 'api_key', 'X-Api-Key', 'accessToken', 'client_secret', 'Set-Cookie', 'sessionId', 'auth', 'otp'])('%s is a secret', (key) => {
+  test.each(['password', 'newPassword', 'api_key', 'X-Api-Key', 'accessToken', 'client_secret', 'Set-Cookie', 'sessionId', 'auth', 'otp', 'pass', 'pw', 'pin', 'passcode'])('%s is a secret', (key) => {
     expect(secretKey(key)).toBe(true)
   })
   test.each(['author', 'email', 'name', 'id', 'keyboard', 'total'])('%s is not', (key) => {
@@ -48,8 +48,46 @@ describe('redactText', () => {
     expect(redactText(input)).toBe(output)
   })
 
-  test('idempotent over already masked JSON', () => {
+  test('idempotent over already masked JSON and bare values', () => {
     const once = redactText(JSON.stringify(redactValue({ token: 'abc' })))
     expect(redactText(once)).toBe('{"token":"[redacted]"}')
+    expect(redactText(redactText('token=abc123'))).toBe('token=[redacted]')
+    expect(redactText('secret=[abc]')).toBe('secret=[redacted]')
+  })
+
+  test('a secret key whose value is an object or array loses the whole subtree', () => {
+    const text = 'Login answered {"session":{"id":"S3CR3T-SESSION"},"tokens":["tok-AAA111","tok-BBB222"],"user":"ada"}'
+    expect(redactText(text)).toBe('Login answered {"session":"[redacted]","tokens":"[redacted]","user":"ada"}')
+    expect(redactText('x {"credentials":{"value":"a}b"}} y')).toBe('x {"credentials":"[redacted]"} y')
+    expect(redactText('{"auth":{"pass":"unbalanced')).not.toContain('unbalanced')
+  })
+
+  test('JSON carried in a string, parsed or escaped', () => {
+    const twice = JSON.stringify({ url: '/login', body: JSON.stringify({ email: 'ada@example.com', password: 'hunter2' }) })
+    expect(redactText(twice)).not.toContain('hunter2')
+    expect(redactValue({ init: { body: JSON.stringify({ auth: { user: 'ada', pass: 'hunter2' } }) } })).toEqual({ init: { body: '{"auth":"[redacted]"}' } })
+    const embedded = 'POST failed: ' + twice
+    expect(redactText(embedded)).not.toContain('hunter2')
+    expect(redactText(String.raw`body {\"session\":{\"id\":\"S1\"}} end`)).not.toContain('S1')
+  })
+
+  test('header lines lose the whole value', () => {
+    expect(redactText('Authorization: ApiKey abc123SECRET')).toBe('Authorization: [redacted]')
+    expect(redactText('Cookie: lang=en; remember_me=SECRET1; PHPSESSID=SECRET2\nnext line')).toBe('Cookie: [redacted]\nnext line')
+    expect(redactText('Cookie: theme=dark; refresh=secret789')).toBe('Cookie: [redacted]')
+  })
+
+  test('long hyphenated or base64 runs stay linear', () => {
+    const started = performance.now()
+    redactText('ab-'.repeat(20000))
+    redactText(Array.from({ length: 3000 }, () => '123e4567-e89b-12d3-a456-426614174000').join('-'))
+    expect(performance.now() - started).toBeLessThan(500) // was 7.5 s
+  })
+})
+
+describe('redactUrl', () => {
+  test('masks every query and fragment value, keeps keys and path', () => {
+    expect(redactUrl('https://ada:pw@app.example/callback?code=OAUTHCODE&state=xyz#key=K1')).toBe('https://[redacted]@app.example/callback?code=[redacted]&state=[redacted]#key=[redacted]')
+    expect(redactUrl('https://app.example/tasks/1')).toBe('https://app.example/tasks/1')
   })
 })
