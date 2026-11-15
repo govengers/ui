@@ -248,8 +248,17 @@ switchable style presets.
   other (livewire D66, the `live.ts` of livewire's todo example made a module). The app builds
   the pair in `createPair(key, onUnauthorized)`, so the module stays free of URLs. The pair key
   carries the impersonator (`admin>target`), so starting or stopping an impersonation is a new
-  pair. A logout through a redirect provider (OIDC, GitHub) navigates to its `<prefix>/logout`;
-  any other uses `POST /auth/password/logout`, which ends whatever session the request has.
+  pair. Logout follows the provider that made the session (the impersonator's while
+  impersonating): a redirect provider (OIDC, GitHub) navigates to its `<prefix>/logout`, a dev
+  login posts `/auth/dev/logout`, any other `POST /auth/password/logout`, which ends whatever
+  session the request has. govengers/auth also changes the identity without a 401 or 4401 (an
+  impersonation past `MaximumDuration` ends in place; another tab signs in or out), so
+  `check()` re-reads `/auth/me` on tab focus and every minute while impersonating and builds a
+  new pair only when the key changed. The anonymous pair's unauthorized callback is ignored.
+  An unreadable `/auth/me` leaves the pair ended and retries with backoff (1 s to 30 s); a
+  refused change keeps its own error. `login` answers auth's challenge name
+  (`{ challenge?: 'totp' | 'totp_setup' }`) so a further challenge is a new value, not a
+  pseudo error.
   `safeRedirect` applies govengers/auth's `return_to` rule on the client. The card has tier
   `block` and lives at `ui/session.md` like `theme`: a module with livewire wiring and no view.
 - **D57 LoginForm follows govengers/auth.** The first field is `identifier` (user name or
@@ -257,15 +266,16 @@ switchable style presets.
   session lives `MaximumAge` from the login); the `sso` slot is replaced by a `providers` prop
   rendered as buttons (one way per job) and `layout="sso"` puts them first with the password
   form behind a link; the code step can switch to a backup code (`backupCode: true`). Refusals
-  carrying a known govengers/auth `code` show as `ui.*` sentences. `LoginCredentials` changed
+  carrying a known govengers/auth `code` show as `ui.*` sentences. The TOTP field takes 6 to 8
+  digits (auth's `TOTP.Digits`). `LoginCredentials` changed
   shape: a copy made before keeps its own file; a re-copy needs the page's `login` updated.
 - **D58 DevLogin is a function-prop block kept out of production by the bundler.** It takes
   `users` and `login` (the session's `devUsers`, `devLogin`), renders nothing when the server
   lists none (the session answers `[]` for a 404), and is imported behind
-  `import.meta.env.DEV` so production builds drop its chunk. The response shape of
-  `GET /auth/dev/users` is assumed to be `DevUser[]` (`{ id, name, email?, roles? }`); the auth
-  library's dev login provider is built in parallel, and a different shape is mapped in the
-  session module.
+  `import.meta.env.DEV` so production builds drop its chunk. `GET /auth/dev/users` answers
+  `{ users: [{ id, name, description }] }` (govengers/auth `devlogin`); the session unwraps
+  `users` and refuses another body, so a mismatch shows as an error, not as an empty card.
+  `LoginPage` has an `after` slot for it; `templates/project/LoginRoute.vue` fills it.
 - **D59 ImpersonationBanner is a warning.** Acting as someone is deliberate, so the banner is
   `warning`, not the `danger` the login pattern named. The end time comes from the app
   (`impersonationEndsAt` on its own `/auth/me`, or `endsAt`): govengers/auth's
@@ -274,12 +284,16 @@ switchable style presets.
 - **D60 ApiKeyManager over livewire.** Keys are a livewire resource plus two mutations the app
   declares; the block takes the descriptors (D5). The create mutation answers the row plus the
   secret and must not declare an `upserts` effect, or the runtime would put the secret into
-  every live list until the next push. The secret lives only in the dialog's state. A key must
+  every live list until the next push. The secret lives only in the dialog's state and is
+  forgotten on close and on a new connection (another identity); a create answering after
+  either is dropped. A key must
   not manage keys; the card says to mount the operations behind a session-only check.
 - **D61 The starter is checked by script.** `templates/project` gains `router.ts` (lazy
   components so `scripts/app-map.ts` can import the routes without a DOM; `public` meta; the
-  sign-in guard), `session.ts`, `Home.vue` and `vite.config.ts` (proxy `/api` with `ws` and
-  `/auth`, `changeOrigin` off so the socket's Origin matches the Host the backend sees).
+  sign-in guard), `session.ts`, `LoginRoute.vue`, `Home.vue` and `vite.config.ts` (proxy
+  `^/api/` with `ws` and `^/auth/`, regex keys because plain keys are prefix matches that would
+  catch SPA routes like `/api-keys`; `changeOrigin` off so the socket's Origin matches the Host
+  the backend sees).
   `main.ts` resumes the session before installing the router, because installing it runs the
   first navigation. `App.vue` renders public routes without the shell. `start-project` copies
   `app-map.ts`; the `ui-screens` recipe is dropped instead of adding a Playwright dependency to
