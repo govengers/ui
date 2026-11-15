@@ -21,6 +21,7 @@ jobs:
       - run: bun scripts/index.ts --check
       - run: bun run contrast
       - run: bun run lint
+      - run: bun scripts/template-check.ts
       - run: bun scripts/screenshots.ts --check
       - run: bun test scripts ui demo/src
       - run: DEMO_BASE=/ui/ bun run build
