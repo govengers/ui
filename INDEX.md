@@ -96,7 +96,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [Building a list page](patterns/building-a-list-page.md) | list page, table of records, search and filter, browse entities, overview page | ListPage, SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, PageHeader, Tabs | yes |  | ready | The most common page of a business application: every record of one resource, searchable, filterable, sortable, paged, with a detail drawer and row actions. The `ListPage` recipe is the canonical composition (D32); this guide says what goes where and why. |
 | [Building a settings page](patterns/building-a-settings-page.md) | settings, preferences, configuration page, profile page, account page | SettingsPage, Card, DetailForm, LiveForm, Tabs, Switch, Select | yes |  | ready | Settings are one `Card` per concern, each its own small form with its own Save, on a `Page` of width `content`. Many sections: a `SettingsPage` index of link cards, one page per section (PDB's shape), or `Tabs` with `?tab=` when the sections are few and short. |
 | [File uploads and background jobs](patterns/file-uploads-and-jobs.md) | upload a file, attachments, import, export, background job, long-running task, progress | FileUpload, JobProgress, Stepper, Toast, Banner | yes |  | ready | Anything that takes longer than a request is a job (`govengers/jobs`, D29); anything that is a file goes through a livewire upload target. |
-| [Login and session](patterns/login-and-session.md) | login, sign in, authentication, session, logout, two-factor, sso | LoginPage, LoginForm, AppShell, Banner | no |  | ready | Authentication is the one thing outside livewire (D26): the session cookie is set by the auth endpoints of `govengers/auth`, and the livewire pair is rebuilt afterwards. |
+| [Login and session](patterns/login-and-session.md) | login, sign in, authentication, session, logout, two-factor, sso, oidc, github login, dev login, impersonation, api keys, redirect after login | session, LoginPage, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, AppShell | no |  | ready | Authentication is the one thing outside livewire (D26): govengers/auth's routes set the session cookie, and the livewire pair follows the identity. `ui/session.ts` is the only code that changes who the app acts as (D56); `templates/project/session.ts`, `router.ts`, `main.ts` and `App.vue` wire it. |
 | [Showing live data](patterns/showing-live-data.md) | live updates, websocket, real-time, subscription, stale data, presence, loading and error states | SearchTable, StatusTile, JobProgress, ConnectionBanner, Skeleton, Banner, EmptyState | yes |  | ready | Everything read through livewire is live: `useLive` for one record or view, `useLiveList` for a list. The page never polls and never upserts its own writes; the push renders them. |
 
 ## By intent
@@ -121,7 +121,7 @@ Every intent keyword and the pieces that answer it.
 - **alert dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **anchored panel**: [Popover](ui/Popover/Popover.md)
 - **announcement**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
-- **api keys**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
+- **api keys**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md), [Login and session](patterns/login-and-session.md)
 - **api tokens**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **app map**: [agent](ui/agent/agent.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
 - **app shell**: [AppShell](ui/AppShell/AppShell.md)
@@ -206,7 +206,7 @@ Every intent keyword and the pieces that answer it.
 - **detail form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **detail page**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **detail panel**: [Sheet](ui/Sheet/Sheet.md), [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
-- **dev login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md), [session](ui/session.md)
+- **dev login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md), [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **development login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **dirty form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
@@ -261,7 +261,7 @@ Every intent keyword and the pieces that answer it.
 - **format date**: [format](ui/format.md)
 - **format number**: [format](ui/format.md)
 - **from to**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
-- **github login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
+- **github login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md), [Login and session](patterns/login-and-session.md)
 - **glyph**: [Icon](ui/Icon/Icon.md)
 - **grafana time picker**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
 - **guide mode**: [Spotlight](ui/Spotlight/Spotlight.md), [AgentDock](ui/blocks/AgentDock/AgentDock.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
@@ -275,7 +275,7 @@ Every intent keyword and the pieces that answer it.
 - **identity change**: [session](ui/session.md)
 - **image upload**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
 - **impersonate**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md), [session](ui/session.md)
-- **impersonation**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
+- **impersonation**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md), [Login and session](patterns/login-and-session.md)
 - **impersonation banner**: [Banner](ui/Banner/Banner.md)
 - **import**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
 - **import status**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
@@ -356,6 +356,7 @@ Every intent keyword and the pieces that answer it.
 - **number card**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **number input**: [Input](ui/Input/Input.md)
 - **offline notice**: [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
+- **oidc**: [Login and session](patterns/login-and-session.md)
 - **oidc login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **on off**: [Switch](ui/Switch/Switch.md)
 - **onboarding flow**: [Stepper](ui/blocks/Stepper/Stepper.md)
@@ -412,7 +413,7 @@ Every intent keyword and the pieces that answer it.
 - **record drawer**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
 - **record form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **record page**: [DetailPage](pages/DetailPage/DetailPage.md)
-- **redirect after login**: [session](ui/session.md)
+- **redirect after login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **related records**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **relative time**: [format](ui/format.md)
 - **release notes**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
