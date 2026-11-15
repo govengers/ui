@@ -1,4 +1,7 @@
 // The ApiKeyManager's rules without the view: the row shape, its state, the expiry choices.
+import { watch, type ComputedRef } from 'vue'
+import type { LiveConnection } from '@/api/runtime'
+import { useLiveStatus } from '@/api/vue'
 
 /** An API key as its owner sees it: never the secret, only the non-secret prefix. */
 export interface ApiKeyRow {
@@ -55,4 +58,14 @@ export function attempts(): { begin(): () => boolean; forget(): void } {
     },
     forget: () => { current += 1 },
   }
+}
+
+/**
+ * Runs `forget` when the connection a secret was created on stops serving: another pair (logout,
+ * switch, impersonation) or its end (a 4401 while /auth/me is unreadable keeps the ended pair).
+ */
+export function forgetWhenGone(connection: ComputedRef<LiveConnection>, forget: () => void): void {
+  const status = useLiveStatus(connection)
+  watch(connection, forget)
+  watch(status, (now) => { if (now === 'ended') forget() })
 }

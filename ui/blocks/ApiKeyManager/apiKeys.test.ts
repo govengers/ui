@@ -1,5 +1,18 @@
 import { describe, expect, test } from 'bun:test'
-import { attempts, expiresAtFor, keyState, newestFirst } from './apiKeys'
+import { computed, effectScope, nextTick, shallowRef } from 'vue'
+import type { LiveConnection, LiveStatus } from '@/api/runtime'
+import { attempts, expiresAtFor, forgetWhenGone, keyState, newestFirst } from './apiKeys'
+
+/** The status half of a LiveConnection: `onStatus` calls with the status now and on every change. */
+function fakeConnection(): { connection: LiveConnection; end(): void } {
+  let status: LiveStatus = 'open'
+  const listeners = new Set<(status: LiveStatus) => void>()
+  const connection = {
+    get status() { return status },
+    onStatus: (listener: (status: LiveStatus) => void) => { listeners.add(listener); listener(status); return () => listeners.delete(listener) },
+  } as unknown as LiveConnection
+  return { connection, end: () => { status = 'ended'; for (const listener of listeners) listener(status) } }
+}
 
 const now = Date.parse('2026-11-16T12:00:00Z')
 const inDays = (days: number): string => new Date(now + days * 86_400_000).toISOString()
@@ -34,5 +47,22 @@ describe('apiKeys', () => {
     tries.forget() // the dialog closed or the identity changed while the create ran
     expect(early()).toBe(false)
     expect(tries.begin()()).toBe(true)
+  })
+
+  test('forgetWhenGone: another connection and the end of the current one forget', async () => {
+    const first = fakeConnection()
+    const current = shallowRef(first.connection)
+    let forgotten = 0
+    const scope = effectScope()
+    scope.run(() => forgetWhenGone(computed(() => current.value), () => { forgotten += 1 }))
+    await nextTick()
+    expect(forgotten).toBe(0)
+    first.end() // a 4401 while /auth/me cannot be read: the ended pair stays the pair
+    await nextTick()
+    expect(forgotten).toBe(1)
+    current.value = fakeConnection().connection // the next identity's pair
+    await nextTick()
+    expect(forgotten).toBe(2)
+    scope.stop()
   })
 })

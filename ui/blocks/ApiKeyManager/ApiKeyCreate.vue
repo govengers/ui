@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // ApiKeyCreate: the ApiKeyManager's create dialog. Name, scopes and expiry, then the secret the
-// create call answered, shown once with a copy button; closing or another identity forgets it,
-// also when the create answers later (D60).
-import { reactive, ref, useId, watch } from 'vue'
+// create call answered, shown once with a copy button; closing, another identity or the end of
+// the connection forgets it, also when the create answers later (D60).
+import { reactive, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError, type MutationTarget, type NoParameters } from '@/api/runtime'
 import { useLiveConnection } from '@/api/vue'
@@ -14,7 +14,7 @@ import Field from '../../Field/Field.vue'
 import Icon from '../../Icon/Icon.vue'
 import Input from '../../Input/Input.vue'
 import Select from '../../Select/Select.vue'
-import { attempts, expiresAtFor, type ApiKeyScope } from './apiKeys'
+import { attempts, expiresAtFor, forgetWhenGone, type ApiKeyScope } from './apiKeys'
 
 const props = defineProps<{
   create: MutationTarget<NoParameters, { name: string; scopes: string[]; expiresAt: string | null }, { secret: string }>
@@ -75,8 +75,8 @@ function closed(): void {
   failure.value = undefined
 }
 
-// Another identity (logout, switch, impersonation): its pair is a new connection; the old secret must not stay.
-watch(connection, () => {
+// The secret belongs to the session that created it: another pair or an ended one forgets it.
+forgetWhenGone(connection, () => {
   closed()
   open.value = false
 })
