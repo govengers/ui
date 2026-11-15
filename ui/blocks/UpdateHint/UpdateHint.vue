@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// UpdateHint (D57): tells the user a newer build was deployed and offers a reload. Compares the
+// UpdateHint (D63): tells the user a newer build was deployed and offers a reload. Compares the
 // bundle's version with the server's: a value pushed over livewire (`latest`), or a `check` it
 // runs every `interval`, when the tab is shown again and when the socket reconnects (a deploy
 // restarts the server), at most once a minute (or per half interval when shorter); a trigger inside

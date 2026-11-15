@@ -305,7 +305,7 @@ switchable style presets.
 
 ## Product pieces (16.11.2026)
 
-- **D56 Release notes come from the changelog files, shown once per user per minor line.** A
+- **D62 Release notes come from the changelog files, shown once per user per minor line.** A
   project keeps `changelog/<major>.<minor>.md` (`# M.m - Title`, `## M.m.p - YYYY-MM-DD` per
   patch, groups `### Features | Fixes | Changes | Security`), parsed by the `ui/changelog.ts`
   module, which refuses anything else with `file:line` (a hyphen, en or em dash all count, so a
@@ -318,7 +318,7 @@ switchable style presets.
   and belongs in the shell, so the Dashboard recipe no longer mounts it. The `Changelog` page
   recipe renders every line. Bullets are plain text: no markdown renderer for a list of
   one-liners.
-- **D57 UpdateHint compares versions and never reloads by itself.** The bundle's version against
+- **D63 UpdateHint compares versions and never reloads by itself.** The bundle's version against
   the server's, from a value a live read pushes or a `check` function (a version endpoint or a
   read) run every 15 minutes while visible, on tab focus and on socket reconnect (a deploy
   restarts the server, so every client reconnects), at most once a minute (half the interval
@@ -326,7 +326,7 @@ switchable style presets.
   other than the bundle's counts, a rollback too; `dev` and friends never do. An info banner with
   Reload; a dismissed hint returns only for yet another version. Reloading on its own would drop
   what the user is typing; chunk-load failures stay the app's `vite:preloadError` handler.
-- **D58 NotificationInbox: one list, an optional count read, optimistic marks.** The popover
+- **D64 NotificationInbox: one list, an optional count read, optimistic marks.** The popover
   reads the newest `limit` rows through one `useLiveList` (no per-state lists, the runtime's
   optimistic upsert reaches every list of a target); the true unread total is a separate object
   read (`{ unread }`), else the bell counts the loaded rows and says `3+` when that is a lower
@@ -334,7 +334,7 @@ switchable style presets.
   (not a createdAt threshold: a row committed later may carry an older time), keeps them, takes
   them back on error, and forgets them when the connection changes. Mark all is disabled only
   when the count read or the complete list proves nothing is unread.
-- **D59 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
+- **D65 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
   buffer (`installFeedbackBuffer`, 50 entries) wraps console error and warn, `fetch` (not-ok
   answers and network failures) and the uncaught error events, and redacts on entry: secret keys
   masked with their subtree at any depth (also inside text that is JSON, or JSON in JSON, which

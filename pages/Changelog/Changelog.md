@@ -14,7 +14,7 @@ The release notes page: every minor line of the parsed changelog, newest first, 
 with its title and intro, then each release with its date and its groups (New, Fixed, Changed,
 Security). The running release carries a "Current" badge, and every release has an anchor
 (`#v2-4-1`) that `WhatsNew`'s "All changes" link or a support answer can point at. Static: the
-notes ship with the bundle, no read (D56).
+notes ship with the bundle, no read (D62).
 
 ## Load
 

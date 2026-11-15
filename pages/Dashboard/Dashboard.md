@@ -13,7 +13,7 @@ laws: [millers-law, pareto-principle]
 The start page after login: a greeting with today's date, four live tiles (active customers,
 open orders, running jobs, revenue of the last 30 days), the five newest orders, the running
 jobs and a billing card that shows the forbidden state. Everything is live; a push moves a tile
-without a reload. The release notes (`WhatsNew`) belong to the shell, not to this page (D56).
+without a reload. The release notes (`WhatsNew`) belong to the shell, not to this page (D62).
 
 ## Load
 

@@ -10,7 +10,7 @@ laws: [jakobs-law, paradox-of-the-active-user, peak-end-rule]
 
 # WhatsNew
 
-The release notes dialog of the running minor line, once per user (D56). On mount it reads the
+The release notes dialog of the running minor line, once per user (D62). On mount it reads the
 line the user saw last, asks `changelog`'s `decideWhatsNew`, stores a first visit silently and
 opens only for a newer minor line with features; it stores the line when it closes, however it
 closes (Got it, X, Escape, backdrop). The notes are the line's groups merged over its patches.

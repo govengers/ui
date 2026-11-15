@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// WhatsNew (D34, D56): the release notes dialog of the running minor line, once per user. On mount
+// WhatsNew (D34, D62): the release notes dialog of the running minor line, once per user. On mount
 // it reads the stored line, asks changelog.ts's decideWhatsNew, stores a first visit silently and
 // opens for a newer line with features; it stores the line when it closes, however it closes.
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'

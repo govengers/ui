@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// FeedbackCapture (D59): the report dialog. Kind, text and (for bugs) severity; on open it freezes
+// FeedbackCapture (D65): the report dialog. Kind, text and (for bugs) severity; on open it freezes
 // the technical details (recent console lines, failed requests, environment) and, through the
 // optional screenshot hook, the page before the dialog covers it. The preview prints exactly the
 // report that is sent; leaving details out removes them from both. Sent over REST, so a report

@@ -1,5 +1,5 @@
 // changelog: the parser for `changelog/<major>.<minor>.md` files and the pure "show what's new?"
-// decision (D56). No Vue: WhatsNew and the Changelog recipe render what this returns.
+// decision (D62). No Vue: WhatsNew and the Changelog recipe render what this returns.
 
 /** The groups of a release, in the order they are shown. */
 export const changeGroups = ['Features', 'Fixes', 'Changes', 'Security'] as const
@@ -193,7 +193,7 @@ export interface WhatsNewDecision {
 }
 
 /**
- * Whether to show what's new (D56). Shows the running minor line once per user, when the user
+ * Whether to show what's new (D62). Shows the running minor line once per user, when the user
  * last saw an older line and the running line has at least one Features item; patches alone never
  * show. A user with nothing stored (first visit) is not behind: the running line is remembered
  * silently. A development build (no `major.minor` in `running`) never shows and stores nothing.

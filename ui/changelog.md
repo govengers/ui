@@ -11,7 +11,7 @@ laws: [paradox-of-the-active-user, peak-end-rule]
 # changelog
 
 The parser for a project's `changelog/<major>.<minor>.md` files and the pure decision "show
-what's new?" (D56): `parseChangelog`, `parseChangelogs`, `mergedGroups`, `decideWhatsNew`,
+what's new?" (D62): `parseChangelog`, `parseChangelogs`, `mergedGroups`, `decideWhatsNew`,
 `versionLine`, `plainVersion`, `compareVersions`. A module without Vue; `WhatsNew` and the `Changelog` recipe
 render what it returns. A single file, `ui/changelog.ts`; `ui-copy` copies the file.
 

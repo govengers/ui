@@ -10,7 +10,7 @@ laws: [doherty-threshold, selective-attention]
 
 # UpdateHint
 
-Tells the user that a newer build was deployed and offers a reload (D57). It compares the
+Tells the user that a newer build was deployed and offers a reload (D63). It compares the
 bundle's version with the server's: a value pushed over livewire (`latest`), or a `check` it runs
 every `interval`, when the tab becomes visible and when the socket reconnects (a deploy restarts
 the server, so every client reconnects), at most once a minute (half the interval when that

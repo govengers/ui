@@ -10,7 +10,7 @@ laws: [selective-attention, zeigarnik-effect, fittss-law]
 
 # NotificationInbox
 
-The bell in the top bar (D58): an icon button with the unread count, and a popover with the
+The bell in the top bar (D64): an icon button with the unread count, and a popover with the
 newest notifications, live. Unread rows carry a dot and a mark-read button; opening a row marks
 it read and follows its route; the header marks all read. One list subscription, plus an
 optional count read for the true unread total.

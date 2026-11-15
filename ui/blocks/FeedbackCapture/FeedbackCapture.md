@@ -10,7 +10,7 @@ laws: [postels-law, teslers-law, peak-end-rule]
 
 # FeedbackCapture
 
-The report dialog (D59): kind (bug, idea, question), text and, for bugs, severity. When it opens
+The report dialog (D65): kind (bug, idea, question), text and, for bugs, severity. When it opens
 it freezes the technical details: the last console errors and warnings, uncaught errors, failed
 requests (from the ring buffer `installFeedbackBuffer()` keeps), the environment, and through an
 optional hook a screenshot of the page taken before the dialog covers it. "Exactly what will be

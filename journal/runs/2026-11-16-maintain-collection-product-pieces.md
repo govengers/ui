@@ -9,7 +9,7 @@ groomed: no
 
 ## Task
 Add the product pieces: the `changelog` module, a changelog-driven `WhatsNew`, the `Changelog`
-recipe, and the blocks `UpdateHint`, `NotificationInbox` and `FeedbackCapture` (D56 to D59).
+recipe, and the blocks `UpdateHint`, `NotificationInbox` and `FeedbackCapture` (D62 to D65).
 
 ## What went wrong on first try
 - `redactText` replaced `Bearer x` before the `key=value` rule, so `Authorization: Bearer x`
@@ -35,7 +35,7 @@ recipe, and the blocks `UpdateHint`, `NotificationInbox` and `FeedbackCapture` (
 
 ## Pieces that did not fit
 - WhatsNew: its old contract (slotted notes, stored full version) could not express "new minor
-  line with features, once per user, silent on first visit"; replaced (D56), Dashboard no longer
+  line with features, once per user, silent on first visit"; replaced (D62), Dashboard no longer
   mounts it.
 - Popover: no static open mode; NotificationInbox exposes `open()` for its demo.
 

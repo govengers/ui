@@ -22,7 +22,7 @@ a tour in front of the work gets skipped.
   before anything fails.
 - EmptyState says why a list is empty and offers the next action.
 - WhatsNew shows the release notes once per minor line with features, never for a patch and
-  never on a first visit, and remembers however it was closed (D56).
+  never on a first visit, and remembers however it was closed (D62).
 
 ## Review questions
 

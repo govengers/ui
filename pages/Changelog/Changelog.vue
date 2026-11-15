@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Changelog recipe (D56): every minor line of the parsed changelog, newest first, one Card per
+// Changelog recipe (D62): every minor line of the parsed changelog, newest first, one Card per
 // line with its releases, their dates and groups. The running release carries a "Current" badge;
 // every release has an anchor (#v2-4-1) a WhatsNew link or a support answer can point at.
 import { computed } from 'vue'

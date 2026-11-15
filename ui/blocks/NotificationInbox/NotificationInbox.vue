@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Query extends ListQuery">
-// NotificationInbox (D58): the bell with the unread count and a popover with the newest
+// NotificationInbox (D64): the bell with the unread count and a popover with the newest
 // notifications, live. Opening one marks it read and follows its route; each unread row has its
 // own mark-read button, the header marks all read. One list subscription plus an optional count
 // read; mark read shows at once (optimistic upsert), mark all at once for the rows shown.
