@@ -231,6 +231,21 @@ export interface SendMessage {
   mode?: AgentMode
 }
 
+/** A feedback report (FeedbackCapture): the block's FeedbackReport is this body. */
+export interface CreateFeedback {
+  type: 'bug' | 'idea' | 'question'
+  text: string
+  severity: 'low' | 'medium' | 'high' | 'critical' | null
+  environment: object | null
+  entries: object[]
+  screenshot: string | null
+}
+
+export interface FeedbackReceipt {
+  id: string
+  createdAt: string
+}
+
 /** Every mutation, for LiveConnection.call (the socket, with its optimistic effect, D36) and Client.call. */
 export const calls = {
   createCustomer: runtime.mutation<runtime.NoParameters, CreateCustomer, Customer>({ name: 'createCustomer', method: 'POST', path: '/customers', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'customers' }, clientID: 7 }),
@@ -244,6 +259,7 @@ export const calls = {
   revokeApiKey: runtime.mutation<ItemParameters, undefined, void>({ name: 'revokeApiKey', method: 'DELETE', path: '/api-keys/{id}', pathParameters: ['id'], body: false, content: false, effect: { kind: 'removes', target: 'apiKeys' } }),
   sendMessage: runtime.mutation<runtime.NoParameters, SendMessage, Message>({ name: 'sendMessage', method: 'POST', path: '/conversation', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'conversation' }, clientID: 7 }),
   markNotificationRead: runtime.mutation<ItemParameters, undefined, Notification>({ name: 'markNotificationRead', method: 'POST', path: '/notifications/{id}/read', pathParameters: ['id'], body: false, content: true, effect: { kind: 'upserts', target: 'notifications' } }),
+  createFeedback: runtime.mutation<runtime.NoParameters, CreateFeedback, FeedbackReceipt>({ name: 'createFeedback', method: 'POST', path: '/feedback', pathParameters: [], body: true, content: true }),
   markAllNotificationsRead: runtime.mutation<runtime.NoParameters, undefined, NotificationCount>({ name: 'markAllNotificationsRead', method: 'POST', path: '/notifications/read', pathParameters: [], body: false, content: true }),
 } as const
 

@@ -127,6 +127,17 @@ export function createHandlers(context: HandlerContext): Handlers {
       if (!remove('apiKeys', id ?? '')) throw new Refusal('not_found')
       return { status: 204 }
     },
+    createFeedback: (_, body) => {
+      const input = objectBody(body)
+      validate(input, {
+        type: oneOf(['bug', 'idea', 'question']), text: nonEmpty,
+        severity: (value) => (value === null ? undefined : oneOf(['low', 'medium', 'high', 'critical'])(value)),
+        environment: (value) => (value === null || (typeof value === 'object' && !Array.isArray(value)) ? undefined : 'must be an object or null'),
+        entries: (value) => (Array.isArray(value) ? undefined : 'must be a list'),
+        screenshot: (value) => (value === null || (typeof value === 'string' && value.startsWith('data:image/')) ? undefined : 'must be an image data URL or null'),
+      }, ['type', 'text'])
+      return { status: 201, payload: { id: uuidv7(), createdAt: now() } } // the demo keeps no feedback table
+    },
     markNotificationRead: ({ id }) => {
       const notification = tables.notifications.find((candidate) => candidate.id === id)
       if (notification === undefined) throw new Refusal('not_found')
