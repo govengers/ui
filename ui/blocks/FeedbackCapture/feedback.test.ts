@@ -62,6 +62,38 @@ describe('installFeedbackBuffer', () => {
     expect(texts[0]).toBe('Login answered {"session":"[redacted]","tokens":"[redacted]"}')
   })
 
+  test('a key in one console argument and its value in the next are redacted as one line', () => {
+    const { host } = fakeHost(async () => new Response())
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    host.console.error('token:', 'abc123SECRET')
+    host.console.error('password:', 'hunter2', 'user:', 'ada')
+    host.console.error('Authorization:', 'ApiKey abc123SECRET')
+    host.console.error('token=%s for %s', 'abc123SECRET', 'ada', { extra: 1 })
+    expect(buffer.entries().map((entry) => (entry.kind === 'console' ? entry.text : ''))).toEqual([
+      'token: [redacted]',
+      'password: [redacted] user: ada',
+      'Authorization: [redacted]',
+      'token=[redacted] for ada {"extra":1}',
+    ])
+  })
+
+  test('a password with an escaped quote inside JSON in JSON loses its tail too', () => {
+    const { host } = fakeHost(async () => new Response())
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    host.console.error('POST failed ' + JSON.stringify({ body: JSON.stringify({ password: 'prefix"SECRET-TAIL' }) }))
+    expect(buffer.entries()[0]).toMatchObject({ text: String.raw`POST failed {"body":"{\"password\":\"[redacted]\"}"}` })
+    const snapshot = { environment: {} as FeedbackSnapshot['environment'], entries: buffer.entries(), screenshot: null }
+    expect(JSON.stringify(buildReport({ type: 'bug', text: 'x', severity: 'low' }, snapshot, { technical: true, screenshot: false }))).not.toContain('SECRET-TAIL')
+  })
+
+  test('request URLs lose code, key and state, keep other query values', async () => {
+    const { host } = fakeHost(async () => new Response(null, { status: 500 }))
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    await host.fetch!('/api/oauth/callback?code=OAUTHCODE&state=xyz&page=2')
+    buffer.push({ kind: 'request', at: 'x', method: 'GET', url: '/api/share?key=SECRETKEY', status: 500, error: null, ms: 1 })
+    expect(buffer.entries().map((entry) => (entry.kind === 'request' ? entry.url : ''))).toEqual(['/api/oauth/callback?code=[redacted]&state=[redacted]&page=2', '/api/share?key=[redacted]'])
+  })
+
   test('push redacts and clips like the recorded entries', () => {
     const { host } = fakeHost(async () => new Response())
     const buffer = installFeedbackBuffer({ host, now: clock })

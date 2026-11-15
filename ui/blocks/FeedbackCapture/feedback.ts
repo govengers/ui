@@ -2,7 +2,7 @@
 // requests (installed once in main.ts), the environment, and the report exactly as it is sent.
 // Everything is redacted when it enters the buffer (redact.ts), so a secret never sits in memory
 // longer than the console line that printed it.
-import { redactText, redactUrl, redactValue } from './redact'
+import { redactRequestUrl, redactText, redactUrl, redactValue } from './redact'
 
 export type ConsoleLevel = 'error' | 'warn' | 'info' | 'log'
 
@@ -61,20 +61,28 @@ function clip(text: string): string {
   return text.length > maxText ? `${text.slice(0, maxText)}... [${text.length - maxText} more]` : text
 }
 
-// Cut before scrubbing so one huge console line costs little; a value the cut splits is still
-// masked (an open quote or bracket runs to the end).
-function scrub(text: string): string {
-  return redactText(text.length > 4 * maxText ? text.slice(0, 4 * maxText) : text)
-}
-
 function describe(value: unknown): string {
-  if (typeof value === 'string') return scrub(value)
-  if (value instanceof Error) return scrub(`${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ''}`)
+  if (typeof value === 'string') return redactText(value)
+  if (value instanceof Error) return redactText(`${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ''}`)
   try {
     return JSON.stringify(redactValue(value)) ?? String(value)
   } catch {
     return '[unserializable]'
   }
+}
+
+// The console prints `('token=%s', t)` as one line: substitute the directives first, so the
+// redaction sees the key and its value together.
+function printed(values: unknown[]): unknown[] {
+  const [first, ...rest] = values
+  if (typeof first !== 'string') return values
+  let next = 0
+  const line = first.replace(/%[sdifoOc]/g, (directive) => {
+    if (next >= rest.length) return directive
+    const value = rest[next++]
+    return directive === '%c' ? '' : describe(value)
+  })
+  return [line, ...rest.slice(next)]
 }
 
 /**
@@ -94,7 +102,9 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
   }
   const record = (level: ConsoleEntry['level'], values: unknown[]): void => {
     try {
-      push({ kind: 'console', level, at: stamp(), text: clip(values.map(describe).join(' ')) })
+      // Each value is redacted alone, then the line once more: a key in one argument and its value
+      // in the next (`console.error('token:', t)`) is only a pair in the whole line.
+      push({ kind: 'console', level, at: stamp(), text: clip(redactText(printed(values).map(describe).join(' '))) })
     } catch {
       // recording must never break the code that logged
     }
@@ -115,7 +125,7 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
     host.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const started = now()
       const method = (init?.method ?? (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET')).toUpperCase()
-      const url = clip(scrub(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url))
+      const url = clip(redactRequestUrl(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url))
       const entry = (status: number | null, error: string | null): RequestEntry => ({ kind: 'request', at: stamp(), method, url, status, error, ms: now() - started })
       try {
         const response = await Reflect.apply(originalFetch, host, [input, init]) as Response
@@ -137,8 +147,8 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
   const buffer: FeedbackBuffer = {
     entries: () => ring.map((item) => ({ ...item })),
     push: (entry) => push(entry.kind === 'console'
-      ? { ...entry, text: clip(scrub(entry.text)) }
-      : { ...entry, url: clip(scrub(entry.url)), error: entry.error === null ? null : clip(scrub(entry.error)) }),
+      ? { ...entry, text: clip(redactText(entry.text)) }
+      : { ...entry, url: clip(redactRequestUrl(entry.url)), error: entry.error === null ? null : clip(redactText(entry.error)) }),
     clear: () => { ring.length = 0 },
     uninstall: () => {
       for (const [level, original] of originals) host.console[level] = original

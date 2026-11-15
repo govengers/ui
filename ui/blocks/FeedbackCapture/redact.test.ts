@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { redactText, redactUrl, redactValue, secretKey } from './redact'
+import { redactRequestUrl, redactText, redactUrl, redactValue, secretKey } from './redact'
 
 describe('secretKey', () => {
   test.each(['password', 'newPassword', 'api_key', 'X-Api-Key', 'accessToken', 'client_secret', 'Set-Cookie', 'sessionId', 'auth', 'otp', 'pass', 'pw', 'pin', 'passcode'])('%s is a secret', (key) => {
@@ -71,6 +71,14 @@ describe('redactText', () => {
     expect(redactText(String.raw`body {\"session\":{\"id\":\"S1\"}} end`)).not.toContain('S1')
   })
 
+  test('an escaped quote inside an escaped string does not end it', () => {
+    const once = 'POST failed ' + JSON.stringify({ body: JSON.stringify({ password: 'prefix"SECRET-TAIL', user: 'ada' }) })
+    expect(redactText(once)).toBe(String.raw`POST failed {"body":"{\"password\":\"[redacted]\",\"user\":\"ada\"}"}`)
+    const twice = 'POST failed ' + JSON.stringify({ body: JSON.stringify({ body: JSON.stringify({ password: 'a"b\\c"SECRET-TAIL' }) }) })
+    expect(redactText(twice)).toBe(String.raw`POST failed {"body":"{\"body\":\"{\\\"password\\\":\\\"[redacted]\\\"}\"}"}`)
+    expect(redactText(String.raw`x \"token\":\"cut-SECRET`)).toBe(String.raw`x \"token\":\"[redacted]\"`)
+  })
+
   test('header lines lose the whole value', () => {
     expect(redactText('Authorization: ApiKey abc123SECRET')).toBe('Authorization: [redacted]')
     expect(redactText('Cookie: lang=en; remember_me=SECRET1; PHPSESSID=SECRET2\nnext line')).toBe('Cookie: [redacted]\nnext line')
@@ -81,7 +89,16 @@ describe('redactText', () => {
     const started = performance.now()
     redactText('ab-'.repeat(20000))
     redactText(Array.from({ length: 3000 }, () => '123e4567-e89b-12d3-a456-426614174000').join('-'))
-    expect(performance.now() - started).toBeLessThan(500) // was 7.5 s
+    redactValue({ body: '\\'.repeat(200000) })
+    expect(performance.now() - started).toBeLessThan(500) // was 7.5 s, the backslashes 25 s
+  })
+})
+
+describe('redactRequestUrl', () => {
+  test('masks code, key, state and secret-named values, keeps the rest', () => {
+    expect(redactRequestUrl('/api/oauth/callback?code=OAUTHCODE&state=xyz&page=2&access_token=T1')).toBe('/api/oauth/callback?code=[redacted]&state=[redacted]&page=2&access_token=[redacted]')
+    expect(redactRequestUrl('https://app.example/api/share?KEY=K1#key=K2')).toBe('https://app.example/api/share?KEY=[redacted]#key=[redacted]')
+    expect(redactRequestUrl('/api/tasks?filter=open&monkey=1')).toBe('/api/tasks?filter=open&monkey=1')
   })
 })
 

@@ -71,8 +71,13 @@ version), `runScreenshotHook` (the hook with a 3 s limit), `buildReport` (frozen
 cycles and depth cut, errors as name, message, stack), `redactText` (text that is JSON is
 redacted as a value, also JSON inside JSON; else `key=value`, `"key": "value"` and escaped
 `\"key\"` pairs, an object or array value with its whole subtree, `Authorization:` and `Cookie:`
-lines to their end, `Bearer x`, JWTs, `user:pass@` in URLs) and `redactUrl`. Substring matching
-over-redacts on purpose. A console line is cut to 8000 characters before it is scrubbed.
+lines to their end, `Bearer x`, JWTs, `user:pass@` in URLs; an escaped string is read through
+its levels of escaping, so an escaped quote inside a password does not end it), `redactUrl` (the
+page: every query and fragment value) and `redactRequestUrl` (a request: secret-named values and
+`code`, `key`, `state`; other query values such as `?filter=` stay for debugging). Substring
+matching over-redacts on purpose. Text is cut to 8000 characters before it is scrubbed, also a
+string inside a logged object. A console line is redacted per argument and then as the whole line
+(with `%s` directives substituted), so `console.error('token:', t)` is caught as a pair.
 
 ## With livewire
 

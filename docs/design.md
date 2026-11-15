@@ -339,8 +339,10 @@ switchable style presets.
   answers and network failures) and the uncaught error events, and redacts on entry: secret keys
   masked with their subtree at any depth (also inside text that is JSON, or JSON in JSON, which
   is parsed and redacted as a value), `key=value` with an object value's whole subtree, header
-  lines to their end, bearer tokens, JWTs and URL user info scrubbed from text; the page URL
-  keeps no query or fragment value. `push` redacts too. The dialog freezes buffer, environment
+  lines to their end, bearer tokens, JWTs and URL user info scrubbed from text, a console line
+  per argument and then as the whole printed line; the page URL keeps no query or fragment
+  value, a failed request's URL keeps the values that name no secret except `code`, `key` and
+  `state` (filters and pages are what a bug report needs). `push` redacts too. The dialog freezes buffer, environment
   and the optional screenshot (taken before the dialog shows) on open; `buildReport`
   deep-freezes the body the preview prints and Send posts. Unticking details removes them from
   both. Sent through `pair.client` (REST) because the socket is often what is broken. The

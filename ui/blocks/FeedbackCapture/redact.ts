@@ -22,8 +22,10 @@ export function secretKey(key: string): boolean {
 // The key's prefix and suffix are bounded: an unbounded run made the pattern quadratic on long
 // hyphenated text (60 KB took seconds).
 const keyPattern = String.raw`[A-Za-z0-9_-]{0,40}(?:password|passwd|passphrase|passcode|secret|token|authorization|cookie|session|credential|api[-_]?key|private[-_]?key|signature|csrf|xsrf)[A-Za-z0-9_-]{0,40}|pwd|pass|pw|pin|auth|otp|totp|sid|jwt`
-// key with an optional quote (escaped too: `\"key\"` in JSON carried in a string), = or :.
-const pairs = new RegExp(String.raw`(\\*["']?)\b(${keyPattern})\b\1(\s*[:=]\s*)`, 'gi')
+// key with an optional quote (escaped too: `\"key\"` in JSON carried in a string), = or :. The
+// escape run is bounded (15 is JSON four times in a string): an unbounded one was quadratic on a
+// long run of backslashes.
+const pairs = new RegExp(String.raw`(\\{0,15}["']?)\b(${keyPattern})\b\1(\s*[:=]\s*)`, 'gi')
 const quoted = /^\\*["']/
 const bare = /(?:(?:Bearer|Basic|Token)\s+)?[^\s&,;"'}\]]+/iy
 const schemes = /\b(Bearer|Basic|Token)\s+[A-Za-z0-9._~+/=-]{6,}/gi
@@ -54,19 +56,41 @@ function closing(text: string, from: number): number {
   return text.length
 }
 
-// The end of the quoted value starting at `from` with `opener` (a quote, maybe escaped); an
-// unterminated one (the text was cut) runs to the end.
+function* characters(text: string, from: number, to: number): Generator<[string, number]> {
+  for (let at = from; at < to; at++) yield [text[at]!, at]
+}
+
+// The characters with one level of string escaping undone (`\x` reads as x), each with the
+// position of its last character in the text (for a quote, the quote itself).
+function* unescaped(chars: Iterable<[string, number]>): Generator<[string, number]> {
+  let escaped = false
+  for (const [char, at] of chars) {
+    if (!escaped && char === '\\') escaped = true
+    else {
+      escaped = false
+      yield [char, at]
+    }
+  }
+}
+
+// The end of the quoted value starting at `from` with `opener` (a quote, maybe escaped). An
+// escaped string (JSON carried in a string) is read through as many levels of unescaping as its
+// opener needs, so a quote escaped once more inside it does not end it. An unterminated value
+// (the text was cut) runs to the end, an escaped one to the end of the line.
 function quotedEnd(text: string, from: number, opener: string): number {
-  if (opener.length > 1) {
-    // shortcut: an escaped string ends at the next same escaped quote, so a quote escaped once more inside it ends it early; upgrade if such logs show up
-    const end = text.indexOf(opener, from + opener.length)
-    return end === -1 ? lineEnd(text, from) : end + opener.length
+  const to = opener.length > 1 ? lineEnd(text, from) : text.length
+  let chars: Iterable<[string, number]> = characters(text, from, to)
+  for (let level = opener; level.length > 1; level = level.replace(/\\(.)/g, '$1')) chars = unescaped(chars)
+  const quote = opener[opener.length - 1]
+  let first = true
+  let escape = false
+  for (const [char, at] of chars) {
+    if (first) first = false // the opener's own quote
+    else if (escape) escape = false
+    else if (char === '\\') escape = true
+    else if (char === quote) return at + 1
   }
-  for (let at = from + 1; at < text.length; at++) {
-    if (text[at] === '\\') at++
-    else if (text[at] === opener) return at + 1
-  }
-  return text.length
+  return to
 }
 
 function scrubPairs(text: string): string {
@@ -96,8 +120,11 @@ function scrubPairs(text: string): string {
     } else {
       bare.lastIndex = start
       end = start + (bare.exec(text)?.[0].length ?? 0)
-      mask = end === start ? '' : redacted
+      mask = redacted
     }
+    // No value (`token:` as its own console argument): nothing to mask, and a marker here would
+    // hide the value that follows from the scrub of the whole line.
+    if (end === start) mask = ''
     out += text.slice(last, start) + mask
     last = end
     pairs.lastIndex = end
@@ -115,8 +142,16 @@ function parsedJson(text: string): unknown {
   }
 }
 
-/** Scrubs credentials out of free text, URLs and serialized JSON (also JSON inside JSON). */
-export function redactText(text: string): string {
+// Longer text is cut before it is scanned, so one huge value costs little; a value the cut splits
+// is still masked (an open quote or bracket runs to the end).
+const maxScan = 8000
+
+/**
+ * Scrubs credentials out of free text, URLs and serialized JSON (also JSON inside JSON). Text
+ * longer than 8000 characters is cut to that length first.
+ */
+export function redactText(input: string): string {
+  const text = input.length > maxScan ? input.slice(0, maxScan) : input
   const json = parsedJson(text)
   if (json !== undefined) return JSON.stringify(redactValue(json))
   return scrubPairs(text.replace(userinfo, `$1${redacted}@`).replace(jwts, redacted)).replace(schemes, `$1 ${redacted}`)
@@ -154,4 +189,13 @@ export function redactUrl(href: string): string {
   const at = href.search(/[?#]/)
   const head = redactText(at === -1 ? href : href.slice(0, at))
   return at === -1 ? head : head + href.slice(at).replace(/([?&#;][^=&#;]*=)[^&#;]*/g, `$1${redacted}`)
+}
+
+/**
+ * A request URL: scrubbed like text, and the values of `code`, `key` and `state` masked too (an
+ * OAuth callback's code and state, a share link's key). Other query values stay, a failed
+ * request's `?filter=` or `?page=` is what a bug report needs.
+ */
+export function redactRequestUrl(url: string): string {
+  return redactText(url).replace(/([?&#;](?:code|key|state)=)[^&#;]*/gi, `$1${redacted}`)
 }
