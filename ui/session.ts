@@ -91,7 +91,7 @@ export interface Session {
   identity: ShallowRef<SessionIdentity | null>
   /** Builds the pair of whoever GET /auth/me answers: at start and after a callback login. */
   resume(): Promise<void>
-  /** Re-reads GET /auth/me and replaces the pair only when the identity changed (on tab focus and while impersonating by itself). */
+  /** Re-reads GET /auth/me: takes the fresh identity, replaces the pair only when its key changed (on tab or window focus and while impersonating by itself). */
   check(): Promise<void>
   /** Password login, then the TOTP step; answers auth's `challenge` when a second step is owed. */
   login(credentials: PasswordCredentials): Promise<{ challenge?: LoginChallenge }>
@@ -146,6 +146,8 @@ export function createSession(options: SessionOptions): Session {
   let retryTimer: ReturnType<typeof setTimeout> | undefined
   let retryDelay = 0
   let pollTimer: ReturnType<typeof setInterval> | undefined
+  // A redirect logout is leaving the page: nothing may serve an identity again before it unloads.
+  let leaving = false
 
   function build(key: string): LivePair {
     const built: LivePair = options.createPair(key, () => {
@@ -165,6 +167,7 @@ export function createSession(options: SessionOptions): Session {
 
   /** Serves `current`: its identity, its pair, and the poll while it is an impersonation. */
   function adopt(current: SessionIdentity | null): void {
+    if (leaving) return
     identity.value = current
     pair.value = build(identityKey(current))
     clearInterval(pollTimer)
@@ -215,27 +218,35 @@ export function createSession(options: SessionOptions): Session {
    */
   function follow(force: boolean): Promise<void> {
     const run = transitions.then(async () => {
+      if (leaving) return
       const before = identity.value
       // After an unreadable answer the pair is ended: rebuild it whatever the identity is.
       if (force || retryDelay !== 0) {
         await resumeNow()
       } else {
         const current = await read()
-        if (identityKey(current) === identityKey(before)) return
+        if (leaving) return
+        // The same identity keeps its pair; its roles, name or impersonation end may have changed.
+        if (identityKey(current) === identityKey(before)) {
+          identity.value = current
+          return
+        }
         pair.value.end()
         adopt(current)
       }
-      if (before !== null && identity.value === null) options.onSignedOut?.()
+      if (!leaving && before !== null && identity.value === null) options.onSignedOut?.()
     })
     transitions = run.catch(() => undefined)
     return run
   }
 
-  // Back to a tab: another tab may have signed in, out, or as someone else meanwhile.
+  // Back to a tab or window: another one may have signed in, out, or as someone else meanwhile.
+  // Two windows side by side are both visible, so moving between them only fires focus.
   if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') void follow(false).catch(() => undefined)
     })
+    window.addEventListener('focus', () => { void follow(false).catch(() => undefined) })
   }
 
   async function expect(response: Response): Promise<Response> {
@@ -271,7 +282,9 @@ export function createSession(options: SessionOptions): Session {
       const redirect = options.providers?.find((provider) => provider.name === owner?.provider)
       if (redirect !== undefined) {
         // The provider's logout ends the session and leaves for the identity provider; the page unloads.
+        leaving = true
         clearInterval(pollTimer)
+        clearTimeout(retryTimer)
         pair.value.end()
         identity.value = null
         navigate(`${redirect.prefix}/logout`)

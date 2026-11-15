@@ -208,6 +208,38 @@ describe('session', () => {
     expect(signedOut).toBe(1)
   })
 
+  test('check takes the fresh identity of the same subject and keeps its pair', async () => {
+    const box = fixture({})
+    box.signIn(ada)
+    await box.session.resume()
+    box.signIn({ ...ada, name: 'Ada L.', roles: [] }) // an admin removed her role meanwhile
+    await box.session.check()
+    expect(box.session.identity.value).toMatchObject({ name: 'Ada L.', roles: [] })
+    expect(box.pairs.map((pair) => pair.ended)).toEqual([true, false])
+  })
+
+  test('a redirect logout stops a pending retry from serving the identity again', async () => {
+    jest.useFakeTimers()
+    try {
+      let signedOut = 0
+      const box = fixture({}, { providers: [{ name: 'company', label: 'Company SSO', prefix: '/auth/oidc/company' }], navigate: () => undefined, onSignedOut: () => { signedOut += 1 } })
+      box.signIn({ ...ada, provider: 'company' })
+      await box.session.resume()
+      box.meAnswers(503)
+      box.pairs.at(-1)!.unauthorized()
+      await box.session.check().catch(() => undefined) // retry pending
+      await box.session.logout()
+      box.meAnswers(200) // the cookie lives until the provider's logout route ran
+      jest.advanceTimersByTime(60_000)
+      await box.session.check()
+      expect(box.session.identity.value).toBeNull()
+      expect(box.pairs.every((pair) => pair.ended)).toBe(true)
+      expect(signedOut).toBe(0)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
   test('an impersonation is looked at again every minute', async () => {
     jest.useFakeTimers()
     try {
