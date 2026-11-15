@@ -5,6 +5,6 @@
 ui-lint:
     bun scripts/ui-lint.ts src/ui src/pages
 
-# Screenshot every route light and dark for a review (needs the dev server on :5173).
-ui-screens:
-    bun scripts/ui-screens.ts
+# The agent's map of routes and actions (D48): src/app-map.json from src/router.ts and every actions.ts.
+app-map:
+    bun scripts/app-map.ts

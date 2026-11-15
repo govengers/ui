@@ -1,23 +1,14 @@
 // How a target project mounts govengers/ui (ui-start step 4). Merge into src/main.ts.
-import { createApp, shallowRef } from 'vue'
+import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
-import { createRouter, createWebHistory } from 'vue-router'
 import './ui/tokens.css'
 import './ui/base.css'
 import './ui/presets/neutral.css'
 import { messages as uiMessages } from './ui/messages'
-import { createLivePair, type LivePair } from './api/runtime'
 import { livePlugin } from './api/vue'
 import App from './App.vue'
-import { routes } from './router'
-
-// One pair per signed-in identity, replaced on login and logout (livewire D66).
-const pairOf = (identity: string): LivePair => createLivePair({
-  identity: () => identity,
-  client: { baseURL: '/api/v1' },
-  connection: { url: () => `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/v1/socket` },
-})
-export const pair = shallowRef(pairOf(''))
+import { createAppRouter } from './router'
+import { session } from './session'
 
 const i18n = createI18n({
   legacy: false,
@@ -27,8 +18,15 @@ const i18n = createI18n({
   messages: uiMessages,
 })
 
-createApp(App)
-  .use(createRouter({ history: createWebHistory(), routes }))
-  .use(i18n)
-  .use(livePlugin(pair))
-  .mount('#app')
+// Who the cookie names decides the first route: resume before the router is installed, since
+// installing it runs the first navigation and its guard.
+session.resume()
+  .catch((error: unknown) => console.error('session: GET /auth/me failed', error))
+  .finally(() => {
+    createApp(App)
+      .use(createAppRouter())
+      .use(i18n)
+      // One pair per signed-in identity, replaced by the session on every change (livewire D66).
+      .use(livePlugin(session.pair))
+      .mount('#app')
+  })
