@@ -12,8 +12,9 @@ const html = computed(() => render(props.source))
 </script>
 
 <script lang="ts">
-// One renderer per app, bound to the browser window.
-const render = createMarkdownRenderer(window)
+// One renderer per app, bound to the browser window (none under SSR: escaped text). A project
+// that shows images from a storage host adds its origin here: { imageHosts: ['https://files.example'] }.
+const render = createMarkdownRenderer(typeof window === 'undefined' ? undefined : window)
 </script>
 
 <template>

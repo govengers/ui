@@ -39,16 +39,25 @@ describe('createMarkdownRenderer', () => {
   })
 
   test('keeps images with safe sources only', () => {
-    expect(render('![chart](https://img.example/a.png)')).toContain('<img src="https://img.example/a.png" alt="chart">')
+    expect(render('![chart](/files/a.png)')).toContain('<img src="/files/a.png" alt="chart">')
+    expect(render('![chart](https://app.example/files/a.png)')).toContain('src="https://app.example/files/a.png"')
     expect(render('![p](data:image/png;base64,iVBO)')).toContain('src="data:image/png;base64,iVBO"')
     expect(render('![s](data:image/svg+xml;base64,PHN2Zz4=)')).not.toContain('src=')
     expect(render('![b](blob:https://app.example/1f2e)')).toContain('src="blob:https://app.example/1f2e"')
     expect(render('[b](blob:https://app.example/1f2e)')).not.toContain('blob:')
   })
 
-  test('without a DOM it shows the text, never unsanitised HTML', () => {
-    const bare = createMarkdownRenderer({} as WindowLike)
-    expect(bare('<b>x</b> **y**')).toBe('<p>&lt;b&gt;x&lt;/b&gt; **y**</p>')
+  test('loads images from foreign hosts only when they are named', () => {
+    expect(render('![t](https://evil.example/t.png?q=secret)')).not.toContain('src=')
+    expect(render('![t](//evil.example/t.png)')).not.toContain('src=')
+    const withHost = createMarkdownRenderer(window as unknown as WindowLike & { location: { origin: string } }, { imageHosts: ['https://files.example'] })
+    expect(withHost('![a](https://files.example/a.png)')).toContain('src="https://files.example/a.png"')
+    expect(withHost('![a](https://files.example.evil/a.png)')).not.toContain('src=')
+  })
+
+  test('without a DOM or a window it shows the text, never unsanitised HTML', () => {
+    expect(createMarkdownRenderer({} as WindowLike)('<b>x</b> **y**')).toBe('<p>&lt;b&gt;x&lt;/b&gt; **y**</p>')
+    expect(createMarkdownRenderer(undefined)('**y**')).toBe('<p>**y**</p>')
   })
 })
 

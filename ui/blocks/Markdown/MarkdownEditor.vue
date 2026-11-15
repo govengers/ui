@@ -42,6 +42,7 @@ const props = withDefaults(defineProps<{
 }>(), { rows: 6 })
 
 const model = defineModel<string>({ default: '' })
+const emit = defineEmits<{ uploading: [pending: number] }>()
 const { t, locale } = useI18n()
 const attrs = useAttrs()
 const pair = useLivePair()
@@ -51,6 +52,12 @@ const area = ref<InstanceType<typeof Textarea> | null>(null)
 const picker = ref<HTMLInputElement | null>(null)
 const problems = ref<string[]>([])
 let lastUpload = 0
+// Uploads in flight: their placeholders are in the model, so a page must not save meanwhile.
+let pending = 0
+function track(change: number): void {
+  pending += change
+  emit('uploading', pending)
+}
 
 const textarea = (): HTMLTextAreaElement | null => (area.value?.$el as HTMLTextAreaElement | undefined) ?? null
 const passed = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style')))
@@ -104,10 +111,21 @@ async function updateMentions(): Promise<void> {
     suggestions.value = []
     return
   }
-  const found = await props.mentions(mention.query)
-  if (asked !== query) return
+  let found: MentionOption[]
+  try {
+    found = await props.mentions(mention.query)
+  } catch {
+    found = [] // offline or refused: no suggestions, the text stays as typed
+  }
+  // A newer query, a blur or Escape outdates this answer.
+  if (asked !== query || document.activeElement !== element) return
   suggestions.value = found.slice(0, 8)
   active.value = 0
+}
+
+function dismissMentions(): void {
+  query++
+  suggestions.value = []
 }
 
 function choose(option: MentionOption): void {
@@ -130,7 +148,7 @@ function onKeydown(event: KeyboardEvent): void {
     } else if (event.key === 'Escape') {
       event.preventDefault()
       event.stopPropagation()
-      suggestions.value = []
+      dismissMentions()
     }
     return
   }
@@ -147,10 +165,15 @@ function images(files: Iterable<File>): File[] {
   return [...files].filter((file) => imageTypes.value.includes(file.type))
 }
 
+/** Uploads the files of an accepted image type; the others are named in the problems. */
 function addImages(files: File[]): void {
   if (files.length === 0 || props.upload === undefined) return
   problems.value = []
   for (const file of files) {
+    if (!imageTypes.value.includes(file.type)) {
+      problems.value.push(t('ui.notAnImage', { name: file.name }))
+      continue
+    }
     if (props.maxSize !== undefined && file.size > props.maxSize) {
       problems.value.push(t('ui.fileTooLarge', { name: file.name, max: formatBytes(props.maxSize, locale.value) }))
       continue
@@ -164,6 +187,7 @@ function addImages(files: File[]): void {
 }
 
 async function send(file: File, placeholder: string): Promise<void> {
+  track(1)
   try {
     if (props.upload === undefined || props.imageUrl === undefined) throw new Error('MarkdownEditor: upload needs imageUrl')
     const response = await pair.value.client.upload(props.upload, props.uploadParams ?? ({} as Params), file, { multipart: true, filename: file.name })
@@ -171,6 +195,8 @@ async function send(file: File, placeholder: string): Promise<void> {
   } catch {
     swap(placeholder, '')
     problems.value.push(t('ui.uploadFailed', { name: file.name }))
+  } finally {
+    track(-1)
   }
 }
 
@@ -193,15 +219,22 @@ function onPaste(event: ClipboardEvent): void {
   addImages(files)
 }
 
+const carriesFiles = (event: DragEvent): boolean => props.upload !== undefined && (event.dataTransfer?.types ?? []).includes('Files')
+
+function onDragover(event: DragEvent): void {
+  if (carriesFiles(event)) event.preventDefault()
+}
+
+// Every file drop is ours once we take files: the browser's own drop would open the file in the
+// tab and lose the text. Text drags keep the textarea's native drop.
 function onDrop(event: DragEvent): void {
-  const files = images(event.dataTransfer?.files ?? [])
-  if (files.length === 0) return
+  if (!carriesFiles(event)) return
   event.preventDefault()
-  addImages(files)
+  addImages([...(event.dataTransfer?.files ?? [])])
 }
 
 function onPick(): void {
-  addImages(images(picker.value?.files ?? []))
+  addImages([...(picker.value?.files ?? [])])
   if (picker.value) picker.value.value = ''
 }
 
@@ -240,9 +273,9 @@ const modes = computed(() => [{ value: 'write', label: t('ui.write') }, { value:
         @input="updateMentions"
         @click="updateMentions"
         @keyup.left.right.home.end="updateMentions"
-        @blur="suggestions = []"
+        @blur="dismissMentions"
         @paste="onPaste"
-        @dragover="(event: DragEvent) => upload && event.preventDefault()"
+        @dragover="onDragover"
         @drop="onDrop"
       />
       <ul v-if="suggestions.length > 0" :id="`${uid}-mentions`" role="listbox" class="ui-markdown-editor__mentions" :aria-label="t('ui.mentions')">

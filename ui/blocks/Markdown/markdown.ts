@@ -15,25 +15,46 @@ export function escapeHtml(text: string): string {
 const parser = new Marked({ async: false, gfm: true, breaks: true })
 parser.use({ renderer: { html: ({ text }) => escapeHtml(text) } })
 
-/** An image source: relative, http(s), blob (a fresh paste) or a raster data URL; never SVG or HTML data. */
-function safeImage(src: string): boolean {
-  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(src)?.[1]?.toLowerCase()
-  if (scheme === undefined || scheme === 'http' || scheme === 'https' || scheme === 'blob') return true
-  return /^data:image\/(png|jpeg|gif|webp);/i.test(src)
+export interface MarkdownRendererOptions {
+  /** Origins images may load from besides the page's own, e.g. `https://files.example` for a storage host. */
+  imageHosts?: readonly string[] | undefined
 }
 
-/** A render function bound to one window: the browser's in an app, a test DOM's in a test. */
-export function createMarkdownRenderer(window: WindowLike & { location?: { origin: string } }): (source: string) => string {
+/**
+ * An image source: the page's origin (relative or absolute), an origin of `hosts`, blob (a fresh
+ * paste) or a raster data URL; never SVG or HTML data. Markdown written by someone else must not
+ * make the reader's browser call a foreign host (tracking, exfiltration through the URL).
+ */
+function safeImage(src: string, origin: string, hosts: readonly string[]): boolean {
+  if (/^data:/i.test(src)) return /^data:image\/(png|jpeg|gif|webp);/i.test(src)
+  if (/^blob:https?:/i.test(src)) return true
+  if (!/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(src)) return true // relative to the page
+  try {
+    const url = new URL(src)
+    return (url.protocol === 'https:' || url.protocol === 'http:') && (url.origin === origin || hosts.includes(url.origin))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * A render function bound to one window: the browser's in an app, a test DOM's in a test.
+ * Without a window (SSR) or a DOM DOMPurify can work on, it shows the escaped text.
+ */
+export function createMarkdownRenderer(window: (WindowLike & { location?: { origin: string } }) | undefined, options: MarkdownRendererOptions = {}): (source: string) => string {
+  const escaped = (source: string): string => `<p>${escapeHtml(source)}</p>`
+  if (window === undefined) return escaped
   const purify = createPurifier(window)
   // Without a working DOM, DOMPurify would hand the HTML back unsanitised: show the text instead.
-  if (!purify.isSupported) return (source) => `<p>${escapeHtml(source)}</p>`
+  if (!purify.isSupported) return escaped
   const origin = window.location?.origin ?? ''
+  const hosts = options.imageHosts ?? []
   // DOMPurify's URL rule has no blob: (a pasted image before its upload answers); keep it on images only.
   purify.addHook('uponSanitizeAttribute', (node, data) => {
     if (node.nodeName === 'IMG' && data.attrName === 'src' && /^blob:https?:/i.test(data.attrValue)) data.forceKeepAttr = true
   })
   purify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.nodeName === 'IMG' && !safeImage((node as Element).getAttribute('src') ?? '')) (node as Element).removeAttribute('src')
+    if (node.nodeName === 'IMG' && !safeImage((node as Element).getAttribute('src') ?? '', origin, hosts)) (node as Element).removeAttribute('src')
     if (node.nodeName !== 'A' || !(node as Element).hasAttribute('href')) return
     const link = node as Element
     let external = true

@@ -42,8 +42,12 @@ Copy: `MarkdownView` alone needs `MarkdownView.vue` and `markdown.ts`; `bun add 
 | `source` | `string` | required | the markdown; a prop, never a slot |
 
 Safety: raw HTML in the source is shown as text, never parsed; DOMPurify drops script URLs and
-event handlers; images load only from relative, http(s), `blob:` and raster `data:image/` URLs
-(no SVG); a link to another origin gets `target="_blank" rel="noopener noreferrer nofollow"`.
+event handlers; images load only from the page's own origin (relative or absolute), `blob:` and
+raster `data:image/` URLs (no SVG): markdown someone else wrote (a user, an agent that read a
+hostile page) cannot make the reader's browser call a foreign host. A storage or CDN host is
+named in `MarkdownView.vue`: `createMarkdownRenderer(window, { imageHosts: ['https://files.example'] })`;
+other images keep their alt text, without a source. A link to another origin gets
+`target="_blank" rel="noopener noreferrer nofollow"`.
 
 ## MarkdownEditor
 
@@ -58,7 +62,11 @@ event handlers; images load only from relative, http(s), `blob:` and raster `dat
 | `uploadParams` | `Params \| undefined` | `{}` | the upload's parameters |
 | `imageUrl` | `(response) => string` | none | the URL an uploaded image is shown from; required with `upload` |
 | `maxSize` | `number \| undefined` | none | bytes per image; larger ones are said inline |
-| `mentions` | `(query) => MentionOption[] \| Promise<MentionOption[]>` | none | suggestions for the text after `@`: `{ value, label, hint? }`; `value` is inserted |
+| `mentions` | `(query) => MentionOption[] \| Promise<MentionOption[]>` | none | suggestions for the text after `@`: `{ value, label, hint? }`; `value` is inserted; a rejection shows none |
+
+| Event | Payload | When |
+|-------|---------|------|
+| `uploading` | `pending: number` | an image upload starts or ends; while `pending > 0` the model holds placeholders, so disable the page's Save |
 
 Attributes (`aria-label`, `data-*`) land on the textarea, `class` and `style` on the wrapper;
 inside a `Field` the label and hint reach the textarea.
@@ -72,7 +80,8 @@ Escape closes. Ctrl or Cmd+K is left to the command palette.
 name), like `FileUpload`. A pasted or dropped image puts `![Uploading name...](uploading:n)` at
 the caret at once and swaps it for `![name](url)` when the answer comes; a failed upload
 removes the placeholder and says so under the editor. A placeholder the user deleted stays
-deleted. Mentions are the page's: a `connection.query` on its users read, a filter of a cached
+deleted. Once `upload` is set every file drop is the editor's: files of another type are named
+under the editor, never opened by the browser in the tab (which would lose the text). Mentions are the page's: a `connection.query` on its users read, a filter of a cached
 list.
 
 ## Agent
@@ -84,7 +93,10 @@ the Write and Preview switch is a tab list named "Editor mode".
 
 - Toolbar edits go through `document.execCommand('insertText')` so Ctrl+Z undoes them; where the
   browser refuses, the edit is applied without undo history.
-- The renderer is bound to `window` once per app; under SSR or a test without a DOM it shows the
-  escaped text, never unsanitised HTML (`createMarkdownRenderer` in `markdown.ts` takes any window).
+- The renderer is bound to `window` once per app; under SSR (no `window`) or a window without a
+  working DOM it shows the escaped text, never unsanitised HTML (`createMarkdownRenderer` in
+  `markdown.ts` takes any window, or none).
+- A page that saves while an upload is in flight saves the placeholder and the image is lost:
+  follow the `uploading` event.
 - Test sanitising under jsdom, not happy-dom: happy-dom let `javascript:` links through
   DOMPurify in this repository's first test run.
