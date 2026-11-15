@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test'
 import { effectScope } from 'vue'
 import { ApiError, createLivePair, type ListResponse, type LivePair, type LiveState, type PresenceItem } from '../api/runtime'
 import { useLiveList } from '../api/vue'
-import { calls, createCustomer, getBilling, getCustomerFacets, getCustomers, getOrders, live, saveFilter, uploadFile, type CustomersFilter } from './api'
+import { calls, createCustomer, getBilling, getCustomerFacets, getCustomers, getOrders, getTasks, live, moveTask, saveFilter, uploadFile, type CustomersFilter } from './api'
 import type { Customer, CustomerFacets, FileItem } from './data'
 import { createFakeEngine, type FakeEngine } from './engine'
 
@@ -51,6 +51,17 @@ async function refusal(promise: Promise<unknown>): Promise<ApiError> {
 const ids = (items: readonly { id: string }[]): string[] => items.map((item) => item.id)
 
 describe('fake engine', () => {
+  test('moveTask moves a card and refuses a bad position', async () => {
+    const { pair } = setup()
+    const moved = await moveTask(pair.client, { id: 'tsk-01' }, { status: 'done', position: 1 })
+    expect(moved).toMatchObject({ id: 'tsk-01', status: 'done', position: 1 })
+    const done = await getTasks(pair.client, { filter: { where: { field: 'status', op: 'eq', value: 'done' } } })
+    expect(done.items[0]?.id).toBe('tsk-01')
+    const error = await refusal(moveTask(pair.client, { id: 'tsk-01' }, { status: 'done', position: Number.NaN }))
+    expect(error.fields).toEqual({ position: 'must be a finite number' })
+    pair.end()
+  })
+
   test('a list read filters, sorts, pages and refuses a bad filter with its path', async () => {
     const { engine, pair } = setup()
     const filter: CustomersFilter = { where: { and: [{ field: 'status', op: 'eq', value: 'active' }, { field: 'country', op: 'in', value: ['DE', 'AT'] }] } }

@@ -5,9 +5,9 @@
 // these descriptors as props (D5).
 
 import * as runtime from '../api/runtime'
-import type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+import type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
 
-export type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, User, UserRole } from './data'
+export type { Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
 export { fields } from './data'
 
 /** A node of a filter document (D12): a condition, or and, or or not over nodes. */
@@ -93,6 +93,15 @@ export type ConversationCondition = TextCondition<'id' | 'text'> | EnumCondition
 export type ConversationFilter = SearchableFilterDocument<ConversationCondition>
 export type ConversationSortTerm = SortTerm<'id' | 'role' | 'createdAt'>
 
+export type TasksCondition =
+  | TextCondition<'id' | 'title' | 'assignee'>
+  | EnumCondition<'status', TaskStatus>
+  | NumberCondition<'position'>
+  | TagsCondition<'labels'>
+  | TimeCondition<'createdAt'>
+export type TasksFilter = SearchableFilterDocument<TasksCondition>
+export type TasksSortTerm = SortTerm<'id' | 'title' | 'status' | 'position' | 'assignee' | 'createdAt'>
+
 /** The filter document of every target a stored filter may name (D13). */
 export interface FilterDocuments {
   customers: CustomersFilter
@@ -101,6 +110,7 @@ export interface FilterDocuments {
   jobs: JobsFilter
   files: FilesFilter
   conversation: ConversationFilter
+  tasks: TasksFilter
 }
 
 /** The reserved parameters of a filterable list read. */
@@ -121,6 +131,7 @@ export type UsersListQuery = ListQuery<UsersFilter, UsersSortTerm>
 export type JobsListQuery = ListQuery<JobsFilter, JobsSortTerm>
 export type FilesListQuery = ListQuery<FilesFilter, FilesSortTerm>
 export type ConversationListQuery = ListQuery<ConversationFilter, ConversationSortTerm>
+export type TasksListQuery = ListQuery<TasksFilter, TasksSortTerm>
 
 export interface ItemParameters {
   id: string
@@ -163,6 +174,8 @@ export const reads = {
   'jobs.item': runtime.liveRead<ItemParameters, Job>({ target: 'jobs.item', path: '/jobs/{id}', pathParameters: ['id'], list: false }),
   files: runtime.liveRead<FilesListQuery, runtime.ListResponse<FileItem>>({ target: 'files', path: '/files', pathParameters: [], list: true }),
   conversation: runtime.liveRead<ConversationListQuery, runtime.ListResponse<Message>>({ target: 'conversation', path: '/conversation', pathParameters: [], list: true }),
+  tasks: runtime.liveRead<TasksListQuery, runtime.ListResponse<Task>>({ target: 'tasks', path: '/tasks', pathParameters: [], list: true }),
+  'tasks.item': runtime.liveRead<ItemParameters, Task>({ target: 'tasks.item', path: '/tasks/{id}', pathParameters: ['id'], list: false }),
   settings: runtime.liveRead<runtime.NoParameters, Settings>({ target: 'settings', path: '/settings', pathParameters: [], list: false }),
   billing: runtime.liveRead<runtime.NoParameters, Billing>({ target: 'billing', path: '/billing', pathParameters: [], list: false }),
 } as const
@@ -205,6 +218,18 @@ export interface SendMessage {
   mode?: AgentMode
 }
 
+export interface CreateTask {
+  id?: string
+  title: string
+  status?: TaskStatus
+}
+
+/** Where a card goes: its column and its rank among the column's cards (Board). */
+export interface MoveTask {
+  status: TaskStatus
+  position: number
+}
+
 /** Every mutation, for LiveConnection.call (the socket, with its optimistic effect, D36) and Client.call. */
 export const calls = {
   createCustomer: runtime.mutation<runtime.NoParameters, CreateCustomer, Customer>({ name: 'createCustomer', method: 'POST', path: '/customers', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'customers' }, clientID: 7 }),
@@ -214,6 +239,8 @@ export const calls = {
   updateSettings: runtime.mutation<runtime.NoParameters, UpdateSettings, Settings>({ name: 'updateSettings', method: 'PATCH', path: '/settings', pathParameters: [], body: true, content: true }),
   startJob: runtime.mutation<runtime.NoParameters, StartJob, Job>({ name: 'startJob', method: 'POST', path: '/jobs', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'jobs' } }),
   sendMessage: runtime.mutation<runtime.NoParameters, SendMessage, Message>({ name: 'sendMessage', method: 'POST', path: '/conversation', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'conversation' }, clientID: 7 }),
+  createTask: runtime.mutation<runtime.NoParameters, CreateTask, Task>({ name: 'createTask', method: 'POST', path: '/tasks', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'tasks' }, clientID: 7 }),
+  moveTask: runtime.mutation<ItemParameters, MoveTask, Task>({ name: 'moveTask', method: 'PATCH', path: '/tasks/{id}/move', pathParameters: ['id'], body: true, content: true, effect: { kind: 'upserts', target: 'tasks' } }),
 } as const
 
 export type UploadContentType = 'application/pdf' | 'image/png' | 'image/jpeg' | 'text/plain' | 'text/csv'
@@ -306,6 +333,16 @@ export function getConversation(client: runtime.Client, parameters: Conversation
   return client.read(reads.conversation, parameters, options)
 }
 
+/** GET /api/v1/tasks (socket target 'tasks'). */
+export function getTasks(client: runtime.Client, parameters: TasksListQuery = {}, options?: runtime.RequestOptions): Promise<runtime.ListResponse<Task>> {
+  return client.read(reads.tasks, parameters, options)
+}
+
+/** GET /api/v1/tasks/{id} (socket target 'tasks.item'). */
+export function getTasksItem(client: runtime.Client, parameters: ItemParameters, options?: runtime.RequestOptions): Promise<Task> {
+  return client.read(reads['tasks.item'], parameters, options)
+}
+
 /** GET /api/v1/settings (socket target 'settings'). */
 export function getSettings(client: runtime.Client, options?: runtime.RequestOptions): Promise<Settings> {
   return client.read(reads.settings, {}, options)
@@ -349,6 +386,16 @@ export function startJob(client: runtime.Client, body: StartJob, options?: runti
 /** POST /api/v1/conversation, answering 201 (D26). */
 export function sendMessage(client: runtime.Client, body: SendMessage, options?: runtime.CallOptions): Promise<Message> {
   return client.call(calls.sendMessage, {}, body, options)
+}
+
+/** POST /api/v1/tasks, answering 201. */
+export function createTask(client: runtime.Client, body: CreateTask, options?: runtime.CallOptions): Promise<Task> {
+  return client.call(calls.createTask, {}, body, options)
+}
+
+/** PATCH /api/v1/tasks/{id}/move, answering 200 with the moved task. */
+export function moveTask(client: runtime.Client, parameters: ItemParameters, body: MoveTask, options?: runtime.CallOptions): Promise<Task> {
+  return client.call(calls.moveTask, parameters, body, options)
 }
 
 /** POST /api/v1/files: a raw body, or multipart with the part "file"; at most 10 MiB, answering 201 once received. */
