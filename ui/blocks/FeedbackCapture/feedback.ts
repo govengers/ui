@@ -2,7 +2,7 @@
 // requests (installed once in main.ts), the environment, and the report exactly as it is sent.
 // Everything is redacted when it enters the buffer (redact.ts), so a secret never sits in memory
 // longer than the console line that printed it.
-import { redactRequestUrl, redactText, redactUrl, redactValue } from './redact'
+import { endsWithSecretKey, redacted, redactRequestUrl, redactText, redactUrl, redactValue } from './redact'
 
 export type ConsoleLevel = 'error' | 'warn' | 'info' | 'log'
 
@@ -71,18 +71,28 @@ function describe(value: unknown): string {
   }
 }
 
-// The console prints `('token=%s', t)` as one line: substitute the directives first, so the
-// redaction sees the key and its value together.
+// The console prints `('token=%s', t)` as one line: substitute the directives first; a directive
+// right after a secret key is masked whole, its value's spaces or quotes do not end the mask.
 function printed(values: unknown[]): unknown[] {
   const [first, ...rest] = values
   if (typeof first !== 'string') return values
   let next = 0
-  const line = first.replace(/%[sdifoOc]/g, (directive) => {
+  const line = first.replace(/%[sdifoOc]/g, (directive, at: number) => {
     if (next >= rest.length) return directive
     const value = rest[next++]
-    return directive === '%c' ? '' : describe(value)
+    if (directive === '%c') return ''
+    return endsWithSecretKey(first.slice(0, at)) ? redacted : describe(value)
   })
   return [line, ...rest.slice(next)]
+}
+
+// Each argument redacted alone; an argument after one ending in a secret key (`'token:', t`) is
+// masked whole.
+function described(values: unknown[]): string[] {
+  return values.map((value, at) => {
+    const before = values[at - 1]
+    return typeof before === 'string' && endsWithSecretKey(before) ? redacted : describe(value)
+  })
 }
 
 /**
@@ -102,9 +112,9 @@ export function installFeedbackBuffer(options: FeedbackBufferOptions = {}): Feed
   }
   const record = (level: ConsoleEntry['level'], values: unknown[]): void => {
     try {
-      // Each value is redacted alone, then the line once more: a key in one argument and its value
-      // in the next (`console.error('token:', t)`) is only a pair in the whole line.
-      push({ kind: 'console', level, at: stamp(), text: clip(redactText(printed(values).map(describe).join(' '))) })
+      // Each value is redacted alone, then the line once more (a pair split over arguments the
+      // argument rule does not see, `('user', 'x token:', t)` after a %s substitution).
+      push({ kind: 'console', level, at: stamp(), text: clip(redactText(described(printed(values)).join(' '))) })
     } catch {
       // recording must never break the code that logged
     }

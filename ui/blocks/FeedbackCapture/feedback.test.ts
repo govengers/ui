@@ -77,6 +77,23 @@ describe('installFeedbackBuffer', () => {
     ])
   })
 
+  test('a value after a key argument or a key directive is masked whole', () => {
+    const { host } = fakeHost(async () => new Response())
+    const buffer = installFeedbackBuffer({ host, now: clock })
+    host.console.error('password:', 'p@ss w0rd!SECRET')
+    host.console.error('password:', 'hunter2,SECRET')
+    host.console.error('token:', 'abc"SECRET')
+    host.console.error('password=%s', "it's;SECRET")
+    host.console.error('password:', 'Bearer abcdefgh')
+    expect(buffer.entries().map((entry) => (entry.kind === 'console' ? entry.text : ''))).toEqual([
+      'password: [redacted]',
+      'password: [redacted]',
+      'token: [redacted]',
+      'password=[redacted]',
+      'password: [redacted]',
+    ])
+  })
+
   test('a password with an escaped quote inside JSON in JSON loses its tail too', () => {
     const { host } = fakeHost(async () => new Response())
     const buffer = installFeedbackBuffer({ host, now: clock })
@@ -91,7 +108,8 @@ describe('installFeedbackBuffer', () => {
     const buffer = installFeedbackBuffer({ host, now: clock })
     await host.fetch!('/api/oauth/callback?code=OAUTHCODE&state=xyz&page=2')
     buffer.push({ kind: 'request', at: 'x', method: 'GET', url: '/api/share?key=SECRETKEY', status: 500, error: null, ms: 1 })
-    expect(buffer.entries().map((entry) => (entry.kind === 'request' ? entry.url : ''))).toEqual(['/api/oauth/callback?code=[redacted]&state=[redacted]&page=2', '/api/share?key=[redacted]'])
+    await host.fetch!('/api/share?%6Bey=SHARE-SECRET')
+    expect(buffer.entries().map((entry) => (entry.kind === 'request' ? entry.url : ''))).toEqual(['/api/oauth/callback?code=[redacted]&state=[redacted]&page=2', '/api/share?key=[redacted]', '/api/share?%6Bey=[redacted]'])
   })
 
   test('push redacts and clips like the recorded entries', () => {

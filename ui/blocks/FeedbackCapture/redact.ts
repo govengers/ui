@@ -104,6 +104,7 @@ function scrubPairs(text: string): string {
     const rest = text.slice(start, start + 16)
     let end: number
     let mask: string
+    let resume = 0
     if (rest.startsWith(redacted)) {
       end = start + redacted.length // already redacted
       mask = redacted
@@ -114,6 +115,8 @@ function scrubPairs(text: string): string {
       const opener = quoted.exec(rest)![0]
       end = quotedEnd(text, start, opener)
       mask = `${opener}${redacted}${opener}`
+      // The closing quote can open the next key (`"Invalid password:","pin":"1"`): search on from it.
+      if (end - start > opener.length) resume = opener.length
     } else if (headerKeys.has(key.toLowerCase().replace(/[-_]/g, '')) && match[3]!.includes(':')) {
       end = lineEnd(text, start)
       mask = redacted
@@ -127,9 +130,16 @@ function scrubPairs(text: string): string {
     if (end === start) mask = ''
     out += text.slice(last, start) + mask
     last = end
-    pairs.lastIndex = end
+    pairs.lastIndex = end - resume
   }
   return out + text.slice(last)
+}
+
+const trailingKey = new RegExp(String.raw`(\\{0,15}["']?)\b(?:${keyPattern})\b\1\s*[:=]\s*$`, 'i')
+
+/** Whether text ends in a secret key and `:` or `=` (`'token:'`), so the value comes next. */
+export function endsWithSecretKey(text: string): boolean {
+  return trailingKey.test(text.slice(-200))
 }
 
 function parsedJson(text: string): unknown {
@@ -197,5 +207,17 @@ export function redactUrl(href: string): string {
  * request's `?filter=` or `?page=` is what a bug report needs.
  */
 export function redactRequestUrl(url: string): string {
-  return redactText(url).replace(/([?&#;](?:code|key|state)=)[^&#;]*/gi, `$1${redacted}`)
+  return redactText(url).replace(/([?&#;])([^=&#;]*)=[^&#;]*/g, (pair, sep: string, name: string) => {
+    const decoded = decodedName(name)
+    return /^(?:code|key|state)$/i.test(decoded) || secretKey(decoded) ? `${sep}${name}=${redacted}` : pair
+  })
+}
+
+// A parameter name percent-decoded (`%6Bey` is key); a malformed escape stays as written.
+function decodedName(name: string): string {
+  try {
+    return decodeURIComponent(name.replace(/\+/g, ' '))
+  } catch {
+    return name
+  }
 }

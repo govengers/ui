@@ -74,10 +74,11 @@ redacted as a value, also JSON inside JSON; else `key=value`, `"key": "value"` a
 lines to their end, `Bearer x`, JWTs, `user:pass@` in URLs; an escaped string is read through
 its levels of escaping, so an escaped quote inside a password does not end it), `redactUrl` (the
 page: every query and fragment value) and `redactRequestUrl` (a request: secret-named values and
-`code`, `key`, `state`; other query values such as `?filter=` stay for debugging). Substring
+`code`, `key`, `state`, names percent-decoded first; other query values such as `?filter=` stay for debugging). Substring
 matching over-redacts on purpose. Text is cut to 8000 characters before it is scrubbed, also a
 string inside a logged object. A console line is redacted per argument and then as the whole line
-(with `%s` directives substituted), so `console.error('token:', t)` is caught as a pair.
+(with `%s` directives substituted). An argument or `%s` value right after a secret key
+(`console.error('token:', t)`, `('token=%s', t)`) is masked whole, spaces and quotes included.
 
 ## With livewire
 

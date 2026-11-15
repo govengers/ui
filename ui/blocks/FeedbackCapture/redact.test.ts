@@ -79,6 +79,13 @@ describe('redactText', () => {
     expect(redactText(String.raw`x \"token\":\"cut-SECRET`)).toBe(String.raw`x \"token\":\"[redacted]\"`)
   })
 
+  test('a string value ending in a secret key does not hide the next key', () => {
+    expect(redactText('Login failed ' + JSON.stringify({ error: 'Invalid password:', password: 'hunter2' }))).not.toContain('hunter2')
+    expect(redactText('x ' + JSON.stringify({ hint: 'enter your pin: ', pin: '1234' }))).not.toContain('1234')
+    expect(redactText('x ' + JSON.stringify({ name: 'x token=', apiKey: 'K-SECRET' }))).not.toContain('K-SECRET')
+    expect(redactText('POST failed ' + JSON.stringify({ body: JSON.stringify({ error: 'Invalid password:', password: 'hunter2' }) }))).not.toContain('hunter2')
+  })
+
   test('header lines lose the whole value', () => {
     expect(redactText('Authorization: ApiKey abc123SECRET')).toBe('Authorization: [redacted]')
     expect(redactText('Cookie: lang=en; remember_me=SECRET1; PHPSESSID=SECRET2\nnext line')).toBe('Cookie: [redacted]\nnext line')
@@ -95,6 +102,11 @@ describe('redactText', () => {
 })
 
 describe('redactRequestUrl', () => {
+  test('percent-encoded parameter names are decoded before matching', () => {
+    expect(redactRequestUrl('/api/share?%6Bey=SHARE-SECRET&%70assword=P1&page=%32')).toBe('/api/share?%6Bey=[redacted]&%70assword=[redacted]&page=%32')
+    expect(redactRequestUrl('/api/x?%E0%A4%A=1')).toBe('/api/x?%E0%A4%A=1')
+  })
+
   test('masks code, key, state and secret-named values, keeps the rest', () => {
     expect(redactRequestUrl('/api/oauth/callback?code=OAUTHCODE&state=xyz&page=2&access_token=T1')).toBe('/api/oauth/callback?code=[redacted]&state=[redacted]&page=2&access_token=[redacted]')
     expect(redactRequestUrl('https://app.example/api/share?KEY=K1#key=K2')).toBe('https://app.example/api/share?KEY=[redacted]#key=[redacted]')
