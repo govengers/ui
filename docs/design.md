@@ -237,3 +237,27 @@ switchable style presets.
   workbooks, the knowledge base and the run-report template into the target's `docs/ui/`, and
   the project's `CLAUDE.md` gets the matching L0 table (`templates/project/CLAUDE.md`), so a
   project's agent runs the same stages without reaching back into this repository.
+
+## Board, markdown and palette (16.11.2026)
+
+- **D56 Markdown brings `marked` and `dompurify`.** The `Markdown` block is the second block with
+  dependencies of its own (D3): `marked` renders GitHub-flavoured markdown through a dedicated
+  synchronous instance, `dompurify` sanitises through a private instance (its hooks never touch
+  another piece's purifier). Raw HTML in the source is shown as text, not sanitised HTML; links to
+  another origin open with `noopener noreferrer nofollow`; images load only from relative,
+  http(s), `blob:` and raster `data:image/` URLs. Without a working DOM the renderer escapes the
+  text instead of returning unsanitised HTML. Sanitiser tests run on `jsdom` (dev dependency, the
+  DOM DOMPurify supports); `happy-dom` let `javascript:` links through in the first run.
+- **D57 A board is one live list.** `Board` subscribes the whole board with one `useLiveList`
+  and groups and orders on the client. The runtime upserts an optimistic item into every live list
+  of its resource regardless of filter (D36 of livewire), so per-column subscriptions would flash a
+  moved card in every column. A move sends a numeric rank, the midpoint between the new
+  neighbours (1024 past an end), plus the neighbours' ids; renumbering a crowded column is the
+  server's job. One drag engine on pointer events serves mouse, pen and touch (touch from the grip
+  only, so the board scrolls); the keyboard path lifts on the grip and the menu path ("Move to")
+  needs no drag at all (D9).
+- **D58 The palette searches with one-shot queries.** `CommandPalette` reads each search group
+  with `connection.query`, not a subscription: results need not be live, and a subscription per
+  keystroke would churn the server. Its quick actions are the bound agent actions without
+  params (D24, D48), so the palette, the dock and the driver share one vocabulary.
+
