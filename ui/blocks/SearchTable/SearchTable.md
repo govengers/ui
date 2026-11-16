@@ -83,7 +83,8 @@ limit, mode })` and `useLiveStatus()` on the provided pair. The page names the d
 nothing else: `<SearchTable :target="live.customers" :filter="facetDocument" ... />`.
 Mutations stay on the page (row actions, bulk actions); their pushes update the rows in place,
 no local upsert. A filter, search or sort change keeps the last rows on screen until the new
-first page arrives.
+first page arrives; the end of the connection (logout, 4401) or a new pair (account switch) never
+keeps them.
 
 ## Agent
 

@@ -5,7 +5,7 @@
 
 import { uuidv7 } from '../api/runtime'
 import { uploads } from './api'
-import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type User } from './data'
+import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type Task, type User } from './data'
 import type { FakeStore } from './engine'
 import { Refusal, parseFilter, withoutField } from './query'
 
@@ -69,6 +69,9 @@ export function createHandlers(context: HandlerContext): Handlers {
     companyName: nonEmpty, supportEmail: email, timezone: nonEmpty, language: oneOf(['en', 'de']), notifyByEmail: flag, weeklyDigest: flag,
   }
 
+  const taskStatuses = enumOf('tasks', 'status')
+  const lastPosition = (status: unknown): number => Math.max(0, ...tables.tasks.filter((task) => task.status === status).map((task) => task.position))
+
   const mutations: Record<string, Mutation> = {
     createCustomer: (_, body) => {
       const input = objectBody(body)
@@ -110,6 +113,22 @@ export function createHandlers(context: HandlerContext): Handlers {
       const job = insert('jobs', { id: uuidv7(), kind: String(input['kind']), status: 'queued', progress: 0, resultRoute: null, createdAt: now() })
       runJob(job.id)
       return { status: 201, payload: job }
+    },
+    createTask: (_, body) => {
+      const input = objectBody(body)
+      validate(input, { id: nonEmpty, title: nonEmpty, status: oneOf(taskStatuses) }, ['title'])
+      const id = typeof input['id'] === 'string' ? input['id'] : uuidv7()
+      if (tables.tasks.some((task) => task.id === id)) throw new Refusal('conflict')
+      const status = (input['status'] ?? 'backlog') as Task['status']
+      const task: Task = { id, title: String(input['title']), status, position: lastPosition(status) + 1024, assignee: null, labels: [], body: '', createdAt: now() }
+      return { status: 201, payload: insert('tasks', task) }
+    },
+    moveTask: ({ id }, body) => {
+      const input = objectBody(body)
+      validate(input, { status: oneOf(taskStatuses), position: finite }, ['status', 'position'])
+      const moved = update('tasks', id ?? '', input as Partial<Task>)
+      if (moved === undefined) throw new Refusal('not_found')
+      return { status: 200, payload: moved }
     },
     createApiKey: (_, body) => {
       const input = objectBody(body)
@@ -215,7 +234,7 @@ export function createHandlers(context: HandlerContext): Handlers {
     if (file.size > maximumUploadBytes) throw new Refusal('invalid_request', { file: `at most ${maximumUploadBytes} bytes` })
     const customerId = parameters['customerId']
     if (customerId !== undefined && customerOf(customerId) === undefined) throw new Refusal('invalid_request', { customerId: 'unknown customer' })
-    const { id } = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'uploading', progress: 0, customerId: customerId ?? null, createdAt: now() })
+    const { id } = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'uploading', progress: 0, customerId: customerId ?? null, url: URL.createObjectURL(file), createdAt: now() })
     let row: FileItem | undefined
     for (const progress of [25, 50, 75, 100]) {
       await new Promise((resolve) => setTimeout(resolve, latency * 2))
@@ -260,6 +279,7 @@ type Rule = (value: unknown) => string | undefined
 const nonEmpty: Rule = (value) => (typeof value === 'string' && value.trim() !== '' ? undefined : 'must not be empty')
 const email: Rule = (value) => (typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? undefined : 'must be an email address')
 const amount: Rule = (value) => (typeof value === 'number' && Number.isFinite(value) && value >= 0 ? undefined : 'must be a number of at least 0')
+const finite: Rule = (value) => (typeof value === 'number' && Number.isFinite(value) ? undefined : 'must be a finite number')
 const flag: Rule = (value) => (typeof value === 'boolean' ? undefined : 'must be true or false')
 const stringList: Rule = (value) => (Array.isArray(value) && value.every((item) => typeof item === 'string') ? undefined : 'must be a list of strings')
 const oneOf = (values: readonly string[]): Rule => (value) => (typeof value === 'string' && values.includes(value) ? undefined : `must be one of ${values.join(', ')}`)

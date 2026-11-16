@@ -348,3 +348,56 @@ switchable style presets.
   both. Sent through `pair.client` (REST) because the socket is often what is broken. The
   screenshot is a hook given 3 s, so the block carries no dependency and a hanging hook cannot
   keep the dialog shut; D34's `html2canvas-pro` is the project's choice.
+
+## Board, markdown and palette (16.11.2026)
+
+- **D66 Markdown brings `marked` and `dompurify`.** The `Markdown` block is the second block with
+  dependencies of its own (D3): `marked` renders GitHub-flavoured markdown through a dedicated
+  synchronous instance, `dompurify` sanitises through a private instance (its hooks never touch
+  another piece's purifier). Raw HTML in the source is shown as text, not sanitised HTML; links to
+  another origin open with `noopener noreferrer nofollow`; images load only from relative,
+  http(s), `blob:` and raster `data:image/` URLs. Without a working DOM the renderer escapes the
+  text instead of returning unsanitised HTML. Sanitiser tests run on `jsdom` (dev dependency, the
+  DOM DOMPurify supports); `happy-dom` let `javascript:` links through in the first run.
+- **D67 A board is one live list.** `Board` subscribes the whole board with one `useLiveList`
+  and groups and orders on the client. The runtime upserts an optimistic item into every live list
+  of its resource regardless of filter (D36 of livewire), so per-column subscriptions would flash a
+  moved card in every column. A move sends a numeric rank, the midpoint between the new
+  neighbours (1024 past an end), plus the neighbours' ids; renumbering a crowded column is the
+  server's job. One drag engine on pointer events serves mouse, pen and touch (touch from the grip
+  only, so the board scrolls); the keyboard path lifts on the grip and the menu path ("Move to")
+  needs no drag at all (D9).
+- **D68 The palette searches with one-shot queries.** `CommandPalette` reads each search group
+  with `connection.query`, not a subscription: results need not be live, and a subscription per
+  keystroke would churn the server. Its quick actions are the bound agent actions without
+  params (D24, D48), so the palette, the dock and the driver share one vocabulary.
+
+- **D69 Mounted tests for what only shows mounted.** D16 kept component tests out; the first
+  review of Board, Markdown and CommandPalette found focus loss, a lift without an end, a file
+  drop left to the browser and a pick lost to a full storage, all invisible to model tests.
+  `bun test` now preloads `scripts/test/setup.ts` (`bunfig.toml`): a jsdom document as the global
+  DOM and a loader compiling `.vue` script and template (no styles). `scripts/test/mount.ts`
+  mounts a piece with vue-i18n and a pair on a fake engine without latency. A piece gets a
+  `<Name>.mounted.test.ts` when it has behaviour a user meets through events: focus, keyboard,
+  events, storage, identity switches. Logic stays in model tests (D16); layout, scrolling and
+  CSS states stay with local browser probes, out of CI. Budget: the whole suite under 2 s, no
+  browser in CI, debounces driven by fake timers, never by waiting.
+- **D70 Images in rendered markdown load from the page's own origin.** `createMarkdownRenderer`
+  takes `imageHosts` (origins); other absolute image sources lose their `src`. Markdown written
+  by another user or by an agent that read hostile content would otherwise make every reader's
+  browser call a foreign host (tracking, exfiltration in the URL). Supersedes D66's
+  "http(s) images".
+
+- **D71 A board's lift aims between two cards.** A pointer or keyboard lift keeps the ids of the
+  cards above and below its target, and the spot is computed from them on every render (`resolve`
+  in `board.ts`; a neighbour gone falls back to the other, then to the index). A position number
+  meant something else once another user's card arrived above it: the drop landed elsewhere or
+  read as cancelled, and Vue moved the lifted element, which loses focus in Chrome and ended the
+  keyboard lift. The hidden origin of a pointer drag sits where the list has the card, not at a
+  remembered index. Amends D67.
+
+- **D72 A lift not moved yet sits where the list has the card.** Until the first arrow key or
+  pointer move, a lift's target is the card's own spot in the current list (`home` on `Lift`),
+  not the cards around it at lift time. A card another user put between the card above and the
+  lifted one would otherwise draw the lifted card above it and turn a put-back into a move.
+  Amends D71.

@@ -13,6 +13,7 @@ export type UserRole = 'admin' | 'member'
 export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
 export type FileStatus = 'uploading' | 'ready'
 export type MessageRole = 'user' | 'agent'
+export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'review' | 'done'
 
 export interface Customer {
   id: string
@@ -64,6 +65,8 @@ export interface FileItem {
   status: FileStatus
   progress: number
   customerId: string | null
+  /** Where the file is shown from; the fake hands out an object URL of the uploaded blob. */
+  url: string | null
   createdAt: string
 }
 
@@ -82,6 +85,20 @@ export interface Message {
   id: string
   role: MessageRole
   text: string
+  createdAt: string
+}
+
+/** A card of the demo board: its column is the status, its order the position (Board). */
+export interface Task {
+  id: string
+  title: string
+  status: TaskStatus
+  position: number
+  /** The id of the assigned user, if any. */
+  assignee: string | null
+  labels: string[]
+  /** Markdown. */
+  body: string
   createdAt: string
 }
 
@@ -124,6 +141,7 @@ export interface Tables {
   jobs: Job[]
   files: FileItem[]
   conversation: Message[]
+  tasks: Task[]
   apiKeys: ApiKey[]
   notifications: Notification[]
   settings: Settings[]
@@ -184,6 +202,16 @@ export const fields: Record<ListTable, readonly FieldMeta[]> = {
     { name: 'id', type: 'string', filter: true, sort: true, search: false },
     { name: 'role', type: 'enum', enum: ['user', 'agent'], filter: true, sort: true, search: false },
     { name: 'text', type: 'text', filter: true, sort: false, search: true },
+    { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
+  ],
+  tasks: [
+    { name: 'id', type: 'string', filter: true, sort: true, search: false },
+    { name: 'title', type: 'string', filter: true, sort: true, search: true },
+    { name: 'status', type: 'enum', enum: ['backlog', 'todo', 'doing', 'review', 'done'], filter: true, sort: true, search: false },
+    { name: 'position', type: 'float', filter: true, sort: true, search: false },
+    { name: 'assignee', type: 'string', filter: true, sort: true, search: false },
+    { name: 'labels', type: 'stringArray', filter: true, sort: false, search: false },
+    { name: 'body', type: 'text', filter: false, sort: false, search: true },
     { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
   ],
   apiKeys: [
@@ -298,12 +326,34 @@ export function seedTables(seed = 1): Tables {
     ['site-photo.jpg', 'image/jpeg', 1_532_118],
   ].map(([name, type, size], index) => ({
     id: `fil-${index + 1}`, name: String(name), type: String(type), size: Number(size), status: 'ready' as const, progress: 100,
-    customerId: customers[index * 7]?.id ?? null, createdAt: at(10 - index),
+    customerId: customers[index * 7]?.id ?? null, url: null, createdAt: at(10 - index),
   }))
   const conversation: Message[] = [
     { id: 'msg-1', role: 'user', text: 'Which customers in Germany are on hold?', createdAt: at(0.02) },
     { id: 'msg-2', role: 'agent', text: 'I filtered the customer list to Germany and on hold. Open it to see them.', createdAt: at(0.019) },
   ]
+  const taskRows: [string, TaskStatus, number | null, string[]][] = [
+    ['Write the onboarding guide', 'backlog', null, ['docs']],
+    ['Dark mode for the invoice PDF', 'backlog', 3, ['design']],
+    ['Rate limit the public API', 'backlog', null, ['security']],
+    ['Import customers from CSV', 'todo', 2, ['feature']],
+    ['Nightly export to S3', 'todo', 4, ['ops']],
+    ['Fix the timezone in reminders', 'todo', 0, ['bug']],
+    ['Board drag and drop', 'doing', 0, ['feature']],
+    ['Markdown in task descriptions', 'doing', 1, ['feature']],
+    ['Command palette', 'review', 5, ['feature']],
+    ['Upgrade to PostgreSQL 18', 'done', 6, ['ops']],
+    ['Login with GitHub', 'done', 1, ['auth']],
+  ]
+  const perStatus = new Map<TaskStatus, number>()
+  const tasks: Task[] = taskRows.map(([title, status, assignee, labels], index) => {
+    const position = ((perStatus.get(status) ?? 0) + 1) * 1024
+    perStatus.set(status, position / 1024)
+    return {
+      id: `tsk-${String(index + 1).padStart(2, '0')}`, title, status, position, assignee: assignee === null ? null : (users[assignee]?.id ?? null), labels,
+      body: `## ${title}\n\n- [ ] Plan\n- [ ] Build\n- [ ] Review`, createdAt: at(20 - index),
+    }
+  })
   const notifications: Notification[] = [
     { id: 'ntf-1', title: 'Export finished', body: 'The customer export is ready to download.', route: '/files', createdAt: at(2), readAt: at(1.9) },
     { id: 'ntf-2', title: 'Import failed', body: 'Row 214 has no email address.', route: null, createdAt: at(1), readAt: at(0.9) },
@@ -319,5 +369,5 @@ export function seedTables(seed = 1): Tables {
     { id: 'key-1', name: 'CI pipeline', prefix: 'demo_key-1', scopes: ['customers:read', 'orders:read'], expiresAt: new Date(seededNow + 60 * day).toISOString(), lastUsedAt: at(0.1), createdAt: at(40) },
     { id: 'key-2', name: 'Old import script', prefix: 'demo_key-2', scopes: ['customers:write'], expiresAt: at(3), lastUsedAt: null, createdAt: at(120) },
   ]
-  return { customers, orders, users, jobs, files, conversation, apiKeys, notifications, settings }
+  return { customers, orders, users, jobs, files, conversation, tasks, apiKeys, notifications, settings }
 }
