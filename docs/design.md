@@ -480,3 +480,8 @@ switchable style presets.
   companies and common cities; the screenshots of the demos whose data changed were rendered
   again. This is the one exception to "decisions are never edited": the wording of D1, D8, D17,
   D31 to D34 and D53 was changed in place, their content and reasoning were not.
+- **D83 The runtime is vendored from livewire main at e8a0e0b.** It adds `isNotReplayable` (the
+  409 answering the repeat of a call whose answer showed a secret once, livewire D91) and the
+  `omit` member of an `Effect` (an optimistic upsert leaves out a target's detail-only fields, as
+  the list's rows do, livewire D93). `vue.ts` is unchanged apart from its header. Still no tag,
+  so D73's rule holds: the next tag replaces both files byte for byte. Amends D73.
