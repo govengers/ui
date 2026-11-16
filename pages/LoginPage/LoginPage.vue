@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // LoginPage recipe (login-and-session): the three auth screens on a bare AppShell, outside
 // livewire. `login` and `change` come from the app's auth module (they end and rebuild the pair,
-// then navigate); the page shows their errors. One file, `state` picks the screen.
+// then navigate); the page shows their errors. One file, `state` picks the screen; without
+// `change` there is no change-password screen.
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RouteLocationRaw } from 'vue-router'
@@ -26,8 +27,8 @@ const props = withDefaults(defineProps<{
   providers?: readonly LoginProvider[] | undefined
   /** `sso`: the providers first, the password form behind a link. */
   layout?: 'password' | 'sso' | undefined
-  /** Changes the password: throws an ApiError with fields (shown at the Fields) or an Error. */
-  change: (passwords: { currentPassword: string; newPassword: string }) => Promise<void>
+  /** Changes the password: throws an ApiError with fields (shown at the Fields) or an Error. None: no such screen, `changePassword` shows the sign-in. */
+  change?: ((passwords: { currentPassword: string; newPassword: string }) => Promise<void>) | undefined
   /** Where "Sign in again" goes. */
   loginRoute?: RouteLocationRaw | undefined
   /** The app's version, shown in the corner. */
@@ -43,12 +44,13 @@ defineSlots<{
 
 const { t } = useI18n({ useScope: 'global', messages })
 
-const page = computed(() => ({ login: 'auth.login', loggedOut: 'auth.loggedOut', changePassword: 'auth.changePassword' })[props.state])
+const shown = computed(() => (props.state === 'changePassword' && props.change === undefined ? 'login' : props.state))
+const page = computed(() => ({ login: 'auth.login', loggedOut: 'auth.loggedOut', changePassword: 'auth.changePassword' })[shown.value])
 const heading = computed(() => ({
   login: t('auth.login.heading', { app: t('auth.app') }),
   loggedOut: t('auth.loggedOut.heading'),
   changePassword: t('auth.changePassword.heading'),
-})[props.state])
+})[shown.value])
 
 // Change password: never prefilled; the repeat is checked here, the rest by the server.
 const passwords = reactive({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -65,6 +67,7 @@ async function submitChange(): Promise<void> {
     errors.value = { confirmPassword: t('auth.changePassword.mismatch') }
     return
   }
+  if (props.change === undefined) return
   changing.value = true
   try {
     await props.change({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword })
@@ -85,14 +88,14 @@ async function submitChange(): Promise<void> {
       <!-- The h1 for assistive technology; the card's title says the same on screen. -->
       <PageHeader :title="heading" class="ui-visually-hidden" />
       <div class="login-page__column">
-        <LoginForm v-if="state === 'login'" :login="login" :providers="providers" :layout="layout">
+        <LoginForm v-if="shown === 'login'" :login="login" :providers="providers" :layout="layout">
           <template #footer>
             <a href="/auth/forgot">{{ t('auth.login.forgot') }}</a>
           </template>
         </LoginForm>
-        <slot v-if="state === 'login'" name="after" />
+        <slot v-if="shown === 'login'" name="after" />
 
-        <Card v-else-if="state === 'loggedOut'" :title="t('auth.loggedOut.title')" as="section">
+        <Card v-else-if="shown === 'loggedOut'" :title="t('auth.loggedOut.title')" as="section">
           <div class="login-page__stack">
             <p>{{ t('auth.loggedOut.text') }}</p>
             <Button variant="primary" block :to="loginRoute">{{ t('auth.loggedOut.again') }}</Button>
