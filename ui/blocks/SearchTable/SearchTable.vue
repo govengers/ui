@@ -3,11 +3,11 @@
 // a toolbar and chip slot for the page's filter kit, the Table with sort, selection and row
 // menus, and the pager. The facet filter is a sibling block; the page passes its document in as
 // `filter`. The state logic is in searchTable.ts; this file wires it to useLiveList.
-import { computed, onScopeDispose, ref, shallowRef, watch, watchEffect } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
-import type { ListResponse, LiveTarget } from '@/api/runtime'
-import { useLiveConnection, useLiveList, useLiveStatus } from '@/api/vue'
+import type { ListQuery, ListResponse, LiveTarget } from '@/api/runtime'
+import { useLiveList, useLiveStatus } from '@/api/vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
 import EmptyState from '../../EmptyState/EmptyState.vue'
@@ -16,7 +16,7 @@ import Input from '../../Input/Input.vue'
 import Menu, { type MenuItem } from '../../Menu/Menu.vue'
 import Pagination from '../../Pagination/Pagination.vue'
 import Table, { type TableColumn, type TableKey, type TableSort } from '../../Table/Table.vue'
-import { composeFilter, cursorWindow, errorKey, needsMore, readQuery, sortTerms, writeQuery, type ListQuery } from './searchTable'
+import { composeFilter, cursorWindow, errorKey, needsMore, readQuery, sortTerms, writeQuery } from './searchTable'
 
 const props = withDefaults(defineProps<{
   /** The list read, e.g. `live.customers`. */
@@ -86,21 +86,14 @@ const list = useLiveList(props.target, {
   limit: props.pageSize,
   mode: props.mode,
 })
-const { error, page, limit, total, hasMore, retry } = list
+const { items, error, page, limit, total, hasMore, retry } = list
 if (fromUrl.page !== undefined && !cursor) page.value = fromUrl.page
 watch(() => composeFilter(props.filter, search.value), (filter) => (list.filter.value = filter as Query['filter']))
 watch(sort, (value) => (list.sort.value = sortTerms(value) as Query['sort']))
 
-// useLiveList drops the rows while a new sort, search or page loads: keep the last ones on
-// screen meanwhile, so only the first load shows skeleton rows. Never across the end of the
-// connection or a new pair: no row outlives a logout, an ended session or an account switch.
-const connection = useLiveConnection()
+// useLiveList keeps the rows and total of the query before until the new first page arrives,
+// and drops them on the connection's end or a new pair (livewire D76, D83).
 const status = useLiveStatus()
-const held = shallowRef<{ connection: unknown; items: Item[] }>({ connection: connection.value, items: [] })
-watchEffect(() => {
-  if (!list.loading.value) held.value = { connection: connection.value, items: list.items.value }
-})
-const loaded = computed(() => (list.loading.value && status.value !== 'ended' && held.value.connection === connection.value ? held.value.items : list.items.value))
 
 // Cursor mode: useLiveList tiles pages (load more); previous and next step through the loaded
 // tiles and load the next one when stepping past them. ponytail: every visited page stays
@@ -108,28 +101,24 @@ const loaded = computed(() => (list.loading.value && status.value !== 'ended' &&
 const size = computed(() => limit.value ?? props.pageSize)
 const index = ref(0)
 watch(() => JSON.stringify([list.filter.value, list.sort.value, limit.value]), () => (index.value = 0))
-const window = computed(() => cursorWindow(loaded.value, index.value, size.value, hasMore.value))
+const window = computed(() => cursorWindow(items.value, index.value, size.value, hasMore.value))
 function next() {
-  if (needsMore(loaded.value.length, index.value, size.value) && hasMore.value) list.loadMore()
+  if (needsMore(items.value.length, index.value, size.value) && hasMore.value) list.loadMore()
   index.value++
 }
 
-const rows = computed(() => (cursor ? window.value.rows : loaded.value))
+const rows = computed(() => (cursor ? window.value.rows : items.value))
 watch(rows, (value) => emit('rows', value), { immediate: true })
-const loading = computed(() => !error.value && ((list.loading.value && loaded.value.length === 0) || (cursor && rows.value.length === 0 && list.stale.value)))
-const stale = computed(() => !props.hideStale && status.value !== 'open' && loaded.value.length > 0)
+const loading = computed(() => !error.value && (list.loading.value || (cursor && rows.value.length === 0 && list.stale.value)))
+const stale = computed(() => !props.hideStale && status.value !== 'open' && items.value.length > 0)
 const errorText = computed(() => {
   const failure = error.value
   const key = failure && errorKey(failure)
   return key ? t(key) : (failure?.message ?? '')
 })
 
-// The last known total, null until the first page: kept while a page loads, so the pager and a
-// page's count do not jump.
-const shownTotal = ref<number | null>(null)
-watch(total, (value) => {
-  if (value !== undefined) shownTotal.value = value
-})
+// Null until the first page.
+const shownTotal = computed(() => total.value ?? null)
 watch(shownTotal, (value) => emit('total', value), { immediate: true })
 
 if (route && router) {

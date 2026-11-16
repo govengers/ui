@@ -1,6 +1,6 @@
 // The facet filter's model (D31), framework-free: clauses in, a livewire filter document, chip
 // text and URL query out. OR inside a facet, AND across facets; "is not" per clause.
-import type { DistinctValue } from '@/api/runtime'
+import type { DistinctValue, SearchableFilterDocument } from '@/api/runtime'
 
 export interface FacetOption {
   value: string
@@ -32,11 +32,8 @@ export type FacetCondition =
   | { field: string; op: 'in' | 'notIn' | 'hasAny'; value: string[] }
   | { not: { field: string; op: 'hasAny'; value: string[] } }
 
-/** A livewire filter document (livewire D12): conditions under where, the search text. */
-export interface FilterDocument {
-  where?: unknown
-  search?: string
-}
+/** A livewire filter document (livewire D12, D78) with its conditions untyped: where, the search text. */
+export type FilterDocument = SearchableFilterDocument<unknown>
 
 export interface DocumentOptions {
   /** A tab's or page's fixed clauses, ANDed with the facets, never shown as chips. */

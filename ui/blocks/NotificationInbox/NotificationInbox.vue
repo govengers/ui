@@ -6,7 +6,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
-import type { ListResponse, LiveTarget, MutationTarget, NoParameters } from '@/api/runtime'
+import type { ListQuery, ListResponse, LiveTarget, MutationTarget, NoParameters } from '@/api/runtime'
 import { useLive, useLiveConnection, useLiveList } from '@/api/vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
@@ -15,7 +15,7 @@ import Icon from '../../Icon/Icon.vue'
 import Popover from '../../Popover/Popover.vue'
 import Skeleton from '../../Skeleton/Skeleton.vue'
 import { formatAge } from '../../format'
-import { isUnread, unreadCount, useMarkAll, type ListQuery, type NotificationLike } from './inbox'
+import { isUnread, unreadCount, useMarkAll, type NotificationLike } from './inbox'
 
 const props = withDefaults(defineProps<{
   /** The user's notifications, newest first by the read's default sort, e.g. live.notifications. */

@@ -1,22 +1,8 @@
 // The state behind SearchTable as plain functions: the table's sort as livewire sort terms, the
 // search folded into the filter document, the router query read and written, the cursor window
 // and the text of a refused read. SearchTable.vue wires them to useLiveList.
+import type { SearchableFilterDocument } from '@/api/runtime'
 import type { TableSort } from '../../Table/Table.vue'
-
-/** The reserved parameters of a filterable list read, as useLiveList drives them. */
-export interface ListQuery {
-  filter?: unknown
-  sort?: readonly string[]
-  limit?: number
-  offset?: number
-  after?: string
-}
-
-/** The part of a livewire filter document SearchTable touches: the search beside the page's where. */
-export interface SearchableFilter {
-  where?: unknown
-  search?: string
-}
 
 /** The table's sort as livewire sort terms: "name" ascending, "-name" descending. */
 export function sortTerms(sort: TableSort | null): string[] | undefined {
@@ -37,8 +23,8 @@ export function parseSort(term: unknown): TableSort | null {
  */
 export function composeFilter(filter: unknown, search: string): unknown {
   const term = search.trim()
-  const base = typeof filter === 'object' && filter !== null ? (filter as SearchableFilter) : {}
-  const composed: SearchableFilter = term === '' ? base : { ...base, search: term }
+  const base = typeof filter === 'object' && filter !== null ? (filter as SearchableFilterDocument<unknown>) : {}
+  const composed: SearchableFilterDocument<unknown> = term === '' ? base : { ...base, search: term }
   return Object.keys(composed).length === 0 ? undefined : composed
 }
 

@@ -1,15 +1,6 @@
 // The model of Board: grouping one live list into columns, ordering by rank, the lift a pointer
 // or keyboard move carries, where a drop lands, and the rank sent to the move mutation. No DOM.
 
-/** The reserved parameters of a filterable list read, as useLiveList drives them. */
-export interface ListQuery {
-  filter?: unknown
-  sort?: readonly string[]
-  limit?: number
-  offset?: number
-  after?: string
-}
-
 export interface BoardColumn {
   /** The value of the item's column field, e.g. a status. */
   key: string
