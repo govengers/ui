@@ -66,3 +66,5 @@ names. Do not browse other workbooks or pieces.
 10. **Commits**: one piece or one change per commit, `<Name>: <what>`; no attribution footers of
     any kind; never `git add -A` when scratch files may exist; push only when the human says so.
 11. **Diction**: English, no em-dash, dates `dd.MM.yyyy`, concise. Summaries, never dumps.
+    The repository is public: name no customer, employer or private project; describe the
+    origin neutrally or cite a `Dnn` (D82).

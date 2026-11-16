@@ -1,4 +1,4 @@
-// Copied from github.com/govengers/livewire main 95e50bc (after v1.0.1, unreleased) generate/runtime/vue.ts (D40, D73). Do not edit; re-copy on upgrade.
+// Copied from github.com/govengers/livewire main e8a0e0b (after v1.0.1, unreleased) generate/runtime/vue.ts (D40, D73, D83). Do not edit; re-copy on upgrade.
 // The livewire Vue 3 composables (D21): live reads with an identity-keyed snapshot, live lists
 // with filter, sort and page state, the connection status and presence. The generator copies
 // this file next to runtime.ts. Vue only, no component library.

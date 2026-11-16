@@ -16,7 +16,7 @@ switchable style presets.
 ## Scope and shape
 
 - **D1 Contract first, including quick projects.** A target project starts with a design
-  contract (`DESIGN.md`) the way Paloma One started with the impeccable direction: direction and
+  contract (`DESIGN.md`) the way an earlier product started with the impeccable direction: direction and
   tokens first, every page against them. The contract is a file, not a ceremony: `ui-start --quick`
   writes it from defaults in one step (D19).
 - **D2 Repository shape mirrors govengers/standards.** `README.md`, `AGENTS.md` (what an agent
@@ -44,8 +44,8 @@ switchable style presets.
   self-hosts one and overrides `--ui-font-sans`.
 - **D8 Coverage target: the typical business application.** Settings, profiles, lists with the
   full filter kit, detail pages, edit forms, file upload, stepper, workflow, dashboard, login,
-  admin. The PDB databridge UI (Wilde IT, Mercedes-Benz) is the reference for what exists today;
-  its facet filter (OpenRouter variant D, 21.09.2026) is the model for ours (D31).
+  admin. The UI of an earlier data-heavy admin console is the reference for what exists
+  today; its facet filter (variant D of its filter designs) is the model for ours (D31).
 - **D9 Native first, accessibility floor non-negotiable.** `<dialog>`, `popover`, `<details>`,
   native date and number inputs, CSS over JS. Every component has a visible focus ring, labelled
   controls, 44 px touch targets, measured 4.5:1 text contrast in every preset and both themes,
@@ -85,8 +85,8 @@ switchable style presets.
   declared text and surface pair per preset and theme), a Playwright axe pass on the demo. No
   per-component unit tests; `bun test` covers logic with branches (fake engine, ui-lint, index
   generator, contrast).
-- **D17 Harvest, rewritten.** Seeded from `@mxcd/vue-components` (bathroom planner) and Paloma
-  One's `tokens.css`/`components.css` lessons; brand derivation, `@fontsource` presets and the
+- **D17 Harvest, rewritten.** Seeded from an earlier Vue component library and an earlier
+  product's `tokens.css`/`components.css` lessons; brand derivation, `@fontsource` presets and the
   vue-agent-fx wrappers are dropped. Everything is rewritten to D6 tokens and D3 dependencies.
 - **D18 Stack default.** Once v0 exists, the frontend default for new projects becomes "Vue 3 +
   govengers/ui copies"; Quasar stays only for existing projects.
@@ -134,16 +134,16 @@ switchable style presets.
   drive visible and screenshot-able without a model or backend.
 - **D31 FacetFilter block.** Button, cascade menu with live counts that ignore the facet's own
   selection, one chip per field, optional panel for short enumerations; feature-identical to the
-  PDB variant D plus URL sync of clauses and search and a `not in` chip toggle. No operator
+  admin console's variant D (D8) plus URL sync of clauses and search and a `not in` chip toggle. No operator
   builder in v0; time ranges are `RangePicker`, text is the search field.
-- **D32 The `ListPage` recipe** is PDB's full kit made generic: `PageHeader`, `CountedTabs`,
+- **D32 The `ListPage` recipe** is the admin console's full kit (D8) made generic: `PageHeader`, `CountedTabs`,
   toolbar (search, `FacetFilter`, `ColumnsPicker`), chip bar, `Table` (cards on phone), `BulkBar`,
   `RowMenu`, `DetailDrawer` with previous and next, `CreateDialog`. Per-entity parts live in one
   config file (`customers.list.ts`: columns, facets, tabs, row and bulk actions).
-- **D33 Four things PDB lacks, in v0:** `FileUpload`, `Stepper` (with "save then watch" as a step
+- **D33 Four things the admin console lacks, in v0:** `FileUpload`, `Stepper` (with "save then watch" as a step
   kind), `WorkflowStatus` (timeline plus allowed transitions as confirmed actions), `useLiveForm`
   (save sends only touched fields, a push refills only untouched ones).
-- **D34 Other PDB pieces generalised:** `RangePicker`, `CountedTabs`, `ColumnsPicker`,
+- **D34 Other admin console pieces generalised:** `RangePicker`, `CountedTabs`, `ColumnsPicker`,
   `DetailDrawer`, `BulkBar`, the three shell banners, `WhatsNew`, status tiles, `format.ts`.
   `FeedbackButton` with screenshot is an optional block carrying `html2canvas-pro`.
 - **D35 Theme.** `useTheme()`: `light | dark | auto`, `auto` default, persisted in
@@ -221,7 +221,7 @@ switchable style presets.
   collapses the dock to a strip while a plan runs (`AppShell dockCollapsed`, bound to
   `AgentDock`'s `running` event) so the plan can reach the page.
 - **D53 ICM structure.** The repository follows the Interpretable Context Methodology used by
-  the Wilde IT devops worker: the root `CLAUDE.md` is the L0 routing table (task shape to
+  an earlier operations repository: the root `CLAUDE.md` is the L0 routing table (task shape to
   workbook, plus the rules that hold everywhere); each `workbooks/<task>/CONTEXT.md` is the L1
   load and do-not-load table; each `stages/NN-<name>/CONTEXT.md` is an L2 Input, Process,
   Output, Completion contract under 80 lines; every workbook ends with the shared mandatory
@@ -470,3 +470,18 @@ switchable style presets.
   badges only (`Object.hasOwn`), so `constructor` shows as it is. The starter's
   `router.isReady()` failure (a route chunk lost after a deploy, a guard answering `false`) is
   logged and the shell mounts anyway, so UpdateHint and the nav stay. Amends D80.
+
+## Neutral examples (16.11.2026)
+
+- **D82 The collection names no private project.** The repository is public, so cards, comments,
+  decisions, knowledge notes, workbooks and demo data describe where a design came from in
+  neutral words ("an earlier data-heavy admin console", "an earlier product") or cite a decision
+  number instead of naming the project, its owner or its customer. Demo data uses invented
+  companies and common cities; the screenshots of the demos whose data changed were rendered
+  again. This is the one exception to "decisions are never edited": the wording of D1, D8, D17,
+  D31 to D34 and D53 was changed in place, their content and reasoning were not.
+- **D83 The runtime is vendored from livewire main at e8a0e0b.** It adds `isNotReplayable` (the
+  409 answering the repeat of a call whose answer showed a secret once, livewire D91) and the
+  `omit` member of an `Effect` (an optimistic upsert leaves out a target's detail-only fields, as
+  the list's rows do, livewire D93). `vue.ts` is unchanged apart from its header. Still no tag,
+  so D73's rule holds: the next tag replaces both files byte for byte. Amends D73.

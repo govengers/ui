@@ -10,8 +10,8 @@ status: ready
 # Building a settings page
 
 Settings are one `Card` per concern, each its own small form with its own Save, on a `Page` of
-width `content`. Many sections: a `SettingsPage` index of link cards, one page per section
-(PDB's shape), or `Tabs` with `?tab=` when the sections are few and short.
+width `content`. Many sections: a `SettingsPage` index of link cards, one page per section,
+or `Tabs` with `?tab=` when the sections are few and short.
 
 ## Per section
 

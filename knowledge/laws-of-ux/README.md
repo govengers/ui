@@ -58,7 +58,7 @@ observations about perception, memory, decisions and motivation used as rules of
 | [Flow](flow.md) | heuristic | Deep focus lasts while the tool is fast and leaves the user in charge | Escape and focus return (P5), DetailDrawer arrow keys, Enter submits DetailForm, take over from AgentCursor |
 | [Goal-Gradient Effect](goal-gradient-effect.md) | heuristic | People speed up as the finish comes into view | Stepper checks, Spotlight "Step x of n", JobProgress and FileUpload bars |
 | [Hick's Law](hicks-law.md) | heuristic | Decision time grows with the number of choices | one primary per page (DESIGN.md rule 4), Menu separators, FacetFilter field then values, WorkflowStatus |
-| [Jakob's Law](jakobs-law.md) | heuristic | Users expect our app to work like the ones they know | native controls (P5, D9), ListPage is the PDB kit (D32), Grafana-style RangePicker, WhatsNew |
+| [Jakob's Law](jakobs-law.md) | heuristic | Users expect our app to work like the ones they know | native controls (P5, D9), ListPage is a known list kit (D32), Grafana-style RangePicker, WhatsNew |
 | [Law of Common Region](law-of-common-region.md) | gestalt | One boundary reads as one group | Card as the save scope, Table rows, one chip per facet, Dialog and Sheet |
 | [Law of Proximity](law-of-proximity.md) | gestalt | Close things read as related | Field spacing `--ui-space-1`, the `--ui-space-*` scale only (D6), Page rhythm |
 | [Law of Prägnanz](law-of-pragnanz.md) | gestalt | People read shapes in the simplest way | radius tokens, one Lucide subset (D43), Skeleton shapes, no gradients (D36) |

@@ -5,7 +5,7 @@ import Button from '../Button/Button.vue'
 import Icon from '../Icon/Icon.vue'
 
 const rows = [
-  { name: 'Acme GmbH', city: 'Stuttgart', status: 'Active' },
+  { name: 'Acme GmbH', city: 'Frankfurt', status: 'Active' },
   { name: 'Globex AG', city: 'Munich', status: 'Active' },
   { name: 'Initech SE', city: 'Berlin', status: 'Paused' },
 ]
@@ -17,7 +17,7 @@ const rows = [
     <div class="grid">
       <Card title="Billing address">
         <template #actions><Button size="sm" variant="ghost"><template #icon><Icon name="pencil" /></template>Edit</Button></template>
-        <p>Acme GmbH<br>Königstraße 1<br>70173 Stuttgart</p>
+        <p>Acme GmbH<br>Hauptstraße 1<br>60311 Frankfurt</p>
         <template #footer>
           <Button size="sm">Cancel</Button>
           <Button size="sm" variant="primary" data-action="updateBillingAddress">Save</Button>

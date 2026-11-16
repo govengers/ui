@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // StatusTile: one number on a dashboard (D34): a label, the value with its unit, the change
-// against the period before, a lamp for its state (PDB's LampDot). Dumb on purpose: the page
+// against the period before, a lamp for its state. Dumb on purpose: the page
 // reads livewire and passes values, so one tile serves live and static numbers alike.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'

@@ -7,7 +7,7 @@ import { useLiveStatus } from '@/api/vue'
 export interface ApiKeyRow {
   id: string
   name: string
-  /** The non-secret start of the key ("holo_01JX..."), to recognise it. */
+  /** The non-secret start of the key ("demo_01JX..."), to recognise it. */
   prefix: string
   /** Permissions in text form, "tasks:write". */
   scopes: readonly string[]

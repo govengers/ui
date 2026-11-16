@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Item">
-// DetailDrawer: one record in a Sheet, with previous and next through the rows on screen (PDB's
-// AgentDetailDrawer, D34). With `target` it subscribes to the open record while it is open, in an
+// DetailDrawer: one record in a Sheet, with previous and next through the rows on screen
+// (D34). With `target` it subscribes to the open record while it is open, in an
 // effect scope of its own that closing ends; without, the page passes the record as `item`.
 // ArrowLeft and ArrowRight step while the focus is not in a field.
 import { computed, effectScope, onScopeDispose, shallowRef, watch, type EffectScope } from 'vue'
