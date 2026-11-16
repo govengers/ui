@@ -452,3 +452,12 @@ switchable style presets.
 - **D79 Mounted tests have a router and cover the page recipes.** `scripts/test/mount.ts`
   installs a memory router (links render, navigation goes nowhere) and `setup.ts` exposes jsdom's
   `history`; `bun test` runs `pages` too, so recipes get mounted tests like blocks (amends D69).
+- **D80 JobProgress takes the generated job view, per run and per job.** `JobLike.status` and
+  `errorClass` are `string`: livewire generates a named Go string type as `string` unless the
+  application lists it as an enum, so a union would reject the default client; an unknown status
+  shows as it is in a neutral badge. `done` fires once per run, not per id: a job seen unfinished
+  again (Retry) reports its next end. A refused Cancel or Retry belongs to its job id and
+  connection. A list row's result read lost with the socket runs again once the socket is open; a
+  refusal stays final. A refused changed query in SearchTable and Board keeps the rows of the
+  query before under the banner (livewire D76); the cards say so. The starter mounts after
+  `router.isReady()`, so the first render knows the route's `meta.public`. Amends D74, D75.
