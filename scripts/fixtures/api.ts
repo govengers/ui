@@ -1,4 +1,5 @@
-// A stand-in for the generated src/api/api.ts of a target (template-check, D61, D74): the
+// A stand-in for the generated src/api/api.ts of a target (template-check, D61, D74), checked
+// there, not here (tsconfig excludes scripts/fixtures: `./runtime` exists only in the target). The
 // declarations the starter shell names, in the shape livewire's generator writes them. A real
 // project generates this file from its registry; the server declares these reads and calls.
 import * as runtime from './runtime'

@@ -20,5 +20,5 @@
     }
   },
   "include": ["ui/**/*", "pages/**/*", "demo/src/**/*", "scripts/**/*", "env.d.ts"],
-  "exclude": ["node_modules", "demo/dist"]
+  "exclude": ["node_modules", "demo/dist", "scripts/fixtures"]
 }
