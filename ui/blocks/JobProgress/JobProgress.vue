@@ -156,12 +156,11 @@ watch(current, (job) => {
         {{ current.error }}
       </p>
       <slot v-if="result !== undefined" name="result" :result="result" :job="current" />
-      <p v-if="resultError" class="ui-job-progress__error" role="alert">
-        {{ resultError }}
-        <Button variant="ghost" size="sm" data-action="retryResult" @click="readResult()">{{ t('ui.retry') }}</Button>
-      </p>
+      <p v-if="resultError" class="ui-job-progress__error" role="alert">{{ resultError }}</p>
       <p v-if="actionError" class="ui-job-progress__error" role="alert">{{ actionError }}</p>
-      <div v-if="route || (cancel && actions.cancel) || (retry && actions.retry)" class="ui-job-progress__actions">
+      <!-- The result Retry sits here, not in the alert: the inline alert clips its overflow. -->
+      <div v-if="route || resultError || (cancel && actions.cancel) || (retry && actions.retry)" class="ui-job-progress__actions">
+        <Button v-if="resultError" variant="ghost" size="sm" data-action="retryResult" @click="readResult()">{{ t('ui.retry') }}</Button>
         <Button v-if="cancel && actions.cancel" variant="ghost" :size="variant === 'inline' ? 'sm' : 'md'" :data-action="cancel.name" :loading="running === 'cancel'" @click="act('cancel')">
           {{ t('ui.cancelJob') }}
         </Button>

@@ -101,7 +101,8 @@ it belongs to that job and connection, so another `id` or a new pair shows none.
 
 "Open result" is a link (`to` = `resultRoute(result, job)`) with `data-action="openResult"`.
 Cancel and Retry carry `data-action` = the mutation's name (`cancelJob`, `retryJob`); a lost
-result read offers Retry as `data-action="retryResult"`. The bar is a
+result read offers Retry as `data-action="retryResult"` in the actions row, outside the alert,
+which the inline variant clips to one line. The bar is a
 native `<progress>` (role `progressbar`, its value while running and reported, indeterminate
 otherwise), named by the title. Status changes are announced (`aria-live="polite"` on the title
 row), progress steps are not.

@@ -463,7 +463,8 @@ switchable style presets.
   `router.isReady()`, so the first render knows the route's `meta.public`. Amends D74, D75.
 - **D81 A lost result read is shown, and the starter mounts on a failed first navigation.** A
   JobProgress list row whose result read was lost with the socket says so with Retry
-  (`data-action="retryResult"`) besides reading again once the socket is open: a page without a
+  (`data-action="retryResult"`, in the actions row: the inline alert clips its overflow) besides
+  reading again once the socket is open: a page without a
   live read leaves the socket idle after the drop, so it never opens by itself, and a retry on
   its own timer would loop while the network is down. A status is looked up in the block's own
   badges only (`Object.hasOwn`), so `constructor` shows as it is. The starter's
