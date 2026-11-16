@@ -32,6 +32,8 @@ export interface FakeStore {
   tick(): void
   /** Evicts every unnamed stored filter, as the server's cap may (D54): a read naming one answers 404 and the runtime sends it inline. */
   forgetFilters(): void
+  /** Closes every socket as a lost network does (1006): the runtime reconnects after its delay. */
+  dropSockets(): void
 }
 
 export interface FakeEngine {
@@ -455,6 +457,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
       tables, insert, update, remove, tick: handlers.tick,
       forgetFilters: () => {
         for (const [id, stored] of filters) if (stored.name === undefined) filters.delete(id)
+      },
+      dropSockets: () => {
+        for (const socket of [...sockets]) socket.close(1006, 'network lost')
       },
     },
   }

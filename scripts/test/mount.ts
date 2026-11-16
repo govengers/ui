@@ -24,7 +24,8 @@ export function mount(component: Component, props: () => Record<string, unknown>
   const pairFor = (identity: string): LivePair => createLivePair({
     identity: () => identity,
     client: { baseURL: '/api/v1', fetch: engine.fetch },
-    connection: { url: 'ws://fake/api/v1/socket', WebSocket: engine.WebSocket },
+    // A dropped socket (engine.store.dropSockets) reconnects at once, so tests never wait on backoff.
+    connection: { url: 'ws://fake/api/v1/socket', WebSocket: engine.WebSocket, reconnectDelay: 0 },
   })
   const pair = shallowRef(pairFor('test:ada'))
   const root = document.createElement('div')
