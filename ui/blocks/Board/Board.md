@@ -88,7 +88,9 @@ Every card menu item carries `data-action` = the move mutation's name; the menu 
 description. Each card is `[data-board-card="<id>"]`, each column `[data-board-column="<key>"]`.
 Moves and their outcome are announced in an assertive live region. After a keyboard or menu move
 or a cancel, focus is back on the moved card's grip until the move settled (its call answered);
-later pushes never move focus, and a press or focus elsewhere ends the restore at once.
+later pushes never move focus, and a press, focus elsewhere or the card's menu opened again ends
+the restore at once. A card lifted by keyboard keeps focus on its grip through pushes that move it
+(a card inserted above it), so another user's move never cancels the lift.
 
 ## Gotchas
 

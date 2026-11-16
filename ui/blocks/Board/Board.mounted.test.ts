@@ -122,6 +122,39 @@ describe('Board keyboard path', () => {
     expect(grip(root, id).getAttribute('aria-pressed')).toBe('false')
   })
 
+  test('a push that moves the lifted card in the DOM keeps the lift and its focus (Chrome blurs moved nodes)', async () => {
+    const { root, engine } = await mountBoard()
+    const id = cardsIn(root, 'todo')[0]!
+    grip(root, id).focus()
+    key(grip(root, id), ' ')
+    await settle(1)
+    key(grip(root, id), 'ArrowDown')
+    await settle()
+    // Chrome blurs a focused node that insertBefore moves; jsdom keeps the focus.
+    const insertBefore = Node.prototype.insertBefore
+    let blurred = 0
+    Node.prototype.insertBefore = function <T extends Node>(this: Node, node: T, child: Node | null): T {
+      const focused = document.activeElement as HTMLElement | null
+      if (node.isConnected && focused !== null && focused !== document.body && node.contains(focused)) {
+        blurred++
+        focused.blur()
+      }
+      return insertBefore.call(this, node, child) as T
+    }
+    try {
+      // Another user moves a backlog card to the top of the lifted card's column.
+      const other = cardsIn(root, 'backlog')[0]!
+      const top = Math.min(...engine.store.tables.tasks.filter((task) => task.status === 'todo').map((task) => task.position))
+      engine.store.update('tasks', other, { status: 'todo', position: top - 1024 })
+      await settle()
+    } finally {
+      Node.prototype.insertBefore = insertBefore
+    }
+    expect(blurred).toBeGreaterThan(0)
+    expect(grip(root, id).getAttribute('aria-pressed')).toBe('true')
+    expect(document.activeElement).toBe(grip(root, id))
+  })
+
   test('a lifted card removed by a push ends the lift', async () => {
     const { root, engine } = await mountBoard()
     const [first, second] = cardsIn(root, 'backlog') as [string, string]
@@ -171,6 +204,23 @@ describe('Board menu path', () => {
     await settle()
     expect(cardsIn(root, 'review')).toContain(id)
     expect(document.activeElement).toBe(grip(root, id))
+  })
+
+  test('the answer of a move never pulls focus out of the card menu the user reopened meanwhile', async () => {
+    const { root } = await mountBoard()
+    const id = cardsIn(root, 'backlog')[0]!
+    const moveTo = (column: string): HTMLElement => [...root.querySelectorAll(`[data-board-card="${id}"] [role="menu"] button`)].find((button) => button.textContent?.includes(column)) as HTMLElement
+    moveTo('Review').click()
+    await nextTick()
+    expect(cardsIn(root, 'review')).toContain(id)
+    // Before the call answered: the user opens the same card's menu again and walks to an item.
+    // jsdom hides a closed popover (display none, not focusable) and has no :popover-open: show it inline.
+    const item = moveTo('To do')
+    item.closest<HTMLElement>('[popover]')!.style.display = 'block'
+    item.focus()
+    expect(document.activeElement).toBe(item)
+    await settle()
+    expect(document.activeElement).toBe(item)
   })
 
   test('after the move settled, a push of another change never takes focus back', async () => {

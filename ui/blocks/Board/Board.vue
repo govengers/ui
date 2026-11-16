@@ -98,16 +98,20 @@ const gripOf = (id: string): HTMLElement | null => root.value?.querySelector<HTM
 // A move or a cancel remounts or moves the card, and the focused grip with it. The card's grip
 // gets focus back after each render until the move settled (its call answered and that render
 // ran), never later: a push after that, another user's move, must not pull focus or scroll. A
-// press of the user's anywhere, or focus they put elsewhere, ends it at once.
+// press of the user's anywhere, or focus they put elsewhere, ends it at once. A keyboard lift
+// keeps its grip focused through any render too: a push that moves the lifted card in the DOM
+// (a card inserted above it) blurs the grip in Chrome, and onFocusout would cancel the lift.
 let keepFocus: { id: string } | undefined
 function restoreFocus(): void {
-  if (keepFocus === undefined) return
-  const grip = gripOf(keepFocus.id)
+  const id = keepFocus?.id ?? (lift.value?.mode === 'keyboard' ? lift.value.id : undefined)
+  if (id === undefined) return
+  const grip = gripOf(id)
   const focused = document.activeElement
   if (grip === null || focused === grip) return
-  // Focus on the card's own controls outside its slot (the menu trigger it returned to) is still the move's.
+  // Focus on the card's own controls outside its slot and outside an open menu (the closed menu's
+  // trigger it returned to) is still the move's; a menu the user reopened is theirs.
   const card = focused?.closest<HTMLElement>('[data-board-card]')
-  const ours = card?.dataset['boardCard'] === keepFocus.id && focused?.closest('.ui-board__body') == null
+  const ours = keepFocus !== undefined && card?.dataset['boardCard'] === id && focused?.closest('.ui-board__body, [role="menu"]') == null
   if (focused === null || focused === document.body || ours) grip.focus()
   else keepFocus = undefined
 }
