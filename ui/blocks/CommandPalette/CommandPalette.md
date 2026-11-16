@@ -76,7 +76,8 @@ results are `role="option"` with their label as text.
   (unless an arrow key chose an option): an answer above would push the top down. A slower group
   below does not hold it back. The active option
   is kept by id, so an answer never moves the highlight. A text no result matches leaves the
-  matching actions first.
+  matching actions first; a mutating action (`mutating: true`) is never made active by itself,
+  so Enter runs it only after an arrow key or the pointer chose it.
 - The end of the connection (logout, 4401) or a new pair (account switch) clears the text and the
   results and aborts the searches; the end also removes that identity's recent picks from storage
   (as the runtime removes its snapshots, livewire D66), a new pair loads its own. A pair without an

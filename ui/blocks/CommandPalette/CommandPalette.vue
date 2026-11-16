@@ -31,6 +31,8 @@ interface Option {
   hint: string | undefined
   /** The action's livewire call name, as data-action (D23). */
   action?: string | undefined
+  /** A mutating action: never the default option, Enter runs it only after an arrow chose it. */
+  mutating?: boolean | undefined
   run: () => void
 }
 interface Section {
@@ -121,7 +123,7 @@ function runAction(action: BoundAction): void {
 }
 
 const actionOptions = computed<Option[]>(() => matchActions(boundActions(), text.value).slice(0, 8).map((action) => ({
-  id: `action:${action.name}`, icon: 'zap', label: humanize(action.name), hint: action.description, action: action.name, run: () => runAction(action),
+  id: `action:${action.name}`, icon: 'zap', label: humanize(action.name), hint: action.description, action: action.name, mutating: action.mutating, run: () => runAction(action),
 })))
 
 const sections = computed<Section[]>(() => {
@@ -153,11 +155,13 @@ const searching = computed(() => sections.value.some((section) => section.state 
 const nothing = computed(() => text.value.trim() !== '' && options.value.length === 0 && !searching.value)
 // Typing (or a paste) makes the first option active once no group above it, nor its own, still
 // searches: an answer above could push it down, and Enter would run an action instead of opening
-// a result. Later groups cannot move it, so one slow group does not keep Enter dead.
+// a result. Later groups cannot move it, so one slow group does not keep Enter dead. A mutating
+// action is never the default: Enter on a text no result matches must not change data.
 const settledFirst = computed(() => {
   for (const section of sections.value) {
     if (section.state === 'loading') return undefined
-    if (section.options.length > 0) return section.options[0]?.id
+    const first = section.options.find((option) => option.mutating !== true)
+    if (first !== undefined) return first.id
   }
   return undefined
 })

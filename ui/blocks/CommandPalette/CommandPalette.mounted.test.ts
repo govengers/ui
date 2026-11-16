@@ -100,6 +100,29 @@ describe('CommandPalette', () => {
     expect(picks.map((pick) => pick.id)).toEqual(['t1'])
   })
 
+  test('a mutating action is never the default: Enter runs it only after an arrow chose it', async () => {
+    jest.useFakeTimers()
+    ran = 0
+    const none: PaletteGroup[] = [{ key: 'tasks', label: 'Tasks', search: async () => [] }]
+    const Bare = defineComponent({
+      setup() {
+        useAgentAction({ name: 'createTask', description: 'Adds a card to the backlog.', page: 'test', mutating: true }, () => void ran++)
+        return () => h(CommandPalette, { groups: none, inline: true, hotkey: '' })
+      },
+    })
+    palette = mount(Bare)
+    const input = await type(palette.root, 'backlog')
+    expect(listed(palette.root).join()).toContain('Create task')
+    enter(input)
+    await flush()
+    expect(ran).toBe(0)
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    await flush()
+    enter(input)
+    await flush()
+    expect(ran).toBe(1)
+  })
+
   test('an ended connection shows no recent pick and removes them, before any new pair', async () => {
     jest.useFakeTimers()
     palette = mount(Page)
