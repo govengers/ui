@@ -85,8 +85,8 @@ const resultRoute = (result: unknown) => ({ name: 'files.detail', params: { id: 
 For a list, read `live.jobs` once with `useLiveList` and give each row `:job="row"
 variant="inline"`: one subscription for the list instead of one per row. The list leaves the
 result out (`null` in its items), so give the rows `:target="live['jobs.item']"` too when they
-offer the result: a row that succeeded reads its item once (`connection.query`), a finished job
-does not change.
+offer the result: a row that succeeded without a result reads its item once
+(`connection.query`), a finished job does not change. A `job` that carries its result uses it.
 
 Cancel and Retry run over the socket; the answer upserts the job into every live read of `jobs`,
 so the badge changes at once. A running job's cancel is a request (`cancelRequested`, badge
@@ -119,5 +119,5 @@ row), progress steps are not.
   days by default), and with them the result: an unreadable item shows no result.
 - `progress` is `null` until the attempt's first report and again after a claim: the bar is
   indeterminate then, never 0 %. A failed job keeps the progress of its last attempt.
-- Copies before D74 read `resultRoute` from the job row and `progress` as a number: a re-copy
+- Copies before D75 read `resultRoute` from the job row and `progress` as a number: a re-copy
   needs the page's `resultRoute` function instead.

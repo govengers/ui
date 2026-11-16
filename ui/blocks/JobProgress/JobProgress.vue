@@ -56,11 +56,11 @@ const badge = computed(() => (current.value?.status === 'running' && current.val
   ? { variant: 'neutral' as const, label: 'ui.cancelling' }
   : badges[current.value?.status ?? 'queued']))
 
-// A list row carries no result (govengers/jobs leaves it out of the list): a succeeded row is
-// read once through the item read. A finished job never changes, so once is enough.
+// A list row carries no result (govengers/jobs leaves it out of the list): a succeeded row
+// without one is read once through the item read. A finished job never changes.
 const fetched = shallowRef<{ id: string; connection: unknown; result: unknown }>()
 const wantsResult = props.resultRoute !== undefined || slots.result !== undefined
-watch([() => (props.job?.status === 'succeeded' ? props.job.id : undefined), connection], async ([id, socket]) => {
+watch([() => (props.job?.status === 'succeeded' && props.job.result == null ? props.job.id : undefined), connection], async ([id, socket]) => {
   if (id === undefined || props.target === undefined || !wantsResult || (fetched.value?.id === id && fetched.value.connection === socket)) return
   try {
     const item = await socket.query(props.target, { id })
@@ -72,7 +72,7 @@ watch([() => (props.job?.status === 'succeeded' ? props.job.id : undefined), con
 const result = computed(() => {
   const job = current.value
   if (job?.status !== 'succeeded') return undefined
-  if (props.job === undefined) return job.result ?? undefined
+  if (props.job === undefined || job.result != null) return job.result ?? undefined
   return fetched.value?.id === job.id && fetched.value.connection === connection.value ? fetched.value.result ?? undefined : undefined
 })
 const route = computed(() => (result.value === undefined || current.value === undefined ? undefined : props.resultRoute?.(result.value, current.value)))
