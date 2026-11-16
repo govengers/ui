@@ -10,7 +10,8 @@ export type CustomerStatus = 'active' | 'onHold' | 'churned'
 export type OrderStatus = 'draft' | 'open' | 'paid' | 'shipped' | 'cancelled'
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'CHF'
 export type UserRole = 'admin' | 'member'
-export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
+export type JobErrorClass = 'transient' | 'permanent' | 'lease_expired'
 export type FileStatus = 'scanning' | 'ready'
 export type MessageRole = 'user' | 'agent'
 export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'review' | 'done'
@@ -46,14 +47,25 @@ export interface User {
   avatar: string | null
 }
 
+/** A job as govengers/jobs' postgresadapter.View answers it (its livewireadapter `jobs` resource). */
 export interface Job {
   id: string
+  queue: string
   kind: string
   status: JobStatus
-  progress: number
-  /** The route the result is shown on once the job succeeded (D29). */
-  resultRoute: string | null
+  attempt: number
+  maximumAttempts: number
+  /** Percent, null until the attempt reported progress, 100 once succeeded. */
+  progress: number | null
+  progressMessage: string
+  /** What the handler left with SetResult; null in the items of the list read. */
+  result: unknown
+  /** The last failed attempt's error, "" without one. */
+  error: string
+  errorClass: JobErrorClass | null
+  cancelRequested: boolean
   createdAt: string
+  finishedAt: string | null
 }
 
 /** An attachment; `scanning` until the server checked it. */
@@ -183,10 +195,13 @@ export const fields: Record<ListTable, readonly FieldMeta[]> = {
   ],
   jobs: [
     { name: 'id', type: 'string', filter: true, sort: true, search: false },
-    { name: 'kind', type: 'string', filter: true, sort: true, search: false },
-    { name: 'status', type: 'enum', enum: ['queued', 'running', 'succeeded', 'failed'], filter: true, sort: true, search: false },
-    { name: 'progress', type: 'int', filter: true, sort: true, search: false },
+    { name: 'queue', type: 'string', filter: true, sort: true, search: false },
+    { name: 'kind', type: 'string', filter: true, sort: true, search: true },
+    { name: 'status', type: 'enum', enum: ['queued', 'running', 'succeeded', 'failed', 'cancelled'], filter: true, sort: true, search: false },
+    { name: 'attempt', type: 'int', filter: true, sort: true, search: false },
+    { name: 'errorClass', type: 'enum', enum: ['transient', 'permanent', 'lease_expired'], filter: true, sort: false, search: false },
     { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
+    { name: 'finishedAt', type: 'time', filter: true, sort: true, search: false },
   ],
   files: [
     { name: 'id', type: 'string', filter: true, sort: true, search: false },
@@ -312,10 +327,14 @@ export function seedTables(seed = 1): Tables {
   })
 
   const at = (daysAgo: number): string => new Date(seededNow - daysAgo * day).toISOString()
+  const job = (patch: Partial<Job> & Pick<Job, 'id' | 'kind' | 'status' | 'createdAt'>): Job => ({
+    queue: 'default', attempt: 1, maximumAttempts: 10, progress: null, progressMessage: '', result: null,
+    error: '', errorClass: null, cancelRequested: false, finishedAt: null, ...patch,
+  })
   const jobs: Job[] = [
-    { id: 'job-1', kind: 'export', status: 'succeeded', progress: 100, resultRoute: '/files', createdAt: at(2) },
-    { id: 'job-2', kind: 'import', status: 'failed', progress: 60, resultRoute: null, createdAt: at(1) },
-    { id: 'job-3', kind: 'report', status: 'running', progress: 40, resultRoute: null, createdAt: at(0.01) },
+    job({ id: 'job-1', kind: 'export', status: 'succeeded', progress: 100, result: { fileId: 'fil-3', rows: 1240 }, createdAt: at(2), finishedAt: at(2) }),
+    job({ id: 'job-2', kind: 'import', status: 'failed', attempt: 10, progress: 60, progressMessage: 'row 214 of 356', error: 'row 214: the customer cus-981 does not exist', errorClass: 'permanent', createdAt: at(1), finishedAt: at(1) }),
+    job({ id: 'job-3', kind: 'report', status: 'running', progress: 40, progressMessage: 'month 5 of 12', createdAt: at(0.01) }),
   ]
   const files: FileItem[] = [
     ['contract-2026.pdf', 'application/pdf', 248_331],

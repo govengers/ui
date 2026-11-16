@@ -133,7 +133,11 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     if (kind === '' && name === 'customerFacets') return handlers.customerFacets(filterOf('customers', parameters))
     if (!isListTable(name)) throw new Refusal('not_found')
     const rows: readonly Row[] = tables[name]
-    if (kind === '') return listPage(rows, parameters, filterOf(name, parameters), { fields: fields[name], ...resources[name] }, Date.now())
+    if (kind === '') {
+      const page = listPage(rows, parameters, filterOf(name, parameters), { fields: fields[name], ...resources[name] }, Date.now())
+      // govengers/jobs leaves the result out of the list's items: the item read carries it.
+      return name === 'jobs' ? { ...page, items: page.items.map((job) => ({ ...job, result: null })) } : page
+    }
     if (kind === 'item') return rows.find((row) => row.id === parameters['id']) ?? notFound()
     if (kind === 'distinct') return distinct(name, rows, parameters)
     if (kind === 'presence') return presenceOf(recordOf(name, parameters['key']), parameters['key'] ?? '')

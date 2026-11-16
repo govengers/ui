@@ -1,7 +1,9 @@
 // Mounts a piece in the jsdom of setup.ts with what the demo gives it: vue-i18n with the ui.*
-// messages and a livewire pair on a fresh fake engine without latency (D69).
+// messages, a memory router that renders nothing (for links) and a livewire pair on a fresh fake
+// engine without latency (D69).
 import { createApp, h, nextTick, shallowRef, type Component, type ShallowRef } from 'vue'
 import { createI18n } from 'vue-i18n'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import { createLivePair, type LivePair } from '../../demo/src/api/runtime'
 import { livePlugin } from '../../demo/src/api/vue'
 import { createFakeEngine, type FakeEngine } from '../../demo/src/fake/engine'
@@ -28,7 +30,8 @@ export function mount(component: Component, props: () => Record<string, unknown>
   const root = document.createElement('div')
   document.body.append(root)
   const app = createApp({ render: () => h(component, props(), slots) })
-  app.use(createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages })).use(livePlugin(pair)).mount(root)
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:any(.*)*', component: { render: () => null } }] })
+  app.use(createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages })).use(router).use(livePlugin(pair)).mount(root)
   return {
     root, engine, pair, pairFor,
     unmount: () => {

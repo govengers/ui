@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test'
 import { effectScope } from 'vue'
 import { ApiError, createLivePair, type ListResponse, type LivePair, type LiveState, type PresenceItem } from '../api/runtime'
 import { useLiveList } from '../api/vue'
-import { calls, createCustomer, getBilling, getCustomerFacets, getCustomers, getOrders, getTasks, live, moveTask, saveFilter, uploadFile, type CustomersFilter } from './api'
+import { calls, cancelJob, createCustomer, getBilling, getCustomerFacets, getCustomers, getJobs, getJobsItem, getOrders, getTasks, live, moveTask, retryJob, saveFilter, uploadFile, type CustomersFilter } from './api'
 import type { Customer, CustomerFacets, FileItem } from './data'
 import { createFakeEngine, type FakeEngine } from './engine'
 
@@ -189,6 +189,16 @@ describe('fake engine', () => {
     await eventually('the facets were replaced', () => watched.states.length === 2)
     const active = (state: LiveState<CustomerFacets> | undefined): number | undefined => state?.data.status.find((facet) => facet.value === 'active')?.count
     expect(active(watched.states[1])).toBe((active(watched.states[0]) ?? 0) - 1)
+    pair.end()
+  })
+
+  test('the jobs list leaves the result out; the item read carries it', async () => {
+    const { pair } = setup()
+    const page = await getJobs(pair.client)
+    expect(page.items.every((job) => job.result === null)).toBe(true)
+    expect((await getJobsItem(pair.client, { id: 'job-1' })).result).toEqual({ fileId: 'fil-3', rows: 1240 })
+    expect((await refusal(cancelJob(pair.client, { id: 'job-1' }))).code).toBe('conflict')
+    expect((await refusal(retryJob(pair.client, { id: 'job-3' }))).code).toBe('conflict')
     pair.end()
   })
 

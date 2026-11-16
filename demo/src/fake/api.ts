@@ -1,37 +1,18 @@
-// The demo's API, in the shape livewire's generator writes api.ts and filters.ts (D14, D40):
+// The demo's API, in the shape livewire's generator writes api.ts and filters.ts (D14, D40, D73):
 // typed descriptors (reads, live, calls, uploads, downloads), the filter types and the thin
 // REST functions, served by the fake engine. Block demos import from here the way a page
 // imports `@/api/api`; blocks themselves import only `@/api/runtime` and `@/api/vue` and take
 // these descriptors as props (D5).
 
 import * as runtime from '../api/runtime'
-import type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
+import type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobErrorClass, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
 
-export type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
+export type { ApiKey, Currency, Customer, CustomerFacets, CustomerStatus, FileItem, FileStatus, Job, JobErrorClass, JobStatus, Message, MessageRole, Notification, Order, OrderStatus, Settings, Task, TaskStatus, User, UserRole } from './data'
 export { fields } from './data'
 
-/** A node of a filter document (D12): a condition, or and, or or not over nodes. */
-export type FilterNode<Condition> =
-  | Condition
-  | { and: readonly FilterNode<Condition>[] }
-  | { or: readonly FilterNode<Condition>[] }
-  | { not: FilterNode<Condition> }
-
-/** A filter document: its conditions under where; the empty document matches every row. */
-export interface FilterDocument<Condition> {
-  where?: FilterNode<Condition>
-}
-
-/** A filter document of a resource with a searchable field. */
-export interface SearchableFilterDocument<Condition> extends FilterDocument<Condition> {
-  search?: string
-}
-
-/** One sort term: the field, or "-field" for descending. */
-export type SortTerm<Field extends string> = Field | `-${Field}`
-
-/** A time in a condition: RFC 3339, or relative to the clock of the read. */
-export type TimeValue = string | runtime.RelativeTime
+// The generic list and filter types live in the runtime; filters.ts re-exports them (livewire D78).
+export type { FilterDocument, FilterNode, ListQuery, SearchableFilterDocument, SortTerm, TimeValue } from '../api/runtime'
+import type { FilterDocument, ListQuery, SearchableFilterDocument, SortTerm, TimeValue } from '../api/runtime'
 
 type TextCondition<Field extends string> =
   | { field: Field; op: 'eq' | 'ne' | 'contains' | 'startsWith'; value: string }
@@ -77,9 +58,14 @@ export type UsersCondition = TextCondition<'id' | 'name' | 'email'> | EnumCondit
 export type UsersFilter = SearchableFilterDocument<UsersCondition>
 export type UsersSortTerm = SortTerm<'id' | 'name' | 'email' | 'role'>
 
-export type JobsCondition = TextCondition<'id' | 'kind'> | EnumCondition<'status', JobStatus> | NumberCondition<'progress'> | TimeCondition<'createdAt'>
-export type JobsFilter = FilterDocument<JobsCondition>
-export type JobsSortTerm = SortTerm<'id' | 'kind' | 'status' | 'progress' | 'createdAt'>
+export type JobsCondition =
+  | TextCondition<'id' | 'queue' | 'kind'>
+  | EnumCondition<'status', JobStatus>
+  | EnumCondition<'errorClass', JobErrorClass>
+  | NumberCondition<'attempt'>
+  | TimeCondition<'createdAt' | 'finishedAt'>
+export type JobsFilter = SearchableFilterDocument<JobsCondition>
+export type JobsSortTerm = SortTerm<'id' | 'queue' | 'kind' | 'status' | 'attempt' | 'createdAt' | 'finishedAt'>
 
 export type FilesCondition =
   | TextCondition<'id' | 'name' | 'type' | 'customerId'>
@@ -118,15 +104,6 @@ export interface FilterDocuments {
   tasks: TasksFilter
   apiKeys: ApiKeysFilter
   notifications: NotificationsFilter
-}
-
-/** The reserved parameters of a filterable list read. */
-interface ListQuery<Filter, Sort> {
-  filter?: Filter
-  filterId?: string
-  sort?: readonly Sort[]
-  limit?: number
-  offset?: number
 }
 
 export type CustomersListQuery = ListQuery<CustomersFilter, CustomersSortTerm>
@@ -279,6 +256,9 @@ export const calls = {
   createOrder: runtime.mutation<runtime.NoParameters, CreateOrder, Order>({ name: 'createOrder', method: 'POST', path: '/orders', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'orders' }, clientID: 7 }),
   updateSettings: runtime.mutation<runtime.NoParameters, UpdateSettings, Settings>({ name: 'updateSettings', method: 'PATCH', path: '/settings', pathParameters: [], body: true, content: true }),
   startJob: runtime.mutation<runtime.NoParameters, StartJob, Job>({ name: 'startJob', method: 'POST', path: '/jobs', pathParameters: [], body: true, content: true, effect: { kind: 'upserts', target: 'jobs' } }),
+  // As govengers/jobs' livewireadapter declares them: the job's view answers, upserted into the list.
+  cancelJob: runtime.mutation<ItemParameters, undefined, Job>({ name: 'cancelJob', method: 'POST', path: '/jobs/{id}/cancel', pathParameters: ['id'], body: false, content: true, effect: { kind: 'upserts', target: 'jobs' } }),
+  retryJob: runtime.mutation<ItemParameters, undefined, Job>({ name: 'retryJob', method: 'POST', path: '/jobs/{id}/retry', pathParameters: ['id'], body: false, content: true, effect: { kind: 'upserts', target: 'jobs' } }),
   // No upserts effect: the answer carries the secret, which must not enter a live list; the push brings the row.
   createApiKey: runtime.mutation<runtime.NoParameters, CreateApiKey, CreatedApiKey>({ name: 'createApiKey', method: 'POST', path: '/api-keys', pathParameters: [], body: true, content: true }),
   revokeApiKey: runtime.mutation<ItemParameters, undefined, void>({ name: 'revokeApiKey', method: 'DELETE', path: '/api-keys/{id}', pathParameters: ['id'], body: false, content: false, effect: { kind: 'removes', target: 'apiKeys' } }),
@@ -428,6 +408,16 @@ export function updateSettings(client: runtime.Client, body: UpdateSettings, opt
 /** POST /api/v1/jobs, answering 201; the job then runs and its progress arrives live (D29). */
 export function startJob(client: runtime.Client, body: StartJob, options?: runtime.CallOptions): Promise<Job> {
   return client.call(calls.startJob, {}, body, options)
+}
+
+/** POST /api/v1/jobs/{id}/cancel, answering 200; 409 for a finished job. */
+export function cancelJob(client: runtime.Client, parameters: ItemParameters, options?: runtime.CallOptions): Promise<Job> {
+  return client.call(calls.cancelJob, parameters, undefined, options)
+}
+
+/** POST /api/v1/jobs/{id}/retry, answering 200; 409 for a job that did not fail. */
+export function retryJob(client: runtime.Client, parameters: ItemParameters, options?: runtime.CallOptions): Promise<Job> {
+  return client.call(calls.retryJob, parameters, undefined, options)
 }
 
 /** POST /api/v1/conversation, answering 201 (D26). */

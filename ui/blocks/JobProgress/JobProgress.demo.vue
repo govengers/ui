@@ -25,11 +25,18 @@ async function start() {
 const { items: jobs } = useLiveList(live.jobs, { limit: 6 })
 
 const samples: JobLike[] = [
-  { id: 'sample-queued', kind: 'export', status: 'queued', progress: 0 },
-  { id: 'sample-running', kind: 'import', status: 'running', progress: 45 },
-  { id: 'sample-succeeded', kind: 'report', status: 'succeeded', progress: 100, resultRoute: '/files' },
-  { id: 'sample-failed', kind: 'import', status: 'failed', progress: 60, error: 'Row 214: the customer cus-981 does not exist.' },
+  { id: 'sample-queued', kind: 'export', status: 'queued', progress: null },
+  { id: 'sample-claimed', kind: 'import', status: 'running', progress: null },
+  { id: 'sample-running', kind: 'import', status: 'running', progress: 45, progressMessage: 'row 214 of 476' },
+  { id: 'sample-cancelling', kind: 'export', status: 'running', progress: 70, cancelRequested: true },
+  { id: 'sample-succeeded', kind: 'report', status: 'succeeded', progress: 100, result: { fileId: 'fil-3' } },
+  { id: 'sample-failed', kind: 'import', status: 'failed', progress: 60, error: 'row 214: the customer cus-981 does not exist', errorClass: 'permanent' },
+  { id: 'sample-lost', kind: 'export', status: 'failed', progress: null, error: '', errorClass: 'lease_expired' },
+  { id: 'sample-cancelled', kind: 'export', status: 'cancelled', progress: null },
 ]
+
+/** The demo's result is `{ fileId }`: open the files page. */
+const resultRoute = (result: unknown) => (typeof result === 'object' && result !== null && 'fileId' in result ? '/files' : undefined)
 </script>
 
 <template>
@@ -49,6 +56,9 @@ const samples: JobLike[] = [
         :target="live['jobs.item']"
         :id="id"
         title="Monthly revenue report"
+        :cancel="calls.cancelJob"
+        :retry="calls.retryJob"
+        :result-route="resultRoute"
         @done="(job) => finished.push(`${job.id.slice(-4)} ${job.status}`)"
       />
     </div>
@@ -57,15 +67,15 @@ const samples: JobLike[] = [
   <section>
     <h2>Every status (a job the page already holds)</h2>
     <div class="grid">
-      <JobProgress v-for="job in samples" :key="job.id" :job="job" />
+      <JobProgress v-for="job in samples" :key="job.id" :job="job" :result-route="resultRoute" />
     </div>
   </section>
 
   <section>
-    <h2>Inline: rows of the live jobs list</h2>
+    <h2>Inline: rows of the live jobs list, Cancel and Retry, the result read from the item</h2>
     <ul class="rows">
       <li v-for="job in jobs" :key="job.id">
-        <JobProgress :job="job" variant="inline" />
+        <JobProgress :job="job" variant="inline" :target="live['jobs.item']" :cancel="calls.cancelJob" :retry="calls.retryJob" :result-route="resultRoute" />
       </li>
     </ul>
   </section>
