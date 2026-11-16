@@ -10,7 +10,7 @@ you copy the directory you need.
 - [knowledge/laws-of-ux/](knowledge/laws-of-ux/) - the design knowledge base, one note per law, mapped to our pieces
 - [MANIFESTO.md](MANIFESTO.md) - what we believe (P1-P9)
 - [docs/design.md](docs/design.md) - every decision, numbered
-- [patterns/](patterns/) - intent guides: building a list page, a form, a settings page, live data, login, uploads and jobs, the in-app agent
+- [patterns/](patterns/) - intent guides: building a list page, a form, a settings page, live data, login and session, uploads and jobs, the in-app agent
 - [demo](https://govengers.github.io/ui/) - every piece under switchable presets, themes and density
 
 ## Why copy instead of import
@@ -23,10 +23,10 @@ copying again; the header line in each copied file says where it came from.
 
 | Tier | What | Livewire |
 |------|------|----------|
-| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent` | no |
+| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent`, `changelog` | no |
 | layout | AppShell, Page, PageHeader, ActionBar, Banner | no |
-| block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, AgentDock, Board, Markdown, CommandPalette | yes |
-| page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard | yes |
+| block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, UpdateHint, NotificationInbox, FeedbackCapture, AgentDock, Board, Markdown, CommandPalette; module `session` | yes |
+| page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard, Changelog | yes |
 | pattern | building a list page, a form, a settings page, live data, login and session, uploads and jobs, the in-app agent | |
 
 Dependencies a copy may need: `vue`, `vue-router`, `vue-i18n`, `date-fns` and the project's

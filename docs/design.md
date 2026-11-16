@@ -238,9 +238,120 @@ switchable style presets.
   the project's `CLAUDE.md` gets the matching L0 table (`templates/project/CLAUDE.md`), so a
   project's agent runs the same stages without reaching back into this repository.
 
+## Session and starter (16.11.2026)
+
+- **D56 One session module.** `ui/session.ts` (`createSession`) is the only code that changes who
+  the app acts as: password login with the TOTP step, logout, dev login, impersonation start and
+  stop, all against govengers/auth's routes as they are. It owns the livewire pair: every change
+  ends the pair before the request that changes the cookie and builds the next pair from what
+  `GET /auth/me` answers afterwards, also when the change failed; changes run one after the
+  other (livewire D66, the `live.ts` of livewire's todo example made a module). The app builds
+  the pair in `createPair(key, onUnauthorized)`, so the module stays free of URLs. The pair key
+  carries the impersonator (`admin>target`), so starting or stopping an impersonation is a new
+  pair. Logout follows the provider that made the session (the impersonator's while
+  impersonating): a redirect provider (OIDC, GitHub) navigates to its `<prefix>/logout`, a dev
+  login posts `/auth/dev/logout`, any other `POST /auth/password/logout`, which ends whatever
+  session the request has. After a redirect logout nothing serves an identity until the page
+  shows it lives on: a `pageshow` from the back/forward cache, or the next change the app asks for. govengers/auth also changes the identity without a 401 or 4401 (an
+  impersonation past `MaximumDuration` ends in place; another tab signs in or out), so
+  `check()` re-reads `/auth/me` on tab or window focus and every minute while impersonating,
+  takes the fresh identity (roles, name) and builds a new pair only when the key changed. The anonymous pair's unauthorized callback is ignored.
+  An unreadable `/auth/me` leaves the pair ended and retries with backoff (1 s to 30 s); a
+  refused change keeps its own error. `login` answers auth's challenge name
+  (`{ challenge?: 'totp' | 'totp_setup' }`) so a further challenge is a new value, not a
+  pseudo error.
+  `safeRedirect` applies govengers/auth's `return_to` rule on the client. The card has tier
+  `block` and lives at `ui/session.md` like `theme`: a module with livewire wiring and no view.
+- **D57 LoginForm follows govengers/auth.** The first field is `identifier` (user name or
+  email, auth's login body), not `email`; "Remember me" is gone because auth has none (the
+  session lives `MaximumAge` from the login); the `sso` slot is replaced by a `providers` prop
+  rendered as buttons (one way per job) and `layout="sso"` puts them first with the password
+  form behind a link; the code step can switch to a backup code (`backupCode: true`). Refusals
+  carrying a known govengers/auth `code` show as `ui.*` sentences. The TOTP field takes 6 to 8
+  digits (auth's `TOTP.Digits`). `LoginCredentials` changed
+  shape: a copy made before keeps its own file; a re-copy needs the page's `login` updated.
+- **D58 DevLogin is a function-prop block kept out of production by the bundler.** It takes
+  `users` and `login` (the session's `devUsers`, `devLogin`), renders nothing when the server
+  lists none (the session answers `[]` for a 404), and is imported behind
+  `import.meta.env.DEV` so production builds drop its chunk. `GET /auth/dev/users` answers
+  `{ users: [{ id, name, description }] }` (govengers/auth `devlogin`); the session unwraps
+  `users` and refuses another body, so a mismatch shows as an error, not as an empty card.
+  `LoginPage` has an `after` slot for it; `templates/project/LoginRoute.vue` fills it.
+- **D59 ImpersonationBanner is a warning.** Acting as someone is deliberate, so the banner is
+  `warning`, not the `danger` the login pattern named. The end time comes from the app
+  (`impersonationEndsAt` on its own `/auth/me`, or `endsAt`): govengers/auth's
+  `IdentityResponse` does not carry it. Read-only is the app's rule and only shown here. The
+  countdown sits in an `aria-live="off"` span so it is not announced every second.
+- **D60 ApiKeyManager over livewire.** Keys are a livewire resource plus two mutations the app
+  declares; the block takes the descriptors (D5). The create mutation answers the row plus the
+  secret and must not declare an `upserts` effect, or the runtime would put the secret into
+  every live list until the next push. The secret lives only in the dialog's state and is
+  forgotten on close, on a new connection (another identity) and when the connection ends; a
+  create answering after
+  either is dropped. A key must
+  not manage keys; the card says to mount the operations behind a session-only check.
+- **D61 The starter is checked by script.** `templates/project` gains `router.ts` (lazy
+  components so `scripts/app-map.ts` can import the routes without a DOM; `public` meta; the
+  sign-in guard), `session.ts`, `LoginRoute.vue`, `Home.vue` and `vite.config.ts` (proxy
+  `^/api/` with `ws` and `^/auth/`, regex keys because plain keys are prefix matches that would
+  catch SPA routes like `/api-keys`; `changeOrigin` off so the socket's Origin matches the Host
+  the backend sees).
+  `main.ts` resumes the session before installing the router, because installing it runs the
+  first navigation. `App.vue` renders public routes without the shell. `start-project` copies
+  `app-map.ts`; the `ui-screens` recipe is dropped instead of adding a Playwright dependency to
+  every project (the verify stages screenshot with Playwright or the `run` skill).
+  `scripts/template-check.ts` scaffolds the templates into a temporary target and runs vue-tsc,
+  ui-lint and app-map there in CI (about 2 s), so a template cannot rot again.
+
+## Product pieces (16.11.2026)
+
+- **D62 Release notes come from the changelog files, shown once per user per minor line.** A
+  project keeps `changelog/<major>.<minor>.md` (`# M.m - Title`, `## M.m.p - YYYY-MM-DD` per
+  patch, groups `### Features | Fixes | Changes | Security`), parsed by the `ui/changelog.ts`
+  module, which refuses anything else with `file:line` (a hyphen, en or em dash all count, so a
+  file is never dropped over the dash). `parseChangelogs` collects errors instead of throwing,
+  so a typo fails the project's test, not the running app. The pure `decideWhatsNew` shows the
+  running minor line when the user last saw an older line and the line has a Features item; a
+  first visit stores the line silently, a patch never shows, a dev build never shows. WhatsNew
+  takes the parsed lines and `readSeen`/`writeSeen` callbacks (default localStorage, once per
+  browser; a user setting makes it once per user) instead of slotted notes and a stored version,
+  and belongs in the shell, so the Dashboard recipe no longer mounts it. The `Changelog` page
+  recipe renders every line. Bullets are plain text: no markdown renderer for a list of
+  one-liners.
+- **D63 UpdateHint compares versions and never reloads by itself.** The bundle's version against
+  the server's, from a value a live read pushes or a `check` function (a version endpoint or a
+  read) run every 15 minutes while visible, on tab focus and on socket reconnect (a deploy
+  restarts the server, so every client reconnects), at most once a minute (half the interval
+  when shorter), and a trigger inside that gap runs once at its end. Any known version
+  other than the bundle's counts, a rollback too; `dev` and friends never do. An info banner with
+  Reload; a dismissed hint returns only for yet another version. Reloading on its own would drop
+  what the user is typing; chunk-load failures stay the app's `vite:preloadError` handler.
+- **D64 NotificationInbox: one list, an optional count read, optimistic marks.** The popover
+  reads the newest `limit` rows through one `useLiveList` (no per-state lists, the runtime's
+  optimistic upsert reaches every list of a target); the true unread total is a separate object
+  read (`{ unread }`), else the bell counts the loaded rows and says `3+` when that is a lower
+  bound. Mark read is the runtime's optimistic upsert; mark all marks the ids of the rows it showed
+  (not a createdAt threshold: a row committed later may carry an older time), keeps them, takes
+  them back on error, and forgets them when the connection changes. Mark all is disabled only
+  when the count read or the complete list proves nothing is unread.
+- **D65 FeedbackCapture sends exactly what it previews, redacted at entry, over REST.** A ring
+  buffer (`installFeedbackBuffer`, 50 entries) wraps console error and warn, `fetch` (not-ok
+  answers and network failures) and the uncaught error events, and redacts on entry: secret keys
+  masked with their subtree at any depth (also inside text that is JSON, or JSON in JSON, which
+  is parsed and redacted as a value), `key=value` with an object value's whole subtree, header
+  lines to their end, bearer tokens, JWTs and URL user info scrubbed from text, a console line
+  per argument and then as the whole printed line; the page URL keeps no query or fragment
+  value, a failed request's URL keeps the values that name no secret except `code`, `key` and
+  `state` (filters and pages are what a bug report needs). `push` redacts too. The dialog freezes buffer, environment
+  and the optional screenshot (taken before the dialog shows) on open; `buildReport`
+  deep-freezes the body the preview prints and Send posts. Unticking details removes them from
+  both. Sent through `pair.client` (REST) because the socket is often what is broken. The
+  screenshot is a hook given 3 s, so the block carries no dependency and a hanging hook cannot
+  keep the dialog shut; D34's `html2canvas-pro` is the project's choice.
+
 ## Board, markdown and palette (16.11.2026)
 
-- **D56 Markdown brings `marked` and `dompurify`.** The `Markdown` block is the second block with
+- **D66 Markdown brings `marked` and `dompurify`.** The `Markdown` block is the second block with
   dependencies of its own (D3): `marked` renders GitHub-flavoured markdown through a dedicated
   synchronous instance, `dompurify` sanitises through a private instance (its hooks never touch
   another piece's purifier). Raw HTML in the source is shown as text, not sanitised HTML; links to
@@ -248,7 +359,7 @@ switchable style presets.
   http(s), `blob:` and raster `data:image/` URLs. Without a working DOM the renderer escapes the
   text instead of returning unsanitised HTML. Sanitiser tests run on `jsdom` (dev dependency, the
   DOM DOMPurify supports); `happy-dom` let `javascript:` links through in the first run.
-- **D57 A board is one live list.** `Board` subscribes the whole board with one `useLiveList`
+- **D67 A board is one live list.** `Board` subscribes the whole board with one `useLiveList`
   and groups and orders on the client. The runtime upserts an optimistic item into every live list
   of its resource regardless of filter (D36 of livewire), so per-column subscriptions would flash a
   moved card in every column. A move sends a numeric rank, the midpoint between the new
@@ -256,12 +367,12 @@ switchable style presets.
   server's job. One drag engine on pointer events serves mouse, pen and touch (touch from the grip
   only, so the board scrolls); the keyboard path lifts on the grip and the menu path ("Move to")
   needs no drag at all (D9).
-- **D58 The palette searches with one-shot queries.** `CommandPalette` reads each search group
+- **D68 The palette searches with one-shot queries.** `CommandPalette` reads each search group
   with `connection.query`, not a subscription: results need not be live, and a subscription per
   keystroke would churn the server. Its quick actions are the bound agent actions without
   params (D24, D48), so the palette, the dock and the driver share one vocabulary.
 
-- **D59 Mounted tests for what only shows mounted.** D16 kept component tests out; the first
+- **D69 Mounted tests for what only shows mounted.** D16 kept component tests out; the first
   review of Board, Markdown and CommandPalette found focus loss, a lift without an end, a file
   drop left to the browser and a pick lost to a full storage, all invisible to model tests.
   `bun test` now preloads `scripts/test/setup.ts` (`bunfig.toml`): a jsdom document as the global
@@ -271,8 +382,8 @@ switchable style presets.
   events, storage, identity switches. Logic stays in model tests (D16); layout, scrolling and
   CSS states stay with local browser probes, out of CI. Budget: the whole suite under 2 s, no
   browser in CI, debounces driven by fake timers, never by waiting.
-- **D60 Images in rendered markdown load from the page's own origin.** `createMarkdownRenderer`
+- **D70 Images in rendered markdown load from the page's own origin.** `createMarkdownRenderer`
   takes `imageHosts` (origins); other absolute image sources lose their `src`. Markdown written
   by another user or by an agent that read hostile content would otherwise make every reader's
-  browser call a foreign host (tracking, exfiltration in the URL). Supersedes D56's
+  browser call a foreign host (tracking, exfiltration in the URL). Supersedes D66's
   "http(s) images".

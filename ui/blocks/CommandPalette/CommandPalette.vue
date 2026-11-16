@@ -55,8 +55,8 @@ const storage = defaultStorage()
 const storageKey = computed(() => (status.value === 'ended' ? '' : recentKey(props.storageKey ?? '', pair.value.identity)))
 const recent = ref<RecentPick[]>([])
 watch(storageKey, (key) => (recent.value = key ? readRecent(storage, key) : []), { immediate: true })
-// The runtime removes an ended identity's snapshots (D66); its recent picks go with them. Each
-// pair is followed until the palette unmounts, also after a newer pair replaced it.
+// The runtime removes an ended identity's snapshots (livewire D66); its recent picks go with
+// them. Each pair is followed until the palette unmounts, also after a newer pair replaced it.
 const stops: Array<() => void> = []
 watch(pair, (current) => {
   const key = recentKey(props.storageKey ?? '', current.identity)

@@ -1,56 +1,53 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { releases } from '@/fake/changelog'
 import WhatsNew from './WhatsNew.vue'
-import { resetWhatsNew, unseen } from './whatsNew'
+import { readSeen, resetWhatsNew, writeSeen } from './whatsNew'
 import Button from '../../Button/Button.vue'
 
 const storageKey = 'demo.whatsNew'
-const version = '2.4.0'
+const version = '2.4.1'
 // Mounted on demand, so the dialog does not cover the demo (and its screenshot) on load.
 const mounted = ref(0)
-const seen = ref(!unseen(version, storageKey))
+const forced = ref(false)
+const stored = ref(readSeen(storageKey))
 
-function show() {
-  resetWhatsNew(storageKey)
-  seen.value = false
+function mount(seen: string | undefined, force = false) {
+  if (seen === undefined) resetWhatsNew(storageKey)
+  else writeSeen(seen, storageKey)
+  stored.value = seen
+  forced.value = force
   mounted.value += 1
+  // The block stores a first visit right after its mount.
+  setTimeout(() => { stored.value = readSeen(storageKey) })
 }
 </script>
 
 <template>
   <section>
-    <h2>Once per version: reset, then it opens on mount</h2>
+    <h2>Once per user: running 2.4.1, decided from what is stored</h2>
     <div class="row">
-      <Button @click="show">Reset and mount</Button>
-      <Button variant="ghost" @click="mounted += 1">Mount again (stays closed once seen)</Button>
-      <span class="muted">stored: {{ seen ? version : 'nothing' }}</span>
+      <Button @click="mount('2.3')">Last saw 2.3: opens</Button>
+      <Button @click="mount(undefined)">First visit: silent, stores 2.4</Button>
+      <Button variant="ghost" @click="mounted += 1; forced = false">Mount again</Button>
+      <Button variant="ghost" @click="mount(stored, true)">Menu entry (force)</Button>
+      <span class="muted">stored: {{ stored ?? 'nothing' }}</span>
     </div>
-    <WhatsNew v-if="mounted > 0" :key="mounted" :version="version" :storage-key="storageKey" @close="seen = true">
-      <h3>Saved filters</h3>
-      <ul>
-        <li>Save any filter of the customer list under a name and share its link.</li>
-        <li>Counts next to every facet value update live.</li>
-      </ul>
-      <h3>Fixes</h3>
-      <ul>
-        <li>The export no longer drops customers without a country.</li>
-      </ul>
-    </WhatsNew>
+    <WhatsNew
+      v-if="mounted > 0"
+      :key="mounted"
+      :version="version"
+      :releases="releases"
+      :storage-key="storageKey"
+      :force="forced"
+      :to="{ hash: '#changelog' }"
+      @close="stored = readSeen(storageKey)"
+    />
   </section>
 
   <section>
-    <h2>Inline preview</h2>
-    <WhatsNew inline :version="version" title="What's new in 2.4">
-      <h3>Saved filters</h3>
-      <ul>
-        <li>Save any filter of the customer list under a name and share its link.</li>
-        <li>Counts next to every facet value update live.</li>
-      </ul>
-      <h3>Fixes</h3>
-      <ul>
-        <li>The export no longer drops customers without a country.</li>
-      </ul>
-    </WhatsNew>
+    <h2>Inline preview of the 2.4 line (patches merged, x.y.0 first)</h2>
+    <WhatsNew inline :version="version" :releases="releases" :limit="2" />
   </section>
 </template>
 

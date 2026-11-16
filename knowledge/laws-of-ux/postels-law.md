@@ -2,7 +2,7 @@
 name: Postel's Law
 category: principle
 summary: Accept what users give in any reasonable form, and send only clean, exact data
-applies: [Input, Select, format, SearchTable, LiveForm, Field]
+applies: [Input, Select, format, SearchTable, LiveForm, Field, FeedbackCapture]
 ---
 
 # Postel's Law

@@ -1,4 +1,4 @@
-// SearchTable mounted (D59): no row of an ended connection stays on screen.
+// SearchTable mounted (D69): no row of an ended connection stays on screen.
 import { afterEach, expect, test } from 'bun:test'
 import type { Component } from 'vue'
 import { live } from '../../../demo/src/fake/api'

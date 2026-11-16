@@ -2,7 +2,7 @@
 name: Jakob's Law
 category: heuristic
 summary: Users bring expectations from every other app they use; meet them instead of retraining them
-applies: [Dialog, Select, Input, RangePicker, ListPage, WhatsNew]
+applies: [Dialog, Select, Input, RangePicker, ListPage, WhatsNew, Changelog]
 ---
 
 # Jakob's Law

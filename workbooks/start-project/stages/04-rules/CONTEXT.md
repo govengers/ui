@@ -4,8 +4,10 @@
 The target from `01-preflight`, the source checkout.
 
 ## Process
-1. Copy `scripts/ui-lint.ts` to the project's `scripts/ui-lint.ts` as is (D47); append
-   `templates/project/justfile` recipes to the project's justfile; add the step from
+1. Copy `scripts/ui-lint.ts` to the project's `scripts/ui-lint.ts` as is (D47) and
+   `templates/project/app-map.ts` to `scripts/app-map.ts` (D48; it imports `src/router.ts`, so
+   the router module loads without a DOM); append `templates/project/justfile` recipes
+   (`ui-lint`, `app-map`) to the project's justfile; add the steps from
    `templates/project/ci-ui.yml` to the frontend CI job.
 2. Copy the project-side workbooks and knowledge (D55): `workbooks/README.md`,
    `workbooks/_shared/`, `workbooks/copy-piece/`, `workbooks/build-page/`,
@@ -22,6 +24,7 @@ The target from `01-preflight`, the source checkout.
 ## Output
 ```
 ui-lint: scripts/ui-lint.ts, just ui-lint, CI step
+app-map: scripts/app-map.ts, just app-map (<n> pages, <m> actions)
 docs/ui: <n> workbooks, <m> knowledge notes
 CLAUDE.md: L0 table appended; skills: ui-copy, ui-page, ui-review
 src/ui/INDEX.md: <n> pieces

@@ -5,10 +5,10 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 
 | Tier | Count |
 |------|-------|
-| primitive | 26 |
+| primitive | 27 |
 | layout | 5 |
-| block | 19 |
-| page | 5 |
+| block | 26 |
+| page | 6 |
 | pattern | 7 |
 
 ## Primitives: props and emits only, no livewire
@@ -21,6 +21,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [Badge](ui/Badge/Badge.md) | badge, status label, count, tag, chip, pill, status dot |  | no | aesthetic-usability-effect, law-of-pragnanz, law-of-similarity, von-restorff-effect | ready | An inline label for a status, a count or a tag. Five soft variants, two sizes, an optional leading dot in the variant's strong colour, square or pill corners. |
 | [Button](ui/Button/Button.md) | button, action, submit, primary action, icon button, link button, loading button | Icon | no | aesthetic-usability-effect, cognitive-load, doherty-threshold, fittss-law, hicks-law, law-of-similarity, occams-razor, von-restorff-effect | ready | The one button. Four variants, three sizes, a loading state, and it becomes a router link or an anchor when given `to` or `href`. |
 | [Card](ui/Card/Card.md) | card, panel, surface, box, section container, link card, tile |  | no | aesthetic-usability-effect, chunking, law-of-common-region, law-of-pragnanz | ready | One surface: an optional header with a title and actions, a body, an optional footer. `flush` lets a Table fill the body edge to edge; `to` turns the whole card into a router link. |
+| [changelog](ui/changelog.md) | changelog, release notes, version history, parse changelog, whats new decision, show release notes once |  | no | paradox-of-the-active-user, peak-end-rule | ready | The parser for a project's `changelog/<major>.<minor>.md` files and the pure decision "show what's new?" (D62): `parseChangelog`, `parseChangelogs`, `mergedGroups`, `decideWhatsNew`, `versionLine`, `plainVersion`, `compareVersions`. A module without Vue; `WhatsNew` and the `Changelog` recipe render what it returns. A single file, `ui/changelog.ts`; `ui-copy` copies the file. |
 | [Checkbox](ui/Checkbox/Checkbox.md) | checkbox, accept terms, opt in, multi select, checkbox group, select all, indeterminate | Icon, Field | no | fittss-law, law-of-proximity, mental-model | ready | The native checkbox, drawn with CSS, with its own label and an optional muted description. Binds a boolean, or toggles `value` in an array like Vue's `v-model` on native checkboxes. The whole row is the click target, at least 44 px tall. |
 | [Dialog](ui/Dialog/Dialog.md) | dialog, modal, confirm, confirmation, delete confirm, popup, alert dialog, form dialog | Button, Icon | no | fittss-law, flow, jakobs-law, law-of-common-region, occams-razor, serial-position-effect | ready | A modal dialog on the native `<dialog>` with `showModal()`: the platform traps focus, closes on Escape and returns focus to the opener. Title, optional description, a body and a right-aligned actions footer; on phones it sits at the bottom, full width, and the footer stays visible. |
 | [EmptyState](ui/EmptyState/EmptyState.md) | empty state, no results, empty list, not found, nothing here yet, zero state | Icon | no | cognitive-load, paradox-of-the-active-user | ready | The centred message where a list has nothing to show, a filter matches nothing or a thing was not found: an icon, a title, an optional description and an optional action. |
@@ -57,33 +58,41 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | Name | Intent | Uses | Livewire | Laws | Status | Summary |
 |------|--------|------|----------|------|--------|---------|
 | [AgentDock](ui/blocks/AgentDock/AgentDock.md) | agent dock, assistant, chat panel, chatbot, in-app agent, ask the assistant, guide mode, drive mode, take over | AgentCursor, Spotlight, Avatar, Banner, Button, Icon, Skeleton, Textarea, agent, format | yes | cognitive-bias, paradox-of-the-active-user | ready | The in-app agent's panel for the AppShell's `dock` slot (D25, D26): the conversation, a composer, and a mode switch (Chat, Guide, Drive). An agent message with a plan gets "Show me", which walks it with the Spotlight while the user clicks, and "Do it", which runs it with the AgentCursor while the user watches. A Take over button stops a running plan. |
+| [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md) | api keys, api tokens, personal access tokens, create api key, revoke key, machine access, agent access, key scopes, key expiry | Badge, Banner, Button, Checkbox, Dialog, EmptyState, Field, Icon, Input, Select, Table, format | yes | peak-end-rule, cognitive-load | ready | The signed-in user's API keys over livewire (D60): a live table (name and non-secret prefix, scopes, created, last used, expiry with an expiring or expired badge), "New API key" (name, scopes, expiry) that shows the secret once with a copy button, and revoke behind a danger confirmation. Fits govengers/auth's issued keys (`<prefix>_<id>.<secret>`, scopes as permissions, optional expiry, last use); the app declares the three livewire operations. |
 | [Board](ui/blocks/Board/Board.md) | kanban board, task board, board with columns, drag and drop cards, move card, reorder cards, swimlane, work in progress limit, status columns, trello board | Badge, Banner, Button, Icon, Menu, Skeleton | yes | jakobs-law, law-of-common-region, fittss-law, doherty-threshold | ready | A kanban board over ONE board-wide livewire list read: columns and their order are computed on the client from a column field and a numeric rank field. Cards move by pointer drag (mouse and pen anywhere on the card, touch on the grip so the board still scrolls), by keyboard on the grip (Space, Enter or a click lifts, arrows move, Space, Enter or a click drops, Escape cancels) and by the card menu ("Move to <column>", up, down). A move calls the page's move mutation with the moved card as the optimistic item. Column headers count their cards against an optional limit; empty, loading, refused, stale and cut states are built in; on phones each column takes most of the screen and swipes sideways. |
 | [ColumnsPicker](ui/blocks/ColumnsPicker/ColumnsPicker.md) | columns, column picker, show columns, hide columns, visible columns, table columns, column chooser, customize table | Popover, Button, Icon, Checkbox | no | choice-overload, cognitive-bias, millers-law, parkinsons-law, working-memory | ready | Which columns a table shows: a ghost icon button opens a list of checkboxes, one per column, and a Reset item. Required columns stay ticked and disabled. With `storageKey` the choice survives a reload in localStorage. |
 | [CommandPalette](ui/blocks/CommandPalette/CommandPalette.md) | command palette, cmd k, ctrl k, quick search, jump to, global search, spotlight search, quick actions, run a command, recent items | Icon, agent | yes | hicks-law, jakobs-law, paradox-of-the-active-user, serial-position-effect | ready | The Cmd/Ctrl+K dialog: empty, it offers the recent picks and the quick actions of the agent action registry; typing searches every group (one livewire list query each, the newest answer wins) and filters the actions, listed under the results. Arrows, Home, End, Enter and Escape run it; the result list is a listbox the input points into with `aria-activedescendant`. |
 | [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md) | connection banner, connection lost, offline notice, reconnecting notice, socket status, live status banner | Banner, Button | yes | doherty-threshold, selective-attention | ready | The shell's connection notice (D34) over `useLiveStatus()`: a warning banner while the socket reconnects, a danger banner with Retry once the connection ended, and nothing while it is open, connecting for the first time or idle. Put it in `AppShell`'s banner slot. |
 | [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md) | detail drawer, record drawer, detail panel, side panel for a row, previous next record, row detail, quick view | Sheet, Button, Icon | yes | cognitive-load, flow, goal-gradient-effect, working-memory | ready | One record in a `Sheet`, with previous and next through the rows on screen (PDB's AgentDetailDrawer, D34): the header shows the title, "3 of 25" and two arrow buttons, also bound to ArrowLeft and ArrowRight. Given an item read as `target` it subscribes to the open record while open; otherwise the page passes the record as `item`. |
 | [DetailForm](ui/blocks/DetailForm/DetailForm.md) | detail form, edit form, edit record, record form, form card, save and cancel, unsaved changes, live edit form | Card, ActionBar, Banner, Button, Icon, Skeleton, LiveForm | no | flow, law-of-proximity, parkinsons-law, peak-end-rule, serial-position-effect, zeigarnik-effect | ready | The card of an edit form over a `useLiveForm` result. While the record loads it shows a skeleton, and a failed read shows a Banner with Retry. The page's Fields go in the default slot, a save failure no field explains shows under them, and the ActionBar with Cancel and Save follows. Enter submits through a real `<form>`. |
+| [DevLogin](ui/blocks/DevLogin/DevLogin.md) | dev login, development login, one click login, log in as user, switch test user, local login, seed users | Avatar, Banner, Button, Card, Skeleton, session | no | fittss-law, doherty-threshold | ready | The development users of govengers/auth's dev login provider (`GET /auth/dev/users`), one click each signs in (`POST /auth/dev/login`) (D58). A hint line says it is for development. It renders nothing when the server lists no users (no dev login: the session module answers `[]` for the 404). Put it in `LoginPage`'s `after` slot (under the form), behind the production guard below; `templates/project/LoginRoute.vue` does exactly that. |
 | [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md) | facet filter, filter, filters, filter chips, filter bar, add filter, faceted search, live counts, filter panel, checkbox filter, FacetPanel, url filter | Popover, Button, Icon, Badge, Input, Checkbox, Field | yes | choice-overload, hicks-law, law-of-common-region, teslers-law, working-memory, zeigarnik-effect | ready | The list filter (D31): a "Filters" button with a count opens a cascade, the facets on the left, the values of the active facet on the right with a live count each. Every facet with ticked values becomes one chip ("Status is active, on hold, or 2 more"); the chip's operator switches between "is" and "is not", its values reopen the cascade inside that facet, its cross drops the facet. "Add filter" and Clear end the bar. `FacetPanel.vue` in the same directory shows the short facets as checkbox lists. OR inside a facet, AND across facets. |
+| [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md) | feedback, report a bug, bug report, send feedback, feature request, support request, console log capture, screenshot report | Dialog, Field, Select, Textarea, Checkbox, Banner, Button | yes | postels-law, teslers-law, peak-end-rule | ready | The report dialog (D65): kind (bug, idea, question), text and, for bugs, severity. When it opens it freezes the technical details: the last console errors and warnings, uncaught errors, failed requests (from the ring buffer `installFeedbackBuffer()` keeps), the environment, and through an optional hook a screenshot of the page taken before the dialog covers it. "Exactly what will be sent" prints the very report the Send button sends; unticking the details or the screenshot removes them from both. Credentials are redacted at any depth when they enter the buffer. |
 | [FileUpload](ui/blocks/FileUpload/FileUpload.md) | file upload, upload files, dropzone, drag and drop upload, attachments, upload progress, document upload, image upload | Badge, Button, Icon, format | yes | doherty-threshold, goal-gradient-effect, paradox-of-the-active-user | ready | A dropzone and the list of files being uploaded and uploaded. The dropzone is a `<label>` around the native file input, so a click, Enter and a drop all work. Each file shows its name, size, a progress bar, a status Badge and a remove button. Size and count limits are said inline. Uploads go through the pair's `Client.upload`. |
+| [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md) | impersonation, impersonate, act as user, login as user, support mode, admin acting as, stop impersonating, view as | Badge, Banner, Button, format, session | no | von-restorff-effect, selective-attention | ready | The shell's notice while an admin acts as another user through govengers/auth's impersonation (D59): "You are acting as Bob on behalf of Ada", the time left when the end is known, a Read-only badge when the app forbids writes, and "Stop acting as Bob". Renders nothing while the identity has no impersonator. Put it into `AppShell`'s `banners` slot next to `ConnectionBanner`. |
 | [JobProgress](ui/blocks/JobProgress/JobProgress.md) | job progress, background job, long running task, export progress, import status, progress bar, async result | Badge, Banner, Button, Skeleton, format | yes | doherty-threshold, goal-gradient-effect, peak-end-rule, teslers-law, zeigarnik-effect | ready | One background job (D29): what it does, its status badge, a progress bar while it runs, why it failed, and an "Open result" button once it succeeded with a result route. Follows the job live by id, or shows a job the page already reads; a compact `inline` variant fits a list row. |
 | [LiveForm](ui/blocks/LiveForm/LiveForm.md) | live form, edit form state, useLiveForm, touched fields, dirty form, unsaved changes, save only changed fields, patch form, edit conflict, form field errors |  | yes | peak-end-rule, postels-law, teslers-law, zeigarnik-effect | ready | `useLiveForm` in `liveForm.ts`, a composable, not a component: the state of an edit form over one live record (D33). Save sends only the touched fields. A push refills only the untouched ones; a touched field keeps the user's text. Field errors come from `ApiError.fields`, and a retried save keeps its Idempotency-Key. Render it with `DetailForm` or with your own Field stack. |
-| [LoginForm](ui/blocks/LoginForm/LoginForm.md) | login form, sign in, log in, password login, two-factor, 2fa code, one-time code, remember me, sso button | Card, Banner, Button, Checkbox, Field, Input | no | parkinsons-law | ready | Email, password and "Remember me" in a Card. The page passes `login`, and the message of the error it throws shows in a danger Banner. When `login` answers `{ twoFactor: true }`, a second step asks for a 6-digit code and calls `login` again with it. Centre it with the `LoginPage` recipe. |
-| [Markdown](ui/blocks/Markdown/Markdown.md) | markdown, render markdown, markdown editor, rich text, comment box, description editor, task list, paste image, drop image, mention, at mention, preview | Button, Icon, Tabs, Textarea, format | yes | jakobs-law, postels-law, aesthetic-usability-effect | ready | `MarkdownView` renders GitHub-flavoured markdown (task lists, tables, code, links, images) as sanitised HTML; `MarkdownEditor` is a Textarea with a format toolbar, a Write and Preview switch, images pasted, dropped or picked uploaded through an upload descriptor, and an `@` mention list the page feeds. The block brings two dependencies (D3, D56): `marked` (the renderer) and `dompurify` (the sanitiser). |
+| [LoginForm](ui/blocks/LoginForm/LoginForm.md) | login form, sign in, log in, password login, user name or email, two-factor, 2fa code, backup code, one-time code, sso button, oidc login, github login, sso first | Card, Banner, Button, Field, Input | no | parkinsons-law, hicks-law | ready | The sign-in card against govengers/auth (D57): user name or email and password, the redirect providers (OIDC, GitHub) as buttons from a prop, and the TOTP step with a switch to a backup code. `layout="sso"` puts the providers first and the password form behind a link. The page passes `login` (the session module's `login` plus the navigation); a refusal with a known govengers/auth `code` shows as its own sentence. Centre it with the `LoginPage` recipe. |
+| [Markdown](ui/blocks/Markdown/Markdown.md) | markdown, render markdown, markdown editor, rich text, comment box, description editor, task list, paste image, drop image, mention, at mention, preview | Button, Icon, Tabs, Textarea, format | yes | jakobs-law, postels-law, aesthetic-usability-effect | ready | `MarkdownView` renders GitHub-flavoured markdown (task lists, tables, code, links, images) as sanitised HTML; `MarkdownEditor` is a Textarea with a format toolbar, a Write and Preview switch, images pasted, dropped or picked uploaded through an upload descriptor, and an `@` mention list the page feeds. The block brings two dependencies (D3, D66): `marked` (the renderer) and `dompurify` (the sanitiser). |
+| [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md) | notifications, notification bell, inbox, unread count, mark as read, mark all read, alerts menu, mentions | Popover, Button, Icon, Banner, EmptyState, Skeleton, format | yes | selective-attention, zeigarnik-effect, fittss-law | ready | The bell in the top bar (D64): an icon button with the unread count, and a popover with the newest notifications, live. Unread rows carry a dot and a mark-read button; opening a row marks it read and follows its route; the header marks all read. One list subscription, plus an optional count read for the true unread total. |
 | [RangePicker](ui/blocks/RangePicker/RangePicker.md) | time range, date range, range picker, time filter, last 7 days, quick ranges, from to, grafana time picker, created between | Popover, Button, Icon, Field, Input | no | choice-overload, hicks-law, jakobs-law, parkinsons-law | ready | A Grafana-style time range: a button showing the range ("Any time", "Last 7 days", "Today", "02.11.26, 10:00 - 02.11.26, 12:00") opens quick ranges (any time; last 5 minutes to last 90 days; today, yesterday, this week, this month) and an absolute form with two native date-time inputs. The value is livewire time values, so a page ANDs `rangeToConditions(field, range)` straight into its filter. |
 | [SearchTable](ui/blocks/SearchTable/SearchTable.md) | search table, live list, live table, list page, searchable list, filtered list, paginated list, cursor pagination list, list with bulk actions, list with row menu, list toolbar | Table, Pagination, Input, Button, Icon, Menu, Banner, EmptyState | yes | cognitive-load, doherty-threshold, flow, parkinsons-law, postels-law, selective-attention | ready | The live list of the `ListPage` recipe (D32) over one livewire list read: a debounced search box, a toolbar and a chip row for the page's filter kit, the `Table` with sort, selection, a bulk bar and a row menu, and the pager in offset or cursor mode. Loading, refused, empty and stale states are built in. The facet filter is a sibling block: the page passes its document in as `filter`. |
+| [session](ui/session.md) | session, login, logout, current user, who am i, sign out, identity change, livewire pair, impersonate, dev login, redirect after login |  | yes | teslers-law | ready | `createSession(options)` is the one place an application changes who it acts as, against govengers/auth as it is (D56): password login with the TOTP step, logout, development login, impersonation start and stop, and the livewire pair that follows the identity. Every change ends the pair before the request that changes the cookie and builds the next pair from what `GET /auth/me` answers afterwards, whatever the change did (livewire D66). Changes run one after the other. Changes the app did not make (another tab, an impersonation auth ended) are caught by `check()`, which runs by itself when the tab becomes visible and every minute while impersonating. A single file, `ui/session.ts`, with `safeRedirect` for the return path. |
 | [StatusTile](ui/blocks/StatusTile/StatusTile.md) | status tile, dashboard tile, kpi, metric, stat card, number card, lamp, delta, trend | Card, Icon, Skeleton, format | no | selective-attention | ready | One number on a dashboard (D34): a label, the value with its unit, the change against the period before (arrow and tone), a lamp for its state, and room for a sentence or a sparkline. With `to` the whole tile is a link card. It reads nothing itself: the page passes values, live or static. |
 | [Stepper](ui/blocks/Stepper/Stepper.md) | stepper, wizard, multi-step form, steps, onboarding flow, checkout steps, save then watch | ActionBar, Button, Icon | no | chunking, goal-gradient-effect, law-of-uniform-connectedness, zeigarnik-effect | ready | A multi-step form frame: the step list (numbers, a check on done steps, the current one highlighted; a compact vertical list in a narrow container), the current step's content, and a Back / Continue / Finish bar. The page owns the current step and decides when it may be left. |
-| [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md) | whats new, release notes, changelog dialog, announcement, new version, onboarding notice | Button, Dialog | no | jakobs-law, paradox-of-the-active-user | ready | The release notes dialog, shown once per version: it opens on mount while the version stored in `localStorage` differs, and stores the version when it closes, however it closes (Got it, X, Escape, backdrop). |
+| [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md) | update available, new version deployed, reload to update, stale bundle, refresh the app, version check | Banner, Button | yes | doherty-threshold, selective-attention | ready | Tells the user that a newer build was deployed and offers a reload (D63). It compares the bundle's version with the server's: a value pushed over livewire (`latest`), or a `check` it runs every `interval`, when the tab becomes visible and when the socket reconnects (a deploy restarts the server, so every client reconnects), at most once a minute (half the interval when that is shorter); a trigger inside that gap runs at its end, so a reconnect is never dropped. An info banner with Reload; a dismissed hint stays away until the server reports yet another version. Never reloads by itself. |
+| [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md) | whats new, release notes, changelog dialog, announcement, new version, onboarding notice, show changes once | Button, Dialog, changelog | no | jakobs-law, paradox-of-the-active-user, peak-end-rule | ready | The release notes dialog of the running minor line, once per user (D62). On mount it reads the line the user saw last, asks `changelog`'s `decideWhatsNew`, stores a first visit silently and opens only for a newer minor line with features; it stores the line when it closes, however it closes (Got it, X, Escape, backdrop). The notes are the line's groups merged over its patches. |
 | [WorkflowStatus](ui/blocks/WorkflowStatus/WorkflowStatus.md) | workflow, status, lifecycle, state machine, approval, transitions, order status, timeline, status history | Badge, Banner, Button, Dialog, Icon, format | yes | hicks-law, law-of-uniform-connectedness, mental-model, teslers-law | ready | The state of a business object and what may happen to it next (D33): the lifecycle as a track (done, current as a Badge in its tone, upcoming), the transitions allowed now as buttons that call livewire, confirmed in a dialog first where they say so, and an optional timeline. |
 
 ## Page recipes: whole pages composing blocks
 
 | Name | Intent | Uses | Livewire | Laws | Status | Summary |
 |------|--------|------|----------|------|--------|---------|
-| [Dashboard](pages/Dashboard/Dashboard.md) | dashboard, home page, start page, overview, kpi tiles, metrics, recent activity, landing page after login | Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, WhatsNew, format | yes | millers-law, pareto-principle | ready | The start page after login: a greeting with today's date, four live tiles (active customers, open orders, running jobs, revenue of the last 30 days), the five newest orders, the running jobs and a billing card that shows the forbidden state. Everything is live; a push moves a tile without a reload. The notes of a new version open once (`WhatsNew`). |
+| [Changelog](pages/Changelog/Changelog.md) | changelog page, release notes page, version history, what changed, all changes, whats new page | Page, PageHeader, Card, Badge, EmptyState, changelog, format | no | jakobs-law, law-of-common-region | ready | The release notes page: every minor line of the parsed changelog, newest first, one Card per line with its title and intro, then each release with its date and its groups (New, Fixed, Changed, Security). The running release carries a "Current" badge, and every release has an anchor (`#v2-4-1`) that `WhatsNew`'s "All changes" link or a support answer can point at. Static: the notes ship with the bundle, no read (D62). |
+| [Dashboard](pages/Dashboard/Dashboard.md) | dashboard, home page, start page, overview, kpi tiles, metrics, recent activity, landing page after login | Page, PageHeader, Badge, Banner, Button, Card, EmptyState, Skeleton, Table, StatusTile, JobProgress, format | yes | millers-law, pareto-principle | ready | The start page after login: a greeting with today's date, four live tiles (active customers, open orders, running jobs, revenue of the last 30 days), the five newest orders, the running jobs and a billing card that shows the forbidden state. Everything is live; a push moves a tile without a reload. The release notes (`WhatsNew`) belong to the shell, not to this page (D62). |
 | [DetailPage](pages/DetailPage/DetailPage.md) | detail page, record page, entity page, customer page, view and edit, inline edit, status lifecycle, related records, not found page | Page, PageHeader, Badge, Banner, Button, Card, Dialog, EmptyState, Field, Icon, Input, Table, Toast, agent, format, DetailForm, LiveForm, WorkflowStatus, SearchTable | yes | chunking, pareto-principle | ready | One record (D33), written for a customer: the header with the back link, the status Badge, the "customer since" line and Delete; the record's fields as an inline edit form that saves only the touched fields; the status lifecycle with its allowed transitions; the customer's recent orders with a link to the full list. Not found, refused and stale are handled once for the whole page. Width `page`: form and status side by side (stacked below about 50rem), the related list below at full width. |
 | [ListPage](pages/ListPage/ListPage.md) | list page, entity list, customers list, table page, search and filter page, overview page, browse records, counted tabs, bulk actions, export list | Page, PageHeader, Tabs, Badge, Banner, Button, Dialog, Field, Icon, Input, Select, Skeleton, Table, Toast, agent, format, SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer | yes | choice-overload, cognitive-bias, jakobs-law, mental-model, pareto-principle, working-memory | ready | Every record of one resource (D32), written for customers: counted tabs, search, the facet filter with live counts, a created-at range, a column picker, sort, paging, selection with bulk export and delete, a row menu, the detail drawer with previous and next, and the create dialog. Every part of the state is in the URL. The per-entity parts live in one config file. |
-| [LoginPage](pages/LoginPage/LoginPage.md) | login page, sign in page, logout page, logged out, signed out, change password, sso login, authentication screen, session expired | AppShell, Page, PageHeader, Card, Banner, Badge, Button, Field, Input, LoginForm | no | pareto-principle | ready | The three auth screens of an application in one file, on a bare `AppShell` (no navigation): sign in (`LoginForm` with SSO above and "Forgot password?" below), signed out (a sentence and "Sign in again") and change password (three password Fields). A centred column of 26rem with the imprint link and the app's version under the card. Outside livewire (login-and-session). |
+| [LoginPage](pages/LoginPage/LoginPage.md) | login page, sign in page, logout page, logged out, signed out, change password, sso login, authentication screen, session expired | AppShell, Page, PageHeader, Card, Banner, Badge, Button, Field, Input, LoginForm | no | pareto-principle | ready | The three auth screens of an application in one file, on a bare `AppShell` (no navigation): sign in (`LoginForm` with the redirect providers and "Forgot password?" below), signed out (a sentence and "Sign in again") and change password (three password Fields). A centred column of 26rem with the imprint link and the app's version under the card. Outside livewire (login-and-session). |
 | [SettingsPage](pages/SettingsPage/SettingsPage.md) | settings page, preferences, configuration page, profile page, account page, notification settings, delete workspace, danger zone, theme setting, language setting | Page, PageHeader, Tabs, Card, Field, Input, Select, Switch, Button, Avatar, Banner, Skeleton, Dialog, Toast, DetailForm, LiveForm, FileUpload, theme, agent | yes | chunking, law-of-common-region, millers-law, pareto-principle, serial-position-effect, von-restorff-effect | ready | The settings of a workspace in four tabs on `?tab=`: General, Profile, Notifications, Danger zone. Every Card is its own form with its own save, never one Save for the page (building-a-settings-page). Width `content`, the dangerous card last and red only on its button. |
 
 ## Patterns: intent guides
@@ -95,7 +104,7 @@ Find by intent (Ctrl-F a word you would say), open the card, then the code next 
 | [Building a list page](patterns/building-a-list-page.md) | list page, table of records, search and filter, browse entities, overview page | ListPage, SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, PageHeader, Tabs | yes |  | ready | The most common page of a business application: every record of one resource, searchable, filterable, sortable, paged, with a detail drawer and row actions. The `ListPage` recipe is the canonical composition (D32); this guide says what goes where and why. |
 | [Building a settings page](patterns/building-a-settings-page.md) | settings, preferences, configuration page, profile page, account page | SettingsPage, Card, DetailForm, LiveForm, Tabs, Switch, Select | yes |  | ready | Settings are one `Card` per concern, each its own small form with its own Save, on a `Page` of width `content`. Many sections: a `SettingsPage` index of link cards, one page per section (PDB's shape), or `Tabs` with `?tab=` when the sections are few and short. |
 | [File uploads and background jobs](patterns/file-uploads-and-jobs.md) | upload a file, attachments, import, export, background job, long-running task, progress | FileUpload, JobProgress, Stepper, Toast, Banner | yes |  | ready | Anything that takes longer than a request is a job (`govengers/jobs`, D29); anything that is a file goes through a livewire upload target. |
-| [Login and session](patterns/login-and-session.md) | login, sign in, authentication, session, logout, two-factor, sso | LoginPage, LoginForm, AppShell, Banner | no |  | ready | Authentication is the one thing outside livewire (D26): the session cookie is set by the auth endpoints of `govengers/auth`, and the livewire pair is rebuilt afterwards. |
+| [Login and session](patterns/login-and-session.md) | login, sign in, authentication, session, logout, two-factor, sso, oidc, github login, dev login, impersonation, api keys, redirect after login | session, LoginPage, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, AppShell | no |  | ready | Authentication is the one thing outside livewire (D26): govengers/auth's routes set the session cookie, and the livewire pair follows the identity. `ui/session.ts` is the only code that changes who the app acts as (D56); `templates/project/session.ts`, `router.ts`, `main.ts` and `App.vue` wire it. |
 | [Showing live data](patterns/showing-live-data.md) | live updates, websocket, real-time, subscription, stale data, presence, loading and error states | SearchTable, StatusTile, JobProgress, ConnectionBanner, Skeleton, Banner, EmptyState | yes |  | ready | Everything read through livewire is live: `useLive` for one record or view, `useLiveList` for a list. The page never polls and never upserts its own writes; the push renders them. |
 
 ## By intent
@@ -105,18 +114,25 @@ Every intent keyword and the pieces that answer it.
 - **2fa code**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **accept terms**: [Checkbox](ui/Checkbox/Checkbox.md)
 - **account page**: [SettingsPage](pages/SettingsPage/SettingsPage.md), [Building a settings page](patterns/building-a-settings-page.md)
+- **act as user**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **action**: [Button](ui/Button/Button.md)
 - **action menu**: [Menu](ui/Menu/Menu.md)
 - **action registry**: [agent](ui/agent/agent.md)
 - **add filter**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
+- **admin acting as**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
+- **agent access**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **agent actions**: [agent](ui/agent/agent.md)
 - **agent clicks for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **agent cursor**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **agent dock**: [AgentDock](ui/blocks/AgentDock/AgentDock.md)
 - **agent surface**: [agent](ui/agent/agent.md)
 - **alert dialog**: [Dialog](ui/Dialog/Dialog.md)
+- **alerts menu**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
+- **all changes**: [Changelog](pages/Changelog/Changelog.md)
 - **anchored panel**: [Popover](ui/Popover/Popover.md)
 - **announcement**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **api keys**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md), [Login and session](patterns/login-and-session.md)
+- **api tokens**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **app map**: [agent](ui/agent/agent.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
 - **app shell**: [AppShell](ui/AppShell/AppShell.md)
 - **approval**: [WorkflowStatus](ui/blocks/WorkflowStatus/WorkflowStatus.md)
@@ -133,6 +149,7 @@ Every intent keyword and the pieces that answer it.
 - **avatar**: [Avatar](ui/Avatar/Avatar.md)
 - **back link**: [PageHeader](ui/PageHeader/PageHeader.md)
 - **background job**: [JobProgress](ui/blocks/JobProgress/JobProgress.md), [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
+- **backup code**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **badge**: [Badge](ui/Badge/Badge.md)
 - **banner**: [Banner](ui/Banner/Banner.md)
 - **board with columns**: [Board](ui/blocks/Board/Board.md)
@@ -141,6 +158,7 @@ Every intent keyword and the pieces that answer it.
 - **box**: [Card](ui/Card/Card.md)
 - **browse entities**: [Building a list page](patterns/building-a-list-page.md)
 - **browse records**: [ListPage](pages/ListPage/ListPage.md)
+- **bug report**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **bulk actions**: [Table](ui/Table/Table.md), [ListPage](pages/ListPage/ListPage.md)
 - **button**: [Button](ui/Button/Button.md)
 - **bytes**: [format](ui/format.md)
@@ -148,7 +166,9 @@ Every intent keyword and the pieces that answer it.
 - **card**: [Card](ui/Card/Card.md)
 - **cards on phone**: [Table](ui/Table/Table.md)
 - **change password**: [LoginPage](pages/LoginPage/LoginPage.md)
+- **changelog**: [changelog](ui/changelog.md)
 - **changelog dialog**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **changelog page**: [Changelog](pages/Changelog/Changelog.md)
 - **chat panel**: [AgentDock](ui/blocks/AgentDock/AgentDock.md)
 - **chatbot**: [AgentDock](ui/blocks/AgentDock/AgentDock.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
 - **checkbox**: [Checkbox](ui/Checkbox/Checkbox.md)
@@ -170,6 +190,7 @@ Every intent keyword and the pieces that answer it.
 - **confirmation**: [Dialog](ui/Dialog/Dialog.md)
 - **connection banner**: [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
 - **connection lost**: [Banner](ui/Banner/Banner.md), [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
+- **console log capture**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **content column**: [Page](ui/Page/Page.md)
 - **content loader**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **context menu**: [Menu](ui/Menu/Menu.md)
@@ -177,10 +198,12 @@ Every intent keyword and the pieces that answer it.
 - **counted tabs**: [Tabs](ui/Tabs/Tabs.md), [ListPage](pages/ListPage/ListPage.md)
 - **counted tabs row**: [PageHeader](ui/PageHeader/PageHeader.md)
 - **CountedTabs**: [Tabs](ui/Tabs/Tabs.md)
+- **create api key**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **create form**: [Building a form](patterns/building-a-form.md)
 - **created between**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
 - **ctrl k**: [CommandPalette](ui/blocks/CommandPalette/CommandPalette.md)
 - **currency**: [format](ui/format.md)
+- **current user**: [session](ui/session.md)
 - **cursor pagination**: [Pagination](ui/Pagination/Pagination.md)
 - **cursor pagination list**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **custom dropdown**: [Popover](ui/Popover/Popover.md)
@@ -203,6 +226,8 @@ Every intent keyword and the pieces that answer it.
 - **detail form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **detail page**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **detail panel**: [Sheet](ui/Sheet/Sheet.md), [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
+- **dev login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md), [session](ui/session.md), [Login and session](patterns/login-and-session.md)
+- **development login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **dialog**: [Dialog](ui/Dialog/Dialog.md)
 - **dirty form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **do it for me**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
@@ -240,6 +265,8 @@ Every intent keyword and the pieces that answer it.
 - **faceted search**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
 - **FacetPanel**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
 - **feature flag toggle**: [Switch](ui/Switch/Switch.md)
+- **feature request**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
+- **feedback**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **field errors**: [Building a form](patterns/building-a-form.md)
 - **file upload**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
 - **filter**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
@@ -258,6 +285,7 @@ Every intent keyword and the pieces that answer it.
 - **format date**: [format](ui/format.md)
 - **format number**: [format](ui/format.md)
 - **from to**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
+- **github login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md), [Login and session](patterns/login-and-session.md)
 - **global search**: [CommandPalette](ui/blocks/CommandPalette/CommandPalette.md)
 - **glyph**: [Icon](ui/Icon/Icon.md)
 - **grafana time picker**: [RangePicker](ui/blocks/RangePicker/RangePicker.md)
@@ -269,11 +297,15 @@ Every intent keyword and the pieces that answer it.
 - **home page**: [Dashboard](pages/Dashboard/Dashboard.md)
 - **icon**: [Icon](ui/Icon/Icon.md)
 - **icon button**: [Button](ui/Button/Button.md)
+- **identity change**: [session](ui/session.md)
 - **image upload**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
+- **impersonate**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md), [session](ui/session.md)
+- **impersonation**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md), [Login and session](patterns/login-and-session.md)
 - **impersonation banner**: [Banner](ui/Banner/Banner.md)
 - **import**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
 - **import status**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
 - **in-app agent**: [AgentDock](ui/blocks/AgentDock/AgentDock.md), [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
+- **inbox**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **indeterminate**: [Checkbox](ui/Checkbox/Checkbox.md)
 - **initials**: [Avatar](ui/Avatar/Avatar.md)
 - **inline edit**: [DetailPage](pages/DetailPage/DetailPage.md), [Building a form](patterns/building-a-form.md)
@@ -281,6 +313,8 @@ Every intent keyword and the pieces that answer it.
 - **jump to**: [CommandPalette](ui/blocks/CommandPalette/CommandPalette.md)
 - **kanban board**: [Board](ui/blocks/Board/Board.md)
 - **kebab menu**: [Menu](ui/Menu/Menu.md)
+- **key expiry**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
+- **key scopes**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **kpi**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **kpi tiles**: [Dashboard](pages/Dashboard/Dashboard.md)
 - **label**: [Field](ui/Field/Field.md)
@@ -306,26 +340,34 @@ Every intent keyword and the pieces that answer it.
 - **live status banner**: [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
 - **live table**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **live updates**: [Showing live data](patterns/showing-live-data.md)
+- **livewire pair**: [session](ui/session.md)
 - **load more**: [Pagination](ui/Pagination/Pagination.md)
 - **loading and error states**: [Showing live data](patterns/showing-live-data.md)
 - **loading button**: [Button](ui/Button/Button.md)
 - **loading placeholder**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **loading rows**: [Table](ui/Table/Table.md)
 - **loading state**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **local login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **log in**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
+- **log in as user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **logged out**: [LoginPage](pages/LoginPage/LoginPage.md)
-- **login**: [Login and session](patterns/login-and-session.md)
+- **login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
+- **login as user**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **login form**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **login page**: [LoginPage](pages/LoginPage/LoginPage.md)
-- **logout**: [Login and session](patterns/login-and-session.md)
+- **logout**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **logout page**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **long running task**: [JobProgress](ui/blocks/JobProgress/JobProgress.md)
 - **long-running task**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
+- **machine access**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **main menu**: [AppShell](ui/AppShell/AppShell.md)
 - **maintenance notice**: [Banner](ui/Banner/Banner.md)
+- **mark all read**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
+- **mark as read**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **markdown**: [Markdown](ui/blocks/Markdown/Markdown.md)
 - **markdown editor**: [Markdown](ui/blocks/Markdown/Markdown.md)
 - **mention**: [Markdown](ui/blocks/Markdown/Markdown.md)
+- **mentions**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **menu**: [Menu](ui/Menu/Menu.md)
 - **metric**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **metrics**: [Dashboard](pages/Dashboard/Dashboard.md)
@@ -337,6 +379,7 @@ Every intent keyword and the pieces that answer it.
 - **multi-step form**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **navigation**: [AppShell](ui/AppShell/AppShell.md)
 - **new version**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **new version deployed**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
 - **next page**: [Pagination](ui/Pagination/Pagination.md)
 - **no results**: [EmptyState](ui/EmptyState/EmptyState.md)
 - **not found**: [EmptyState](ui/EmptyState/EmptyState.md)
@@ -345,14 +388,19 @@ Every intent keyword and the pieces that answer it.
 - **nothing here yet**: [EmptyState](ui/EmptyState/EmptyState.md)
 - **notice**: [Banner](ui/Banner/Banner.md)
 - **notification**: [Toast](ui/Toast/Toast.md)
+- **notification bell**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **notification settings**: [SettingsPage](pages/SettingsPage/SettingsPage.md)
+- **notifications**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **number card**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **number input**: [Input](ui/Input/Input.md)
 - **offline notice**: [ConnectionBanner](ui/blocks/ConnectionBanner/ConnectionBanner.md)
+- **oidc**: [Login and session](patterns/login-and-session.md)
+- **oidc login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **on off**: [Switch](ui/Switch/Switch.md)
 - **onboarding flow**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **onboarding notice**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
 - **onboarding tour**: [Spotlight](ui/Spotlight/Spotlight.md)
+- **one click login**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **one-time code**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **online status**: [Avatar](ui/Avatar/Avatar.md)
 - **opt in**: [Checkbox](ui/Checkbox/Checkbox.md)
@@ -372,11 +420,13 @@ Every intent keyword and the pieces that answer it.
 - **paginated list**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **pagination**: [Pagination](ui/Pagination/Pagination.md)
 - **panel**: [Card](ui/Card/Card.md)
+- **parse changelog**: [changelog](ui/changelog.md)
 - **password**: [Input](ui/Input/Input.md)
 - **password login**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **paste image**: [Markdown](ui/blocks/Markdown/Markdown.md)
 - **patch form**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **percent**: [format](ui/format.md)
+- **personal access tokens**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **picker**: [Select](ui/Select/Select.md)
 - **picker panel**: [Popover](ui/Popover/Popover.md)
 - **pictogram**: [Icon](ui/Icon/Icon.md)
@@ -407,15 +457,20 @@ Every intent keyword and the pieces that answer it.
 - **record drawer**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
 - **record form**: [DetailForm](ui/blocks/DetailForm/DetailForm.md)
 - **record page**: [DetailPage](pages/DetailPage/DetailPage.md)
+- **redirect after login**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
+- **refresh the app**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
 - **related records**: [DetailPage](pages/DetailPage/DetailPage.md)
 - **relative time**: [format](ui/format.md)
-- **release notes**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
-- **remember me**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
+- **release notes**: [changelog](ui/changelog.md), [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **release notes page**: [Changelog](pages/Changelog/Changelog.md)
+- **reload to update**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
 - **render markdown**: [Markdown](ui/blocks/Markdown/Markdown.md)
 - **reorder cards**: [Board](ui/blocks/Board/Board.md)
 - **replay steps**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
+- **report a bug**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **required**: [Field](ui/Field/Field.md)
 - **responsive table**: [Table](ui/Table/Table.md)
+- **revoke key**: [ApiKeyManager](ui/blocks/ApiKeyManager/ApiKeyManager.md)
 - **rich text**: [Markdown](ui/blocks/Markdown/Markdown.md)
 - **row actions**: [Menu](ui/Menu/Menu.md), [Table](ui/Table/Table.md)
 - **row detail**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
@@ -428,29 +483,35 @@ Every intent keyword and the pieces that answer it.
 - **save only changed fields**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
 - **save then watch**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **saved message**: [Toast](ui/Toast/Toast.md)
+- **screenshot report**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **search and filter**: [Building a list page](patterns/building-a-list-page.md)
 - **search and filter page**: [ListPage](pages/ListPage/ListPage.md)
 - **search box**: [Input](ui/Input/Input.md)
 - **search table**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **searchable list**: [SearchTable](ui/blocks/SearchTable/SearchTable.md)
 - **section container**: [Card](ui/Card/Card.md)
+- **seed users**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **segmented navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **select**: [Select](ui/Select/Select.md)
 - **select all**: [Checkbox](ui/Checkbox/Checkbox.md)
-- **session**: [Login and session](patterns/login-and-session.md)
+- **send feedback**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
+- **session**: [session](ui/session.md), [Login and session](patterns/login-and-session.md)
 - **session expired**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **settings**: [Building a settings page](patterns/building-a-settings-page.md)
 - **settings page**: [SettingsPage](pages/SettingsPage/SettingsPage.md)
 - **sheet**: [Sheet](ui/Sheet/Sheet.md)
 - **shimmer**: [Skeleton](ui/Skeleton/Skeleton.md)
+- **show changes once**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
 - **show columns**: [ColumnsPicker](ui/blocks/ColumnsPicker/ColumnsPicker.md)
 - **show me how**: [Adding the in-app agent](patterns/adding-the-in-app-agent.md)
 - **show me where to click**: [Spotlight](ui/Spotlight/Spotlight.md)
+- **show release notes once**: [changelog](ui/changelog.md)
 - **side panel**: [Sheet](ui/Sheet/Sheet.md)
 - **side panel for a row**: [DetailDrawer](ui/blocks/DetailDrawer/DetailDrawer.md)
 - **sidebar**: [AppShell](ui/AppShell/AppShell.md)
 - **sign in**: [LoginForm](ui/blocks/LoginForm/LoginForm.md), [Login and session](patterns/login-and-session.md)
 - **sign in page**: [LoginPage](pages/LoginPage/LoginPage.md)
+- **sign out**: [session](ui/session.md)
 - **signed out**: [LoginPage](pages/LoginPage/LoginPage.md)
 - **skeleton**: [Skeleton](ui/Skeleton/Skeleton.md)
 - **slide-over**: [Sheet](ui/Sheet/Sheet.md)
@@ -461,7 +522,9 @@ Every intent keyword and the pieces that answer it.
 - **spotlight search**: [CommandPalette](ui/blocks/CommandPalette/CommandPalette.md)
 - **sso**: [Login and session](patterns/login-and-session.md)
 - **sso button**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
+- **sso first**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **sso login**: [LoginPage](pages/LoginPage/LoginPage.md)
+- **stale bundle**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
 - **stale data**: [Banner](ui/Banner/Banner.md), [Showing live data](patterns/showing-live-data.md)
 - **start page**: [Dashboard](pages/Dashboard/Dashboard.md)
 - **stat card**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
@@ -476,12 +539,16 @@ Every intent keyword and the pieces that answer it.
 - **stepper**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **steps**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **sticky bottom bar**: [ActionBar](ui/ActionBar/ActionBar.md)
+- **stop impersonating**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **sub navigation**: [Tabs](ui/Tabs/Tabs.md)
 - **submit**: [Button](ui/Button/Button.md)
 - **subscription**: [Showing live data](patterns/showing-live-data.md)
+- **support mode**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
+- **support request**: [FeedbackCapture](ui/blocks/FeedbackCapture/FeedbackCapture.md)
 - **surface**: [Card](ui/Card/Card.md)
 - **swimlane**: [Board](ui/blocks/Board/Board.md)
 - **switch**: [Switch](ui/Switch/Switch.md)
+- **switch test user**: [DevLogin](ui/blocks/DevLogin/DevLogin.md)
 - **symbol**: [Icon](ui/Icon/Icon.md)
 - **tab list**: [Tabs](ui/Tabs/Tabs.md)
 - **table**: [Table](ui/Table/Table.md)
@@ -512,21 +579,31 @@ Every intent keyword and the pieces that answer it.
 - **trend**: [StatusTile](ui/blocks/StatusTile/StatusTile.md)
 - **two-factor**: [LoginForm](ui/blocks/LoginForm/LoginForm.md), [Login and session](patterns/login-and-session.md)
 - **undo**: [Toast](ui/Toast/Toast.md)
+- **unread count**: [NotificationInbox](ui/blocks/NotificationInbox/NotificationInbox.md)
 - **unsaved changes**: [DetailForm](ui/blocks/DetailForm/DetailForm.md), [LiveForm](ui/blocks/LiveForm/LiveForm.md)
+- **update available**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
 - **upload a file**: [File uploads and background jobs](patterns/file-uploads-and-jobs.md)
 - **upload files**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
 - **upload progress**: [FileUpload](ui/blocks/FileUpload/FileUpload.md)
 - **url filter**: [FacetFilter](ui/blocks/FacetFilter/FacetFilter.md)
 - **useLiveForm**: [LiveForm](ui/blocks/LiveForm/LiveForm.md)
+- **user name or email**: [LoginForm](ui/blocks/LoginForm/LoginForm.md)
 - **user picture**: [Avatar](ui/Avatar/Avatar.md)
 - **validation**: [Building a form](patterns/building-a-form.md)
 - **validation error**: [Field](ui/Field/Field.md)
+- **version check**: [UpdateHint](ui/blocks/UpdateHint/UpdateHint.md)
+- **version history**: [changelog](ui/changelog.md), [Changelog](pages/Changelog/Changelog.md)
 - **view and edit**: [DetailPage](pages/DetailPage/DetailPage.md)
+- **view as**: [ImpersonationBanner](ui/blocks/ImpersonationBanner/ImpersonationBanner.md)
 - **visible automation**: [AgentCursor](ui/AgentCursor/AgentCursor.md)
 - **visible columns**: [ColumnsPicker](ui/blocks/ColumnsPicker/ColumnsPicker.md)
 - **walkthrough**: [Spotlight](ui/Spotlight/Spotlight.md)
 - **websocket**: [Showing live data](patterns/showing-live-data.md)
+- **what changed**: [Changelog](pages/Changelog/Changelog.md)
 - **whats new**: [WhatsNew](ui/blocks/WhatsNew/WhatsNew.md)
+- **whats new decision**: [changelog](ui/changelog.md)
+- **whats new page**: [Changelog](pages/Changelog/Changelog.md)
+- **who am i**: [session](ui/session.md)
 - **wizard**: [Stepper](ui/blocks/Stepper/Stepper.md)
 - **work in progress limit**: [Board](ui/blocks/Board/Board.md)
 - **workflow**: [WorkflowStatus](ui/blocks/WorkflowStatus/WorkflowStatus.md)

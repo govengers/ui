@@ -13,7 +13,7 @@ laws: [jakobs-law, postels-law, aesthetic-usability-effect]
 `MarkdownView` renders GitHub-flavoured markdown (task lists, tables, code, links, images) as
 sanitised HTML; `MarkdownEditor` is a Textarea with a format toolbar, a Write and Preview
 switch, images pasted, dropped or picked uploaded through an upload descriptor, and an `@`
-mention list the page feeds. The block brings two dependencies (D3, D56): `marked` (the
+mention list the page feeds. The block brings two dependencies (D3, D66): `marked` (the
 renderer) and `dompurify` (the sanitiser).
 
 ## Load

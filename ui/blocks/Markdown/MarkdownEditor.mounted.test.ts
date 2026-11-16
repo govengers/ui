@@ -1,4 +1,4 @@
-// MarkdownEditor mounted (D59): file drops, uploads in flight and mention answers.
+// MarkdownEditor mounted (D69): file drops, uploads in flight and mention answers.
 import { afterEach, describe, expect, test } from 'bun:test'
 import { ref } from 'vue'
 import { uploads, type FileItem } from '../../../demo/src/fake/api'

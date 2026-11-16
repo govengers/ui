@@ -78,7 +78,7 @@ results are `role="option"` with their label as text.
   matching actions first.
 - The end of the connection (logout, 4401) or a new pair (account switch) clears the text and the
   results and aborts the searches; the end also removes that identity's recent picks from storage
-  (as the runtime removes its snapshots, D66), a new pair loads its own. A pair without an
+  (as the runtime removes its snapshots, livewire D66), a new pair loads its own. A pair without an
   identity keeps none. The palette removes them only while it is mounted: mount it in the shell. A
   storage that is blocked or full keeps the picks for the page only.
 - One keydown handler on the dialog; it stops the keys it handles, so page hotkeys do not fire

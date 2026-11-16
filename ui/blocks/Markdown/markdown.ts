@@ -1,4 +1,4 @@
-// The renderer behind MarkdownView (D56): marked turns GitHub-flavoured markdown into HTML, a
+// The renderer behind MarkdownView (D66): marked turns GitHub-flavoured markdown into HTML, a
 // private DOMPurify instance sanitises it. Raw HTML in the source is shown as text, never parsed;
 // a link that leaves the page's origin opens in a new tab without access to its opener.
 import createPurifier, { type WindowLike } from 'dompurify'

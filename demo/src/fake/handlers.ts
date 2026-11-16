@@ -5,7 +5,7 @@
 
 import { uuidv7 } from '../api/runtime'
 import { uploads } from './api'
-import { currencyOf, fields, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type Task, type User } from './data'
+import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type Task, type User } from './data'
 import type { FakeStore } from './engine'
 import { Refusal, parseFilter, withoutField } from './query'
 
@@ -129,6 +129,44 @@ export function createHandlers(context: HandlerContext): Handlers {
       const moved = update('tasks', id ?? '', input as Partial<Task>)
       if (moved === undefined) throw new Refusal('not_found')
       return { status: 200, payload: moved }
+    },
+    createApiKey: (_, body) => {
+      const input = objectBody(body)
+      const expiresAt: Rule = (value) => (value === null || (typeof value === 'string' && !Number.isNaN(Date.parse(value))) ? undefined : 'must be a time or null')
+      validate(input, { name: nonEmpty, scopes: stringList, expiresAt }, ['name', 'scopes'])
+      const id = uuidv7()
+      const key: ApiKey = {
+        id, name: String(input['name']), prefix: `demo_${id.slice(0, 8)}`, scopes: input['scopes'] as string[],
+        expiresAt: (input['expiresAt'] as string | null | undefined) ?? null, lastUsedAt: null, createdAt: now(),
+      }
+      const secret = Array.from({ length: 32 }, () => Math.floor(random() * 16).toString(16)).join('')
+      return { status: 201, payload: { ...insert('apiKeys', key), secret: `${key.prefix}.${secret}` } }
+    },
+    revokeApiKey: ({ id }) => {
+      if (!remove('apiKeys', id ?? '')) throw new Refusal('not_found')
+      return { status: 204 }
+    },
+    createFeedback: (_, body) => {
+      const input = objectBody(body)
+      validate(input, {
+        type: oneOf(['bug', 'idea', 'question']), text: nonEmpty,
+        severity: (value) => (value === null ? undefined : oneOf(['low', 'medium', 'high', 'critical'])(value)),
+        environment: (value) => (value === null || (typeof value === 'object' && !Array.isArray(value)) ? undefined : 'must be an object or null'),
+        entries: (value) => (Array.isArray(value) ? undefined : 'must be a list'),
+        screenshot: (value) => (value === null || (typeof value === 'string' && value.startsWith('data:image/')) ? undefined : 'must be an image data URL or null'),
+      }, ['type', 'text'])
+      return { status: 201, payload: { id: uuidv7(), createdAt: now() } } // the demo keeps no feedback table
+    },
+    markNotificationRead: ({ id }) => {
+      const notification = tables.notifications.find((candidate) => candidate.id === id)
+      if (notification === undefined) throw new Refusal('not_found')
+      return { status: 200, payload: notification.readAt === null ? update('notifications', notification.id, { readAt: now() }) : notification }
+    },
+    markAllNotificationsRead: () => {
+      const unread = tables.notifications.filter((notification) => notification.readAt === null)
+      const at = now()
+      for (const notification of unread) update('notifications', notification.id, { readAt: at })
+      return { status: 200, payload: { unread: 0 } }
     },
     sendMessage: (_, body) => {
       const input = objectBody(body)

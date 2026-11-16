@@ -13,7 +13,7 @@ CommandPalette (Cmd/Ctrl+K), with the fake engine calls their demos need.
 
 ## What went wrong on first try
 - `bun test` of the sanitiser on happy-dom -> DOMPurify kept `javascript:` hrefs and dropped
-  headings -> switched the test DOM to jsdom, which DOMPurify supports (D56).
+  headings -> switched the test DOM to jsdom, which DOMPurify supports (D66).
 - `<script>` inside a template literal in a `.demo.vue` `<script setup>` ends the SFC script block
   -> escaped as `<\/script>`.
 - Board at 390 px widened the whole page to 1022 px (the column scroller's min-content leaked into

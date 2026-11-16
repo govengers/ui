@@ -1,4 +1,4 @@
-// Board mounted (D59): focus, lift ends, announcements and live state that only show with the
+// Board mounted (D69): focus, lift ends, announcements and live state that only show with the
 // component. Pointer drag geometry and auto-scroll need a real browser and stay with the probes.
 import { afterEach, describe, expect, test } from 'bun:test'
 import { nextTick, ref } from 'vue'

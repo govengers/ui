@@ -7,7 +7,6 @@ export const messages = {
       version: 'Version {version}',
       login: {
         heading: 'Sign in to {app}',
-        sso: 'Continue with SSO',
         forgot: 'Forgot password?',
       },
       loggedOut: {
@@ -36,7 +35,6 @@ export const messages = {
       version: 'Version {version}',
       login: {
         heading: 'Bei {app} anmelden',
-        sso: 'Mit SSO fortfahren',
         forgot: 'Passwort vergessen?',
       },
       loggedOut: {

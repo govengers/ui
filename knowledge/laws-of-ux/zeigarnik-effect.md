@@ -2,7 +2,7 @@
 name: Zeigarnik Effect
 category: heuristic
 summary: Unfinished tasks stay on people's minds, so show what is open and how to finish it
-applies: [DetailForm, LiveForm, Stepper, JobProgress, FacetFilter]
+applies: [DetailForm, LiveForm, Stepper, JobProgress, FacetFilter, NotificationInbox]
 ---
 
 # Zeigarnik Effect

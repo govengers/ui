@@ -1,4 +1,4 @@
-// CommandPalette mounted (D59): picks under a refusing storage, recents per identity, the active
+// CommandPalette mounted (D69): picks under a refusing storage, recents per identity, the active
 // option after a paste, and the order of results and actions.
 import { afterEach, describe, expect, jest, test } from 'bun:test'
 import type { PaletteGroup, RecentPick } from './palette'

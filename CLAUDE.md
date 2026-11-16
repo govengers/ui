@@ -20,7 +20,7 @@ table (ICM, `workbooks/README.md`); procedure lives in the workbooks, facts in t
 | `skills/` | thin entry points that name a workbook; installed into `~/.claude/skills` and into projects |
 | `templates/project/` | files `start-project` copies into a target |
 | `demo/` | the demonstrator (`just demo`); `demo/src/fake/` the in-browser livewire engine |
-| `scripts/` | index, contrast, screenshots, ui-lint, cards; `scripts/test/` the mounted-test harness (D59); `just ci` runs them |
+| `scripts/` | index, contrast, screenshots, ui-lint, cards; `scripts/test/` the mounted-test harness (D69); `just ci` runs them |
 | `docs/design.md` | every decision, numbered D1 onward; a change is a new number |
 | `journal/`, `TODO.md` | run reports and the monthly line; defects seen on the way |
 

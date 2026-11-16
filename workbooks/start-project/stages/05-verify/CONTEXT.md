@@ -4,10 +4,11 @@
 The project after `04-rules`.
 
 ## Process
-1. `bunx vue-tsc --noEmit` and `just ui-lint`: both clean.
-2. Start the dev server; screenshot the empty shell at 1280 px and 390 px, light and dark
-   (Playwright or the `run` skill); look at the four images: chrome bar, navigation, an empty
-   page column, no console errors.
+1. `bunx vue-tsc --noEmit`, `just ui-lint` and `just app-map`: all clean.
+2. Start the backend and the dev server (`BACKEND_URL` when the backend is not on :8080); `/`
+   lands on `/login?redirect=/`; sign in (dev login or a seeded user) and land on Home.
+   Screenshot the shell at 1280 px and 390 px, light and dark (Playwright or the `run` skill);
+   look at the four images: chrome bar, navigation, an empty page column, no console errors.
 3. Full mode: run `scripts/contrast.ts` from a temporary directory holding `ui/tokens.css` and
    `ui/presets/<name>.css` (the script reads `ui/` of its cwd); every pair passes.
 

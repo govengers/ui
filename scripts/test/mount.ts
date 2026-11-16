@@ -1,5 +1,5 @@
 // Mounts a piece in the jsdom of setup.ts with what the demo gives it: vue-i18n with the ui.*
-// messages and a livewire pair on a fresh fake engine without latency (D59).
+// messages and a livewire pair on a fresh fake engine without latency (D69).
 import { createApp, h, nextTick, shallowRef, type Component, type ShallowRef } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { createLivePair, type LivePair } from '../../demo/src/api/runtime'

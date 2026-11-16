@@ -7,7 +7,7 @@ install:
     bun install
 
 # Everything CI runs.
-ci: check index-check contrast lint test build
+ci: check index-check contrast lint template-check test build
 
 # Type-check every component, page, script and the demo.
 check:
@@ -28,6 +28,10 @@ contrast:
 # The same mechanical rules a target project runs on its pages.
 lint:
     bun run lint
+
+# Scaffold templates/project into a temporary target and run its gates there (D61).
+template-check:
+    bun scripts/template-check.ts
 
 test:
     bun test scripts ui demo/src

@@ -1,4 +1,4 @@
-// bun test preload (bunfig.toml, D59): a jsdom document as the global DOM and a loader that
+// bun test preload (bunfig.toml, D69): a jsdom document as the global DOM and a loader that
 // compiles .vue files, so a test can mount a piece and drive it like a user (scripts/test/mount.ts).
 // Styles are not compiled: layout, scrolling and CSS states stay with the browser probes.
 import { plugin } from 'bun'

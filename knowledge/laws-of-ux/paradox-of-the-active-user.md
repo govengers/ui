@@ -2,7 +2,7 @@
 name: Paradox of the Active User
 category: heuristic
 summary: Users skip manuals and start working, so put help where they already are
-applies: [AgentDock, Spotlight, Field, EmptyState, FileUpload, WhatsNew]
+applies: [AgentDock, Spotlight, Field, EmptyState, FileUpload, WhatsNew, changelog]
 ---
 
 # Paradox of the Active User
@@ -21,7 +21,8 @@ a tour in front of the work gets skipped.
 - Field hints sit right under the control; FileUpload states its size and count limits inline,
   before anything fails.
 - EmptyState says why a list is empty and offers the next action.
-- WhatsNew shows the release notes once per version and remembers however it was closed.
+- WhatsNew shows the release notes once per minor line with features, never for a patch and
+  never on a first visit, and remembers however it was closed (D62).
 
 ## Review questions
 
