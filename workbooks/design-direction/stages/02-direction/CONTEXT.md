@@ -10,7 +10,7 @@ The brief block.
 2. Write the direction in at most eight sentences: density, rhythm, how state is shown (edge,
    chip, badge), what the accent is for, what is never done. Every sentence names the law or the
    principle it follows. Offer at most two candidates, each with a one-line physical metaphor
-   (Paloma One's room rack, Casa MaPa's cement tile) when that helps the human choose.
+   (a room rack, a cement tile) when that helps the human choose.
 3. When the human wants the impeccable skill: run its direction step on the same brief, transcribe
    its outcome into the same eight-sentence form; the sentences are ours, the skill is an input.
 

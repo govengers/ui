@@ -60,5 +60,5 @@ route matches, so `nav` must list every top-level area of `app-map.json`.
 
 - More than five nav items: the sixth onward is hidden on phones. Put secondary areas into a
   `Menu` in `actions` or into a settings page.
-- The top bar is `--ui-chrome` in both themes (PDB rule: chrome is black day and night); put a
+- The top bar is `--ui-chrome` in both themes (chrome is black day and night); put a
   logo with its own plate there, not an inverse variant.

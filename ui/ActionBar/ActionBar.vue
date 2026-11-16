@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // ActionBar: the sticky row of a form's actions (save, cancel). It must come AFTER the content
-// in DOM order: position sticky only engages with preceding scrollable content (Paloma lesson).
+// in DOM order: position sticky only engages with preceding scrollable content.
 withDefaults(defineProps<{
   /** Sticks to the bottom of the viewport while the form scrolls. */
   sticky?: boolean | undefined

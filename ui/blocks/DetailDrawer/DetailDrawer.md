@@ -10,8 +10,8 @@ laws: [cognitive-load, flow, goal-gradient-effect, working-memory]
 
 # DetailDrawer
 
-One record in a `Sheet`, with previous and next through the rows on screen (PDB's
-AgentDetailDrawer, D34): the header shows the title, "3 of 25" and two arrow buttons, also bound
+One record in a `Sheet`, with previous and next through the rows on screen (D34):
+the header shows the title, "3 of 25" and two arrow buttons, also bound
 to ArrowLeft and ArrowRight. Given an item read as `target` it subscribes to the open record
 while open; otherwise the page passes the record as `item`.
 

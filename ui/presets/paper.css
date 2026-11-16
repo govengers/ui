@@ -1,6 +1,6 @@
 /*
  * preset: paper. Warm bone surfaces, ink teal, tight corners (card stock has a 2 mm corner),
- * a quiet coral accent that never carries white text. Rooted in Paloma One's "Il Tabellone".
+ * a quiet coral accent that never carries white text.
  * Tokens only (D6). Fonts stay the system stack; a project wanting Archivo self-hosts it and
  * overrides --ui-font-sans in DESIGN.md.
  */

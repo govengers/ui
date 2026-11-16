@@ -47,5 +47,5 @@ Do not load:
 
 - Put the ActionBar after the form fields in DOM order. `position: sticky; bottom: 0` only
   engages with preceding scrollable content in the same container; a bar rendered before the
-  fields never sticks (Paloma One platform shard, 07.09.2026).
+  fields never sticks.
 - The submit `Button` carries `type="submit"` and `data-action`; `ui-lint` checks the latter.

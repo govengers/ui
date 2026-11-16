@@ -18,8 +18,8 @@ training longer. Familiar patterns let them think about the work, not the interf
 
 - Native first (P5, D9): `<dialog>`, `popover`, a native `<select>` without a custom listbox,
   native date and number inputs; their behaviour is the one users already know.
-- The ListPage recipe is the PDB kit made generic (D32) and FacetFilter follows PDB's variant D
-  (D31): the users of our applications already work with them.
+- The ListPage recipe is the list kit of an earlier admin console made generic (D32) and
+  FacetFilter follows that console's filter (D31): the users of our applications already work with them.
 - RangePicker copies the Grafana time picker operations people know.
 - Links look like links (`a` in `ui/base.css`: accent colour, underline); a Switch applies at
   once and a Checkbox saves with its form, as on every settings screen (`ui/Switch/Switch.md`).
@@ -28,7 +28,7 @@ training longer. Familiar patterns let them think about the work, not the interf
 ## Review questions
 
 - Which control on this page behaves differently from the browser's or the system's own?
-- Would a PDB user find the list, the filter and the row actions where they expect them?
+- Would a user of a typical admin console find the list, the filter and the row actions where they expect them?
 
 ## Source
 

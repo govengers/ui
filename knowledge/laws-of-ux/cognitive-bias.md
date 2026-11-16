@@ -25,7 +25,7 @@ anyone's impression.
   plan (D25).
 - Most users keep defaults, so defaults are decisions: `defaultColumns` and `defaultSort` per
   entity in `customers.list.ts`, theme `auto` (D35).
-- ListPage and FacetFilter follow a kit people already use daily (PDB, D8, D31), not a
+- ListPage and FacetFilter follow a kit people already use daily (D8, D31), not a
   designer's taste.
 
 ## Review questions
