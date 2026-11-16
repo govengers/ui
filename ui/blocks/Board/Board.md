@@ -104,7 +104,8 @@ later pushes never move focus, and a press or focus elsewhere ends the restore a
   grip, so a tap must not block them).
 - Cards stay on screen while a new `filter`, `sort` or `limit` loads, never across the end of the
   connection or a new pair: after a logout, an ended session (4401) or an account switch the board
-  shows no card of the old identity, no lift and no announcement naming one.
+  shows no card of the old identity, no lift and no announcement naming one. A move still in
+  flight then neither announces nor emits `moved` or `move-error`.
 - Two boards on one page over the same read and pair show each other's optimistic card until the
   push; give a second board a pair of its own.
 - `columnField` values must be the column `key`s; a card whose value has no column is invisible.

@@ -15,11 +15,13 @@ const columns: BoardColumn[] = [
   { key: 'done', label: 'Done' },
 ]
 const filter = ref<TasksFilter | undefined>()
+const events: string[] = []
 let board: Mounted | undefined
 afterEach(() => {
   board?.unmount()
   board = undefined
   filter.value = undefined
+  events.length = 0
 })
 
 async function mountBoard(): Promise<Mounted> {
@@ -28,6 +30,8 @@ async function mountBoard(): Promise<Mounted> {
     itemLabel: (task: Task) => task.title, move: calls.moveTask,
     moveArgs: (task: Task, placement: Placement) => ({ parameters: { id: task.id }, body: { status: placement.column, position: placement.rank } }),
     label: 'Board',
+    onMoved: (task: Task) => events.push(`moved ${task.title}`),
+    'onMove-error': (_: unknown, task: Task) => events.push(`move-error ${task.title}`),
   }))
   await settle()
   return board
@@ -51,6 +55,21 @@ describe('Board keyboard path', () => {
     key(grip(root, id), 'Escape')
     await settle(1)
     expect(cardsIn(root, 'backlog')).toContain(id)
+    expect(document.activeElement).toBe(grip(root, id))
+  })
+
+  test('an arrow to another column keeps the lift when the remount blurs the grip (Chrome)', async () => {
+    const { root } = await mountBoard()
+    const id = cardsIn(root, 'backlog')[0]!
+    grip(root, id).focus()
+    key(grip(root, id), ' ')
+    await settle(1)
+    key(grip(root, id), 'ArrowRight')
+    // Chrome fires focusout when the patch removes the focused grip; jsdom does not.
+    grip(root, id).dispatchEvent(new FocusEvent('focusout', { bubbles: true }))
+    await settle(1)
+    expect(grip(root, id).getAttribute('aria-pressed')).toBe('true')
+    expect(cardsIn(root, 'todo')).toContain(id)
     expect(document.activeElement).toBe(grip(root, id))
   })
 
@@ -211,5 +230,22 @@ describe('Board live state', () => {
     await settle()
     expect(live_(mounted.root)).toBe('')
     expect(mounted.root.querySelector('.ui-board')?.getAttribute('data-state')).toBeNull()
+  })
+
+  test('a move in flight at an account switch announces and emits nothing of the old identity', async () => {
+    const mounted = await mountBoard()
+    const id = cardsIn(mounted.root, 'backlog')[0]!
+    grip(mounted.root, id).focus()
+    key(grip(mounted.root, id), ' ')
+    await settle(1)
+    key(grip(mounted.root, id), 'ArrowRight')
+    await nextTick()
+    key(grip(mounted.root, id), ' ')
+    // The call is sent, not answered: the end rejects it.
+    mounted.pair.value.end()
+    mounted.pair.value = mounted.pairFor('test:bob')
+    await settle()
+    expect(live_(mounted.root)).toBe('')
+    expect(events).toEqual([])
   })
 })

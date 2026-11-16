@@ -114,6 +114,9 @@ function restoreFocus(): void {
 function focusGrip(id: string, until: Promise<unknown> = Promise.resolve()): void {
   const mine = { id }
   keepFocus = mine
+  // Registered in the key handler, so it runs before onFocusout's check of the same flush
+  // (Chrome blurs the grip the remount removes); the bounded restores below cover later renders.
+  void nextTick(restoreFocus)
   const done = (): void => void nextTick(() => {
     restoreFocus()
     if (keepFocus === mine) keepFocus = undefined
@@ -180,12 +183,17 @@ async function commit(item: Item, spot: Spot, refocus: boolean): Promise<void> {
   const optimistic = { ...item, [props.columnField]: spot.column, [props.rankField]: placement.rank } as Item
   const { parameters, body } = props.moveArgs(item, placement)
   announcement.value = t('ui.cardMoved', { card: name, where: where(placement, item.id) })
-  const call = connection.value.call(props.move, parameters, body, { optimistic })
+  const from = connection.value
+  const call = from.call(props.move, parameters, body, { optimistic })
   if (refocus) focusGrip(item.id, call)
+  // After the answer: nothing of a connection that ended or was replaced meanwhile (logout, 4401,
+  // account switch) reaches the live region or the page, its card names included.
+  const gone = (): boolean => connection.value !== from || status.value === 'ended'
   try {
     await call
-    emit('moved', item, placement)
+    if (!gone()) emit('moved', item, placement)
   } catch (failure) {
+    if (gone()) return
     announcement.value = t('ui.moveFailed', { card: name })
     emit('move-error', failure, item)
   }
