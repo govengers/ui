@@ -89,8 +89,11 @@ description. Each card is `[data-board-card="<id>"]`, each column `[data-board-c
 Moves and their outcome are announced in an assertive live region. After a keyboard or menu move
 or a cancel, focus is back on the moved card's grip until the move settled (its call answered);
 later pushes never move focus, and a press, focus elsewhere or the card's menu opened again ends
-the restore at once. A card lifted by keyboard keeps focus on its grip through pushes that move it
-(a card inserted above it), so another user's move never cancels the lift.
+the restore at once. A lift aims between two cards, not at a position number: a card another
+user puts into the column keeps the spot the user picked (the drop lands between the same
+neighbours) and leaves the lifted card's element in place. A card lifted by keyboard keeps focus
+on its grip through pushes that still move it (a neighbour moved elsewhere), so another user's
+move never cancels the lift.
 
 ## Gotchas
 

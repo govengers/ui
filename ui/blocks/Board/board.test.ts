@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { entries, group, indexAt, place, rankBetween, rankStep, sameSpot, step, type Lift } from './board'
+import { aim, entries, group, indexAt, place, rankBetween, rankStep, resolve, sameSpot, step, type Lift } from './board'
 
 interface Task { id: string; status: string; rank: number }
 const task = (id: string, status: string, rank: number): Task => ({ id, status, rank })
@@ -36,9 +36,31 @@ describe('rankBetween and place', () => {
   })
 })
 
+describe('aim and resolve', () => {
+  const todo = [task('a', 'todo', 1), task('b', 'todo', 2), task('l', 'todo', 3), task('c', 'todo', 4)]
+  const pushed = (...cards: Task[]): Task[] => [...cards, ...todo].sort((left, right) => left.rank - right.rank)
+  test('aim names the neighbours among the other cards', () => {
+    expect(aim(todo, 'l', { column: 'todo', index: 1 })).toEqual({ column: 'todo', index: 1, before: 'a', after: 'b' })
+    expect(aim(todo, 'l', { column: 'todo', index: 9 })).toEqual({ column: 'todo', index: 3, before: 'c', after: undefined })
+  })
+  test('a card put above keeps the spot under the same neighbour', () => {
+    const target = aim(todo, 'l', { column: 'todo', index: 3 })
+    expect(resolve(pushed(task('x', 'todo', 0)), 'l', target)).toMatchObject({ index: 4, before: 'c', after: undefined })
+    expect(resolve(pushed(task('x', 'todo', 1.5)), 'l', aim(todo, 'l', { column: 'todo', index: 1 }))).toMatchObject({ index: 1, before: 'a', after: 'x' })
+  })
+  test('the top stays the top', () => {
+    expect(resolve(pushed(task('x', 'todo', 0)), 'l', aim(todo, 'l', { column: 'todo', index: 0 }))).toMatchObject({ index: 0, after: 'x' })
+  })
+  test('a neighbour gone: next to the other one, else the index', () => {
+    const target = aim(todo, 'l', { column: 'todo', index: 2 })
+    expect(resolve(todo.filter((card) => card.id !== 'b'), 'l', target)).toMatchObject({ index: 1, before: 'a', after: 'c' })
+    expect(resolve([task('y', 'todo', 1)], 'l', target)).toMatchObject({ index: 1, before: 'y', after: undefined })
+  })
+})
+
 describe('step', () => {
   const counts = new Map([['todo', 2], ['doing', 0], ['done', 5]])
-  const lift = (column: string, index: number): Lift => ({ id: 'a', from: { column: 'todo', index: 0 }, to: { column, index }, mode: 'keyboard' })
+  const lift = (column: string, index: number): Lift => ({ id: 'a', to: { column, index, before: undefined, after: undefined }, mode: 'keyboard' })
   const keys = ['todo', 'doing', 'done']
   test('up and down stay in the column and clamp', () => {
     expect(step(keys, counts, lift('todo', 0), 'ArrowUp')).toEqual({ column: 'todo', index: 0 })
@@ -65,7 +87,7 @@ test('indexAt counts the middles above the pointer', () => {
 describe('entries', () => {
   const cards = [task('a', 'todo', 1), task('b', 'todo', 2), task('c', 'todo', 3)]
   const shape = (list: ReturnType<typeof entries<Task>>) => list.map((entry) => (entry.kind === 'placeholder' ? '_' : entry.origin ? `(${entry.item.id})` : entry.item.id)).join('')
-  const lift = (mode: Lift['mode'], column: string, index: number): Lift => ({ id: 'b', from: { column: 'todo', index: 1 }, to: { column, index }, mode })
+  const lift = (mode: Lift['mode'], column: string, index: number): Lift => ({ id: 'b', to: { column, index, before: undefined, after: undefined }, mode })
 
   test('no lift renders the cards', () => {
     expect(shape(entries(cards, 'todo', null, undefined))).toBe('abc')

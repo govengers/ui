@@ -16,12 +16,14 @@ const columns: BoardColumn[] = [
 ]
 const filter = ref<TasksFilter | undefined>()
 const events: string[] = []
+const placements: Placement[] = []
 let board: Mounted | undefined
 afterEach(() => {
   board?.unmount()
   board = undefined
   filter.value = undefined
   events.length = 0
+  placements.length = 0
 })
 
 async function mountBoard(): Promise<Mounted> {
@@ -30,7 +32,10 @@ async function mountBoard(): Promise<Mounted> {
     itemLabel: (task: Task) => task.title, move: calls.moveTask,
     moveArgs: (task: Task, placement: Placement) => ({ parameters: { id: task.id }, body: { status: placement.column, position: placement.rank } }),
     label: 'Board',
-    onMoved: (task: Task) => events.push(`moved ${task.title}`),
+    onMoved: (task: Task, placement: Placement) => {
+      events.push(`moved ${task.title}`)
+      placements.push(placement)
+    },
     'onMove-error': (_: unknown, task: Task) => events.push(`move-error ${task.title}`),
   }))
   await settle()
@@ -41,6 +46,33 @@ const cardsIn = (root: HTMLElement, column: string): string[] =>
   [...root.querySelectorAll(`[data-board-column="${column}"] [data-board-card]`)].map((card) => (card as HTMLElement).dataset['boardCard'] ?? '')
 const grip = (root: HTMLElement, id: string): HTMLElement => root.querySelector(`[data-board-card="${id}"] [data-board-grip]`) as HTMLElement
 const live_ = (root: HTMLElement): string => root.querySelector('[aria-live]')?.textContent ?? ''
+
+/** Runs a push and counts the moves of a node holding focus, blurring it first as Chrome does (jsdom keeps the focus). */
+async function blurringMoves(push: () => unknown): Promise<number> {
+  const insertBefore = Node.prototype.insertBefore
+  let blurred = 0
+  Node.prototype.insertBefore = function <T extends Node>(this: Node, node: T, child: Node | null): T {
+    const focused = document.activeElement as HTMLElement | null
+    if (node.isConnected && focused !== null && focused !== document.body && node.contains(focused)) {
+      blurred++
+      focused.blur()
+    }
+    return insertBefore.call(this, node, child) as T
+  }
+  try {
+    await push()
+    await settle()
+  } finally {
+    Node.prototype.insertBefore = insertBefore
+  }
+  return blurred
+}
+
+/** Another user moves card `id` to the top of To do. */
+function pushToTop(engine: Mounted['engine'], id: string): void {
+  const top = Math.min(...engine.store.tables.tasks.filter((task) => task.status === 'todo').map((task) => task.position))
+  engine.store.update('tasks', id, { status: 'todo', position: top - 1024 })
+}
 
 describe('Board keyboard path', () => {
   test('Escape after a move to another column puts focus back on the card grip', async () => {
@@ -122,37 +154,45 @@ describe('Board keyboard path', () => {
     expect(grip(root, id).getAttribute('aria-pressed')).toBe('false')
   })
 
+  test('a card pushed above a keyboard lift keeps the spot the user picked and the lifted element in place', async () => {
+    const { root, engine } = await mountBoard()
+    const [, id, below] = cardsIn(root, 'todo') as [string, string, string]
+    grip(root, id).focus()
+    key(grip(root, id), ' ')
+    await settle(1)
+    // Aim at the end of the column: under its last card.
+    key(grip(root, id), 'End')
+    await settle()
+    const blurred = await blurringMoves(() => pushToTop(engine, cardsIn(root, 'backlog')[0]!))
+    expect(blurred).toBe(0)
+    expect(grip(root, id).getAttribute('aria-pressed')).toBe('true')
+    expect(document.activeElement).toBe(grip(root, id))
+    expect(cardsIn(root, 'todo').at(-1)).toBe(id)
+    key(grip(root, id), ' ')
+    await settle()
+    expect(cardsIn(root, 'todo').at(-1)).toBe(id)
+    expect(placements.at(-1)).toMatchObject({ column: 'todo', before: below, after: undefined })
+    expect(live_(root)).not.toContain('cancelled')
+  })
+
   test('a push that moves the lifted card in the DOM keeps the lift and its focus (Chrome blurs moved nodes)', async () => {
     const { root, engine } = await mountBoard()
-    const id = cardsIn(root, 'todo')[0]!
+    const todo = (): number[] => engine.store.tables.tasks.filter((task) => task.status === 'todo').map((task) => task.position)
+    // Five cards, so the three below outnumber the two the push moves and Vue moves those two.
+    for (const other of cardsIn(root, 'backlog').slice(0, 2)) engine.store.update('tasks', other, { status: 'todo', position: Math.max(...todo()) + 1024 })
+    await settle()
+    const [id, above] = cardsIn(root, 'todo') as [string, string]
     grip(root, id).focus()
     key(grip(root, id), ' ')
     await settle(1)
     key(grip(root, id), 'ArrowDown')
     await settle()
-    // Chrome blurs a focused node that insertBefore moves; jsdom keeps the focus.
-    const insertBefore = Node.prototype.insertBefore
-    let blurred = 0
-    Node.prototype.insertBefore = function <T extends Node>(this: Node, node: T, child: Node | null): T {
-      const focused = document.activeElement as HTMLElement | null
-      if (node.isConnected && focused !== null && focused !== document.body && node.contains(focused)) {
-        blurred++
-        focused.blur()
-      }
-      return insertBefore.call(this, node, child) as T
-    }
-    try {
-      // Another user moves a backlog card to the top of the lifted card's column.
-      const other = cardsIn(root, 'backlog')[0]!
-      const top = Math.min(...engine.store.tables.tasks.filter((task) => task.status === 'todo').map((task) => task.position))
-      engine.store.update('tasks', other, { status: 'todo', position: top - 1024 })
-      await settle()
-    } finally {
-      Node.prototype.insertBefore = insertBefore
-    }
+    // Another user moves the card the lift is aimed under to the bottom: the lifted card follows it.
+    const blurred = await blurringMoves(() => engine.store.update('tasks', above, { position: Math.max(...todo()) + 1024 }))
     expect(blurred).toBeGreaterThan(0)
     expect(grip(root, id).getAttribute('aria-pressed')).toBe('true')
     expect(document.activeElement).toBe(grip(root, id))
+    expect(cardsIn(root, 'todo').slice(-2)).toEqual([above, id])
   })
 
   test('a lifted card removed by a push ends the lift', async () => {

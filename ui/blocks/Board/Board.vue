@@ -14,7 +14,7 @@ import Button from '../../Button/Button.vue'
 import Icon from '../../Icon/Icon.vue'
 import Menu, { type MenuItem } from '../../Menu/Menu.vue'
 import Skeleton from '../../Skeleton/Skeleton.vue'
-import { entries, group, place, sameSpot, step, without, type BoardColumn, type Keyed, type Lift, type ListQuery, type Placement, type Spot } from './board'
+import { aim, entries, group, place, resolve, sameSpot, step, without, type BoardColumn, type Keyed, type Lift, type ListQuery, type Placement, type Spot } from './board'
 import { useBoardDrag } from './drag'
 
 const props = withDefaults(defineProps<{
@@ -89,6 +89,10 @@ const scroller = ref<HTMLElement | null>(null)
 const cardsOf = (column: string): Item[] => grouped.value.get(column) ?? []
 const columnLabel = (key: string): string => props.columns.find((column) => column.key === key)?.label ?? key
 const spotOf = (item: Item): Spot => ({ column: columnOf(item), index: cardsOf(columnOf(item)).findIndex((card) => card.id === item.id) })
+// The lift aims between two cards, not at an index: another user's card put into the column keeps
+// the user's spot and leaves the lifted card's element where it is (a moved node loses focus).
+const aimed = computed<Lift | null>(() => (lift.value === null ? null : { ...lift.value, to: resolve(cardsOf(lift.value.to.column), lift.value.id, lift.value.to) }))
+const aimAt = (current: Lift, spot: Spot): Lift => ({ ...current, to: aim(cardsOf(spot.column), current.id, spot) })
 const counts = computed(() => new Map(props.columns.map((column) => [column.key, without(cardsOf(column.key), lift.value?.id ?? '').length])))
 /** "Backlog, position 2 of 4" for card `id` at `spot`: the column's other cards plus this one. */
 const where = (spot: Spot, id: string): string => t('ui.cardPosition', { column: columnLabel(spot.column), n: spot.index + 1, total: without(cardsOf(spot.column), id).length + 1 })
@@ -99,8 +103,9 @@ const gripOf = (id: string): HTMLElement | null => root.value?.querySelector<HTM
 // gets focus back after each render until the move settled (its call answered and that render
 // ran), never later: a push after that, another user's move, must not pull focus or scroll. A
 // press of the user's anywhere, or focus they put elsewhere, ends it at once. A keyboard lift
-// keeps its grip focused through any render too: a push that moves the lifted card in the DOM
-// (a card inserted above it) blurs the grip in Chrome, and onFocusout would cancel the lift.
+// keeps its grip focused through any render too: aimed between neighbours, a push inserting cards
+// leaves its element in place, but one that moves a neighbour can move it, and Chrome blurs a
+// moved node (onFocusout would cancel the lift).
 let keepFocus: { id: string } | undefined
 function restoreFocus(): void {
   const id = keepFocus?.id ?? (lift.value?.mode === 'keyboard' ? lift.value.id : undefined)
@@ -136,7 +141,7 @@ onScopeDispose(() => window.removeEventListener('pointerdown', release, true))
 function start(item: Item, mode: Lift['mode']): boolean {
   if (lift.value !== null) return false
   const from = spotOf(item)
-  lift.value = { id: item.id, from, to: from, mode }
+  lift.value = { id: item.id, to: aim(cardsOf(from.column), item.id, from), mode }
   announcement.value = t('ui.cardLifted', { card: props.itemLabel(item), where: where(from, item.id) })
   return true
 }
@@ -152,7 +157,7 @@ function cancel(refocus = true): void {
 }
 
 function drop(): void {
-  const current = lift.value
+  const current = aimed.value
   const item = lifted.value
   lift.value = null
   if (current && item) void commit(item, current.to, current.mode === 'keyboard')
@@ -213,7 +218,7 @@ const { ghost, onPointerdown } = useBoardDrag({
     return start(item, 'pointer')
   },
   over: (spot) => {
-    if (lift.value && !sameSpot(lift.value.to, spot)) lift.value = { ...lift.value, to: spot }
+    if (lift.value && aimed.value && !sameSpot(aimed.value.to, spot)) lift.value = aimAt(lift.value, spot)
   },
   drop,
   cancel: () => cancel(false),
@@ -249,10 +254,10 @@ function onGripKey(event: KeyboardEvent, item: Item): void {
     cancel()
     return
   }
-  const next = step(keys.value, counts.value, current, event.key)
+  const next = step(keys.value, counts.value, aimed.value ?? current, event.key)
   if (next === undefined) return
   event.preventDefault()
-  lift.value = { ...current, to: next }
+  lift.value = aimAt(current, next)
   announcement.value = where(next, item.id)
   // The card moved in the DOM; keep focus on its grip.
   focusGrip(item.id)
@@ -316,7 +321,7 @@ const overLimit = (column: BoardColumn): boolean => column.limit !== undefined &
           <template v-if="loading">
             <li v-for="n in 2" :key="n" class="ui-board__skeleton"><Skeleton shape="rect" height="4rem" /></li>
           </template>
-          <template v-for="entry in loading ? [] : entries(cardsOf(column.key), column.key, lift, lifted)" :key="entry.kind === 'card' ? entry.item.id : 'placeholder'">
+          <template v-for="entry in loading ? [] : entries(cardsOf(column.key), column.key, aimed, lifted)" :key="entry.kind === 'card' ? entry.item.id : 'placeholder'">
             <li v-if="entry.kind === 'placeholder'" class="ui-board__placeholder" :style="{ height: `${ghost?.height ?? 0}px` }" aria-hidden="true" />
             <li
               v-else

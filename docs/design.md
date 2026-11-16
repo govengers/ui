@@ -387,3 +387,11 @@ switchable style presets.
   by another user or by an agent that read hostile content would otherwise make every reader's
   browser call a foreign host (tracking, exfiltration in the URL). Supersedes D66's
   "http(s) images".
+
+- **D71 A board's lift aims between two cards.** A pointer or keyboard lift keeps the ids of the
+  cards above and below its target, and the spot is computed from them on every render (`resolve`
+  in `board.ts`; a neighbour gone falls back to the other, then to the index). A position number
+  meant something else once another user's card arrived above it: the drop landed elsewhere or
+  read as cancelled, and Vue moved the lifted element, which loses focus in Chrome and ended the
+  keyboard lift. The hidden origin of a pointer drag sits where the list has the card, not at a
+  remembered index. Amends D67.

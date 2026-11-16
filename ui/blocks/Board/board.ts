@@ -24,21 +24,24 @@ export interface Spot {
   index: number
 }
 
-/** A card in flight: where it was and where it would land now. */
+/** A spot and the column's cards around it: what a lift aims at, so a push keeps it between them. */
+export interface Target extends Spot {
+  /** The id of the card above, if any. */
+  before: string | undefined
+  /** The id of the card below, if any. */
+  after: string | undefined
+}
+
+/** A card in flight and where it would land now. */
 export interface Lift {
   id: string
-  from: Spot
-  to: Spot
+  to: Target
   /** pointer: the card follows the pointer and a placeholder marks the spot; keyboard: the card itself moves. */
   mode: 'pointer' | 'keyboard'
 }
 
 /** Where a drop lands: the column, the index, its neighbours and a rank between them. */
-export interface Placement extends Spot {
-  /** The id of the card above, if any. */
-  before: string | undefined
-  /** The id of the card below, if any. */
-  after: string | undefined
+export interface Placement extends Target {
   rank: number
 }
 
@@ -77,19 +80,34 @@ export function without<Item extends Keyed>(cards: readonly Item[], id: string):
   return cards.filter((card) => card.id !== id)
 }
 
-/** Where dropping card `id` at `spot` lands, computed from the target column's cards. */
-export function place<Item extends Keyed>(cards: readonly Item[], id: string, spot: Spot, rankOf: (item: Item) => number): Placement {
+/** The target of card `id` at `spot` (index clamped) among the column's other cards. */
+export function aim<Item extends Keyed>(cards: readonly Item[], id: string, spot: Spot): Target {
   const others = without(cards, id)
   const index = Math.max(0, Math.min(spot.index, others.length))
-  const above = others[index - 1]
-  const below = others[index]
-  return {
-    column: spot.column,
-    index,
-    before: above?.id,
-    after: below?.id,
-    rank: rankBetween(above === undefined ? undefined : rankOf(above), below === undefined ? undefined : rankOf(below)),
-  }
+  return { column: spot.column, index, before: others[index - 1]?.id, after: others[index]?.id }
+}
+
+/**
+ * Where a target is in the column's cards now: under the card it was aimed below (none: the top),
+ * else above the card it was aimed above, else at its index. A card another user puts into the
+ * column moves the index, never the spot between the neighbours the user picked.
+ */
+export function resolve<Item extends Keyed>(cards: readonly Item[], id: string, target: Target): Target {
+  const others = without(cards, id)
+  const at = (key: string | undefined): number => (key === undefined ? -1 : others.findIndex((card) => card.id === key))
+  const above = at(target.before)
+  const below = at(target.after)
+  const index = target.before === undefined ? 0 : above >= 0 ? above + 1 : below >= 0 ? below : target.index
+  return aim(cards, id, { column: target.column, index })
+}
+
+/** Where dropping card `id` at `spot` lands, computed from the target column's cards. */
+export function place<Item extends Keyed>(cards: readonly Item[], id: string, spot: Spot, rankOf: (item: Item) => number): Placement {
+  const target = aim(cards, id, spot)
+  const others = without(cards, id)
+  const above = others[target.index - 1]
+  const below = others[target.index]
+  return { ...target, rank: rankBetween(above === undefined ? undefined : rankOf(above), below === undefined ? undefined : rankOf(below)) }
 }
 
 export function sameSpot(left: Spot, right: Spot): boolean {
@@ -124,18 +142,16 @@ export function indexAt(middles: readonly number[], y: number): number {
 }
 
 /**
- * What a column renders while a card is lifted. Keyboard: the card itself at its target spot.
- * Pointer: the placeholder at the target spot, and the card kept at its old place hidden
- * (`origin`), so the element the pointer went down on stays mounted and unmoved.
+ * What a column renders while a card is lifted (`lift.to` resolved against `cards`). Keyboard: the
+ * card itself at its target spot. Pointer: the placeholder at the target spot, and the card kept
+ * hidden where the list has it (`origin`), so the element the pointer went down on stays mounted.
  */
 export function entries<Item extends Keyed>(cards: readonly Item[], column: string, lift: Lift | null, lifted: Item | undefined): Entry<Item>[] {
   if (lift === null || lifted === undefined) return cards.map((item) => ({ kind: 'card', item, origin: false }))
-  const out: Entry<Item>[] = without(cards, lift.id).map((item) => ({ kind: 'card', item, origin: false }))
+  const pointer = lift.mode === 'pointer'
+  const out: Entry<Item>[] = cards.filter((item) => pointer || item.id !== lift.id).map((item) => ({ kind: 'card', item, origin: item.id === lift.id }))
   if (lift.to.column === column) {
-    out.splice(cardPosition(out, lift.to.index), 0, lift.mode === 'keyboard' ? { kind: 'card', item: lifted, origin: false } : { kind: 'placeholder' })
-  }
-  if (lift.mode === 'pointer' && lift.from.column === column) {
-    out.splice(cardPosition(out, lift.from.index), 0, { kind: 'card', item: lifted, origin: true })
+    out.splice(cardPosition(out, lift.to.index), 0, pointer ? { kind: 'placeholder' } : { kind: 'card', item: lifted, origin: false })
   }
   return out
 }
