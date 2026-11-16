@@ -1,6 +1,6 @@
 // The model of CommandPalette: search groups over livewire list reads, quick actions from the
 // agent action registry, recent picks in localStorage, and the active option under the arrows.
-import type { ListResponse, LiveConnection, ReadTarget } from '@/api/runtime'
+import type { ListQuery, ListResponse, LiveConnection, ReadTarget } from '@/api/runtime'
 import type { BoundAction } from '../../agent/registry'
 
 /** One row the palette offers. */
@@ -22,17 +22,11 @@ export interface PaletteGroup {
   search: (connection: LiveConnection, text: string, signal: AbortSignal) => Promise<PaletteResult[]>
 }
 
-/** The parameters searchGroup sends: the text as the filter document's search, and a limit. */
-interface SearchQuery {
-  filter?: unknown
-  limit?: number
-}
-
 /**
  * A search group over a list read whose resource has a searchable field: each search is one
  * query over the socket with `{ filter: { where, search }, limit }`.
  */
-export function searchGroup<Query extends SearchQuery, Item>(options: {
+export function searchGroup<Query extends ListQuery, Item>(options: {
   key: string
   label: string
   target: ReadTarget<Query, ListResponse<Item>>

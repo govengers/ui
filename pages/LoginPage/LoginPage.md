@@ -41,7 +41,7 @@ Do not load:
 | `login` | `(credentials: LoginCredentials) => Promise<LoginAnswer \| void>` | required | `session.login` plus the navigation to `safeRedirect(route.query.redirect)` (see `LoginForm`, `ui/session.md`) |
 | `providers` | `LoginProvider[]` | `[]` | the redirect logins, hrefs from `session.loginHref` |
 | `layout` | `password \| sso` | `password` | `sso`: providers first, the password form behind a link |
-| `change` | `(passwords: { currentPassword, newPassword }) => Promise<void>` | required | throws an `ApiError` whose `fields` show at the Fields, or an `Error` whose message shows in a Banner |
+| `change` | `(passwords: { currentPassword, newPassword }) => Promise<void>` | none | throws an `ApiError` whose `fields` show at the Fields, or an `Error` whose message shows in a Banner; without it there is no change-password screen and `state="changePassword"` shows the sign-in |
 | `loginRoute` | `RouteLocationRaw` | `{ name: 'auth.login' }` | where "Sign in again" goes |
 | `version` | `string \| undefined` | none | shown as a Badge under the card |
 
@@ -81,7 +81,8 @@ recipe: one `t` for the page's keys and the `ui.*` keys.
    `public: true` meta, wired to `src/session.ts`. Pass `version` from the build
    (`import.meta.env.VITE_APP_VERSION`).
 4. `change` is the app's own call (govengers/auth has no change-password route; the app's
-   password reset or a livewire mutation).
+   password reset or a livewire mutation). An app without one passes no `change` and declares no
+   `changePassword` route; the starter does so.
 
 ## Gotchas
 

@@ -46,8 +46,8 @@ Do not load:
 | `remove` | `MutationTarget<{ id }, undefined, unknown> \| undefined` | none | deletes an uploaded file; without it only failed uploads can be removed |
 | `name` | `string` | required | the file input's `name` |
 
-`Row` is any `UploadRow` (`fileUpload.ts`): `id`, `name` and `size`, with optional `status`
-(`'uploading'`, `'ready'`, or another word shown as is) and `progress` (0 to 100).
+`Row` is any `UploadRow` (`fileUpload.ts`): `id`, `name` and `size`, with an optional `status`
+(`'ready'`, or another word shown as is, such as `scanning`).
 
 The directory holds three parts: `FileUpload.vue` (limits, uploads, the list),
 `FileDropzone.vue` (the label around the file input, drag and drop) and `fileUpload.ts` (how
@@ -71,12 +71,14 @@ does. Use it for a paste handler or an agent tool.
 - Every file goes up as `client.upload(upload, params, file, { multipart: true, filename })`. A
   multipart body carries the file name to the handler (`livewire.File.Filename`); a raw body
   would lose it.
-- `Client.upload` is a `fetch` and reports no progress. With `files`, the block lists the
-  server's rows. A server that writes the file's row first (status `uploading`, `progress`
-  counting up) shows real progress; the demo's fake does. Until a row exists, and without
-  `files`, the bar is indeterminate.
-- A file being uploaded shows as a local row until the list has its row: matched by `id` once
-  the answer is in, before that by name and size among the `uploading` rows.
+- The bar shows the bytes sent, from `onProgress` (livewire D79): the runtime sends through
+  XMLHttpRequest in a browser. It stays indeterminate where the runtime cannot tell: under bun or
+  Node, with `ClientOptions.credentials: 'omit'`, and with an application `ClientOptions.fetch`
+  (the demo's fake engine is one, so the demo shows the indeterminate bar).
+- A file being uploaded shows as a local row until the answer is in, then as the list's row of
+  the answer's `id`. The server pushes that row before its answer arrives; until then a row that
+  joined the list after the upload started, with the file's name and size, stays hidden behind
+  the local row, so the file never shows twice.
 - `remove` runs over the socket (`connection.call(remove, { id })`), so a `Removes` effect hides
   the row at once.
 
@@ -99,5 +101,5 @@ accessible name "Remove {file}".
   or failed.
 - A multipart part is read into memory on the server up to the upload's `MaximumBytes`; fine for
   documents and images, not for video.
-- Two files with the same name and size uploading at once both match the first `uploading` row
-  until their answers arrive.
+- While a file uploads, another new row of its name and size (a colleague uploading the same
+  file) stays hidden until the answer arrives.

@@ -4,9 +4,9 @@
 // its resource). Columns and their order are computed here (board.ts); a move, by pointer
 // (drag.ts), by keyboard on the grip or by the card menu, calls the page's move mutation with the
 // moved card as the optimistic item.
-import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch, watchEffect } from 'vue'
+import { computed, nextTick, onScopeDispose, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { ListResponse, LiveConnection, LiveTarget, MutationTarget } from '@/api/runtime'
+import type { ListQuery, ListResponse, LiveTarget, MutationTarget } from '@/api/runtime'
 import { useLiveConnection, useLiveList, useLiveStatus, type UseLiveListOptions } from '@/api/vue'
 import Badge from '../../Badge/Badge.vue'
 import Banner from '../../Banner/Banner.vue'
@@ -14,7 +14,7 @@ import Button from '../../Button/Button.vue'
 import Icon from '../../Icon/Icon.vue'
 import Menu, { type MenuItem } from '../../Menu/Menu.vue'
 import Skeleton from '../../Skeleton/Skeleton.vue'
-import { aim, entries, group, place, resolve, sameSpot, step, without, type BoardColumn, type Keyed, type Lift, type ListQuery, type Placement, type Spot } from './board'
+import { aim, entries, group, place, resolve, sameSpot, step, without, type BoardColumn, type Keyed, type Lift, type Placement, type Spot } from './board'
 import { useBoardDrag } from './drag'
 
 const props = withDefaults(defineProps<{
@@ -65,18 +65,13 @@ watch(() => props.limit, (limit) => (list.limit.value = limit))
 
 const rankOf = (item: Item): number => Number(item[props.rankField])
 const columnOf = (item: Item): string => String(item[props.columnField])
-// useLiveList drops the cards while a new filter, sort or limit loads: keep the last ones on
-// screen meanwhile, but only those of the same live connection, so no card outlives a logout,
-// an ended session (4401) or an account switch.
-const held = shallowRef<{ connection: LiveConnection; items: Item[] }>({ connection: connection.value, items: [] })
-watchEffect(() => {
-  if (!list.loading.value) held.value = { connection: connection.value, items: list.items.value }
-})
-const items = computed(() => (list.loading.value && status.value !== 'ended' && held.value.connection === connection.value ? held.value.items : list.items.value))
+// useLiveList keeps the cards of the query before until the new first page arrives, and drops
+// them on the connection's end or a new pair (livewire D76, D83).
+const items = list.items
 const grouped = computed(() => group(items.value, props.columns, columnOf, rankOf))
 watch(grouped, () => restoreFocus(), { flush: 'post' })
 const keys = computed(() => props.columns.map((column) => column.key))
-const loading = computed(() => !error.value && list.loading.value && items.value.length === 0)
+const loading = computed(() => !error.value && list.loading.value)
 const stale = computed(() => status.value !== 'open' && items.value.length > 0)
 const cut = computed(() => (total.value !== undefined && total.value > items.value.length ? total.value : undefined))
 
@@ -176,9 +171,8 @@ watch(lifted, (item) => {
 })
 
 // The end of the connection or a new pair (logout, 4401, account switch): nothing of the old
-// identity stays, not the cards held, a lift, or the last announcement naming a card.
+// identity stays, not a lift, or the last announcement naming a card.
 watch([connection, () => status.value === 'ended'], () => {
-  held.value = { connection: connection.value, items: [] }
   lift.value = null
   keepFocus = undefined
   announcement.value = ''

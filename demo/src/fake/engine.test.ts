@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test'
 import { effectScope } from 'vue'
 import { ApiError, createLivePair, type ListResponse, type LivePair, type LiveState, type PresenceItem } from '../api/runtime'
 import { useLiveList } from '../api/vue'
-import { calls, createCustomer, getBilling, getCustomerFacets, getCustomers, getOrders, getTasks, live, moveTask, saveFilter, uploadFile, type CustomersFilter } from './api'
+import { calls, cancelJob, createCustomer, getBilling, getCustomerFacets, getCustomers, getJobs, getJobsItem, getOrders, getTasks, live, moveTask, retryJob, saveFilter, uploadFile, type CustomersFilter } from './api'
 import type { Customer, CustomerFacets, FileItem } from './data'
 import { createFakeEngine, type FakeEngine } from './engine'
 
@@ -192,23 +192,33 @@ describe('fake engine', () => {
     pair.end()
   })
 
-  test('an upload counts its progress live and answers the finished file', async () => {
+  test('the jobs list leaves the result out; the item read carries it', async () => {
     const { pair } = setup()
-    const progress: number[] = []
+    const page = await getJobs(pair.client)
+    expect(page.items.every((job) => job.result === null)).toBe(true)
+    expect((await getJobsItem(pair.client, { id: 'job-1' })).result).toEqual({ fileId: 'fil-3', rows: 1240 })
+    expect((await refusal(cancelJob(pair.client, { id: 'job-1' }))).code).toBe('conflict')
+    expect((await refusal(retryJob(pair.client, { id: 'job-3' }))).code).toBe('conflict')
+    pair.end()
+  })
+
+  test('an upload pushes its row before it answers it, then the scan turns it ready', async () => {
+    const { pair } = setup()
+    const statuses: string[] = []
     const watched = collector<ListResponse<FileItem>>()
     pair.connection.subscribe(live.files, {}, {
       ...watched.listener,
       next: (state) => {
         const row = state.data.items.find((file) => file.name === 'report.pdf')
-        if (row !== undefined && progress.at(-1) !== row.progress) progress.push(row.progress)
+        if (row !== undefined && statuses.at(-1) !== row.status) statuses.push(row.status)
         watched.listener.next(state)
       },
     })
     await eventually('the files arrived', () => watched.states.length === 1)
     const file = await uploadFile(pair.client, { name: 'report.pdf' }, new Blob(['%PDF-1.7'], { type: 'application/pdf' }))
-    expect(file).toMatchObject({ name: 'report.pdf', type: 'application/pdf', size: 8, status: 'ready', progress: 100 })
-    await eventually('the last progress arrived', () => progress.at(-1) === 100)
-    expect(progress).toEqual([0, 25, 50, 75, 100])
+    expect(file).toMatchObject({ name: 'report.pdf', type: 'application/pdf', size: 8, status: 'scanning' })
+    expect(statuses).toEqual(['scanning'])
+    await eventually('the scan finished', () => statuses.at(-1) === 'ready')
     const refused = await refusal(uploadFile(pair.client, {}, new Blob(['x'], { type: 'application/zip' }), { contentType: 'application/zip' as 'text/plain' }))
     expect(refused.fields['file']).toStartWith('must be one of')
     pair.end()

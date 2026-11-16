@@ -32,7 +32,8 @@ const nameOf = (identity: SessionIdentity): string => identity.name ?? identity.
 const actor = computed(() => props.identity?.impersonator)
 const end = computed(() => {
   const value = props.endsAt ?? props.identity?.impersonationEndsAt
-  return value === undefined ? undefined : new Date(value).getTime()
+  const time = value === undefined ? Number.NaN : new Date(value).getTime()
+  return Number.isNaN(time) ? undefined : time // an unreadable end is no countdown, not an ended impersonation
 })
 const left = computed(() => (end.value === undefined ? undefined : Math.max(0, (end.value - now.value) / 1000)))
 

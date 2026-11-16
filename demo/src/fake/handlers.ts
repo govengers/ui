@@ -5,7 +5,7 @@
 
 import { uuidv7 } from '../api/runtime'
 import { uploads } from './api'
-import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type Task, type User } from './data'
+import { currencyOf, fields, type ApiKey, type Customer, type CustomerFacets, type FileItem, type Job, type ListTable, type Order, type OrderStatus, type Settings, type Tables, type Task, type User } from './data'
 import type { FakeStore } from './engine'
 import { Refusal, parseFilter, withoutField } from './query'
 
@@ -110,9 +110,29 @@ export function createHandlers(context: HandlerContext): Handlers {
     startJob: (_, body) => {
       const input = objectBody(body)
       validate(input, { kind: nonEmpty }, ['kind'])
-      const job = insert('jobs', { id: uuidv7(), kind: String(input['kind']), status: 'queued', progress: 0, resultRoute: null, createdAt: now() })
+      const job = insert('jobs', {
+        id: uuidv7(), queue: 'default', kind: String(input['kind']), status: 'queued', attempt: 0, maximumAttempts: 10, progress: null, progressMessage: '',
+        result: null, error: '', errorClass: null, cancelRequested: false, createdAt: now(), finishedAt: null,
+      })
       runJob(job.id)
       return { status: 201, payload: job }
+    },
+    // govengers/jobs livewireadapter: cancel a queued job at once, a running one at its next step; 409 once finished.
+    cancelJob: (parameters) => {
+      const job = jobOf(parameters['id'])
+      if (job.status !== 'queued' && job.status !== 'running') throw new Refusal('conflict')
+      // A running job stops at its runner's next step; a seeded one has no runner and stops at once.
+      const atOnce = job.status === 'queued' || !runners.has(job.id)
+      const patch: Partial<Job> = atOnce ? { status: 'cancelled', finishedAt: now() } : { cancelRequested: true }
+      return { status: 200, payload: update('jobs', job.id, patch) }
+    },
+    // Only a dead job runs again; 409 for any other.
+    retryJob: (parameters) => {
+      const job = jobOf(parameters['id'])
+      if (job.status !== 'failed') throw new Refusal('conflict')
+      const retried = update('jobs', job.id, { status: 'queued', attempt: 0, progress: null, progressMessage: '', finishedAt: null })
+      runJob(job.id)
+      return { status: 200, payload: retried }
     },
     createTask: (_, body) => {
       const input = objectBody(body)
@@ -177,16 +197,40 @@ export function createHandlers(context: HandlerContext): Handlers {
     },
   }
 
+  function jobOf(id: string | undefined): Job {
+    const job = tables.jobs.find((candidate) => candidate.id === id)
+    if (job === undefined) throw new Refusal('not_found')
+    return job
+  }
+
+  /** The jobs a runJob loop is running. */
+  const runners = new Set<string>()
+
+  /** Runs a job in steps: claimed (progress null until reported), then reporting, then a result. */
   function runJob(id: string): void {
+    runners.add(id)
     setTimeout(function step() {
       const job = tables.jobs.find((candidate) => candidate.id === id)
-      if (job === undefined || job.status === 'succeeded' || job.status === 'failed') return
-      const progress = job.status === 'queued' ? 0 : Math.min(100, job.progress + 10 + Math.floor(random() * 20))
-      if (progress === 100) {
-        update('jobs', id, { status: 'succeeded', progress, resultRoute: `/jobs/${id}` })
+      if (job === undefined || (job.status !== 'queued' && job.status !== 'running')) {
+        runners.delete(id)
         return
       }
-      update('jobs', id, { status: 'running', progress })
+      if (job.cancelRequested) {
+        runners.delete(id)
+        update('jobs', id, { status: 'cancelled', cancelRequested: false, finishedAt: now() })
+        return
+      }
+      if (job.status === 'queued') {
+        update('jobs', id, { status: 'running', attempt: job.attempt + 1, progress: null, progressMessage: '' })
+      } else {
+        const progress = Math.min(100, (job.progress ?? 0) + 10 + Math.floor(random() * 20))
+        if (progress === 100) {
+          update('jobs', id, { status: 'succeeded', progress, progressMessage: '', result: { fileId: 'fil-3', rows: 1240 }, finishedAt: now() })
+          runners.delete(id)
+          return
+        }
+        update('jobs', id, { progress, progressMessage: `step ${Math.ceil(progress / 10)} of 10` })
+      }
       setTimeout(step, latency * 4)
     }, latency * 4)
   }
@@ -211,9 +255,9 @@ export function createHandlers(context: HandlerContext): Handlers {
   }
 
   /**
-   * An upload (D17), REST only. fetch reports no upload progress, so the fake reports it the way a
-   * server can: the file's row in `files` counts its progress live while the body "arrives", and
-   * the answer is the finished row.
+   * An upload (D17), REST only. The body "arrives" for a while (the client's onProgress counts it,
+   * livewire D79), then the handler inserts the file's row, which is pushed before the answer
+   * reaches the client, as on a real server; a scan turns it ready afterwards.
    */
   async function receiveUpload(parameters: Record<string, string>, body: unknown, contentType: string | null): Promise<Answer> {
     let file: Blob
@@ -234,13 +278,11 @@ export function createHandlers(context: HandlerContext): Handlers {
     if (file.size > maximumUploadBytes) throw new Refusal('invalid_request', { file: `at most ${maximumUploadBytes} bytes` })
     const customerId = parameters['customerId']
     if (customerId !== undefined && customerOf(customerId) === undefined) throw new Refusal('invalid_request', { customerId: 'unknown customer' })
-    const { id } = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'uploading', progress: 0, customerId: customerId ?? null, url: URL.createObjectURL(file), createdAt: now() })
-    let row: FileItem | undefined
-    for (const progress of [25, 50, 75, 100]) {
-      await new Promise((resolve) => setTimeout(resolve, latency * 2))
-      row = update('files', id, progress === 100 ? { status: 'ready', progress } : { progress })
-    }
-    return { status: 201, payload: row }
+    await new Promise((resolve) => setTimeout(resolve, latency * 6))
+    const row = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'scanning', customerId: customerId ?? null, url: URL.createObjectURL(file), createdAt: now() })
+    await new Promise((resolve) => setTimeout(resolve, latency))
+    setTimeout(() => update('files', row.id, { status: 'ready' }), latency * 4)
+    return { status: 201, payload: { ...row } }
   }
 
   /**

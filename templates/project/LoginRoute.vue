@@ -17,7 +17,7 @@ const page = computed(() => loginProps(redirect.value))
 </script>
 
 <template>
-  <LoginPage :state="state ?? 'login'" :login="page.login" :change="page.change" :providers="page.providers">
+  <LoginPage :state="state ?? 'login'" v-bind="page">
     <template v-if="DevLogin" #after>
       <component :is="DevLogin" :users="session.devUsers" :login="(id: string) => devLogin(id, redirect)" />
     </template>

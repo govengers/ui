@@ -15,14 +15,6 @@ export interface NotificationLike {
   readAt: string | null
 }
 
-/** The parameters of a list read the block passes (the limit only). */
-export interface ListQuery {
-  filter?: unknown
-  sort?: readonly string[]
-  limit?: number
-  offset?: number
-}
-
 /**
  * Unread, unless "mark all read" covers it: `covered` holds the ids of the rows the list showed
  * when the user pressed it, so a row that arrives later stays unread whatever its createdAt.

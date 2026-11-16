@@ -32,6 +32,8 @@ export interface FakeStore {
   tick(): void
   /** Evicts every unnamed stored filter, as the server's cap may (D54): a read naming one answers 404 and the runtime sends it inline. */
   forgetFilters(): void
+  /** Closes every socket as a lost network does (1006): the runtime reconnects after its delay. */
+  dropSockets(): void
 }
 
 export interface FakeEngine {
@@ -133,7 +135,11 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     if (kind === '' && name === 'customerFacets') return handlers.customerFacets(filterOf('customers', parameters))
     if (!isListTable(name)) throw new Refusal('not_found')
     const rows: readonly Row[] = tables[name]
-    if (kind === '') return listPage(rows, parameters, filterOf(name, parameters), { fields: fields[name], ...resources[name] }, Date.now())
+    if (kind === '') {
+      const page = listPage(rows, parameters, filterOf(name, parameters), { fields: fields[name], ...resources[name] }, Date.now())
+      // govengers/jobs leaves the result out of the list's items: the item read carries it.
+      return name === 'jobs' ? { ...page, items: page.items.map((job) => ({ ...job, result: null })) } : page
+    }
     if (kind === 'item') return rows.find((row) => row.id === parameters['id']) ?? notFound()
     if (kind === 'distinct') return distinct(name, rows, parameters)
     if (kind === 'presence') return presenceOf(recordOf(name, parameters['key']), parameters['key'] ?? '')
@@ -451,6 +457,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
       tables, insert, update, remove, tick: handlers.tick,
       forgetFilters: () => {
         for (const [id, stored] of filters) if (stored.name === undefined) filters.delete(id)
+      },
+      dropSockets: () => {
+        for (const socket of [...sockets]) socket.close(1006, 'network lost')
       },
     },
   }

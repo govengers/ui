@@ -401,3 +401,72 @@ switchable style presets.
   not the cards around it at lift time. A card another user put between the card above and the
   lifted one would otherwise draw the lifted card above it and turn a put-back into a move.
   Amends D71.
+
+## Sync with the libraries (16.11.2026)
+
+- **D73 The runtime is vendored from a livewire commit until it is released.** `demo/src/api/`
+  holds livewire `main` at 95e50bc (after v1.0.1, PR #13 merged, no tag yet), header naming the
+  commit; the next tag replaces it byte for byte. Amends D40. With it the collection drops its
+  workarounds: `useLiveList` keeps the rows and total of a changed query until the new first page
+  and drops them on the connection's end (livewire D76, D83), so `SearchTable` and `Board` read
+  `list.items` and `total` directly instead of holding the last rows per connection; the generic
+  `ListQuery`, `FilterDocument`, `SearchableFilterDocument` come from `runtime.ts` (livewire D78),
+  so `SearchTable`, `Board`, `NotificationInbox`, `CommandPalette`, `FacetFilter` and the demo's
+  `api.ts` stop redeclaring them.
+- **D74 The starter shell mounts the product pieces.** `templates/project/App.vue` mounts
+  `WhatsNew`, `UpdateHint`, `NotificationInbox`, `FeedbackCapture`, `ImpersonationBanner` and
+  `CommandPalette`, each as one marked block (import, state, tag) a project deletes when its
+  server side is missing; `main.ts` installs the feedback buffer, `changelog.ts` and
+  `changelog/0.1.md` feed WhatsNew. start-project stage 02 names what each needs from the
+  backend and asks which to keep. `scripts/template-check.ts` stands the generated `api.ts` in
+  with `scripts/fixtures/api.ts` (the declarations the shell names, excluded from the root
+  type-check because its `./runtime` exists only in the target) and parses the starter
+  changelog. Removal is a deletion, not a configuration flag: one way per job (P2).
+- **D75 JobProgress shows govengers/jobs' job view.** `JobLike` is the part of
+  `postgresadapter.View` the block reads: status `cancelled` added, `progress` nullable (an
+  indeterminate bar until the first report, never 0 %), `progressMessage`, `result`, `error`,
+  `errorClass` (a sentence for `permanent` and `lease_expired`), `cancelRequested` (badge
+  "Cancelling"). Cancel and Retry are bound to the mutations `livewireadapter` declares
+  (`cancelJob`, `retryJob`, props, `data-action` = their names), shown only when the page passes
+  them and the status allows (cancel while queued or running without a pending cancel, retry
+  when dead). The result comes from the item read, as the list leaves it out: a list row that
+  succeeded without one reads its item once (a finished job does not change), and a page's
+  `resultRoute(result, job)` turns it into the "Open result" link; a `result` slot shows a
+  summary. The view has no `resultRoute` field, so D29's row field is gone. The fake engine's
+  jobs follow the view (list items without result, cancel and retry with govengers/jobs' 409s).
+- **D76 FileUpload counts the bytes it sends.** `Client.upload`'s `onProgress` (livewire D79)
+  drives the bar; it stays indeterminate where the runtime cannot report (bun, `credentials:
+  'omit'`, an application fetch such as the demo's). Server rows no longer carry progress. A
+  server pushes the file's row before its answer arrives, so until the answer a row that joined
+  the list after the upload started, with the file's name and size, hides behind the upload; the
+  answer's id then hands over to the row. The fake engine inserts the row at the end of the body
+  and scans it afterwards (`scanning`, then `ready`).
+- **D77 LoginPage's `change` is optional.** Without it there is no change-password screen
+  (`state="changePassword"` shows the sign-in) and the starter router passes none, because
+  govengers/auth has no change-password route; `LoginRoute.vue` binds `loginProps` whole, so a
+  project that adds `change` there gets the screen.
+- **D78 The impersonation end comes from govengers/auth.** auth D70 answers
+  `impersonationEndsAt` on `/auth/me` while impersonating; `SessionIdentity` documents it and the
+  banner counts down without app code. `endsAt` stays as an override for older auth releases. An
+  unreadable end is no countdown, not an ended impersonation. Amends D59.
+- **D79 Mounted tests have a router and cover the page recipes.** `scripts/test/mount.ts`
+  installs a memory router (links render, navigation goes nowhere) and `setup.ts` exposes jsdom's
+  `history`; `bun test` runs `pages` too, so recipes get mounted tests like blocks (amends D69).
+- **D80 JobProgress takes the generated job view, per run and per job.** `JobLike.status` and
+  `errorClass` are `string`: livewire generates a named Go string type as `string` unless the
+  application lists it as an enum, so a union would reject the default client; an unknown status
+  shows as it is in a neutral badge. `done` fires once per run, not per id: a job seen unfinished
+  again (Retry) reports its next end. A refused Cancel or Retry belongs to its job id and
+  connection. A list row's result read lost with the socket runs again once the socket is open; a
+  refusal stays final. A refused changed query in SearchTable and Board keeps the rows of the
+  query before under the banner (livewire D76); the cards say so. The starter mounts after
+  `router.isReady()`, so the first render knows the route's `meta.public`. Amends D74, D75.
+- **D81 A lost result read is shown, and the starter mounts on a failed first navigation.** A
+  JobProgress list row whose result read was lost with the socket says so with Retry
+  (`data-action="retryResult"`, in the actions row: the inline alert clips its overflow) besides
+  reading again once the socket is open: a page without a
+  live read leaves the socket idle after the drop, so it never opens by itself, and a retry on
+  its own timer would loop while the network is down. A status is looked up in the block's own
+  badges only (`Object.hasOwn`), so `constructor` shows as it is. The starter's
+  `router.isReady()` failure (a route chunk lost after a deploy, a guard answering `false`) is
+  logged and the shell mounts anyway, so UpdateHint and the nav stay. Amends D80.

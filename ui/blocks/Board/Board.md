@@ -108,8 +108,9 @@ move never cancels the lift.
   removes the lifted card. While a card is lifted by keyboard no other card lifts by keyboard; a
   pointer drag takes over a lift a click or short press on a grip began (touch drags only by the
   grip, so a tap must not block them).
-- Cards stay on screen while a new `filter`, `sort` or `limit` loads, never across the end of the
-  connection or a new pair: after a logout, an ended session (4401) or an account switch the board
+- Cards stay on screen while a new `filter`, `sort` or `limit` loads, and under the danger banner
+  when it is refused (livewire D76: its first page never arrives); they stay movable then. Never
+  across the end of the connection or a new pair: after a logout, an ended session (4401) or an account switch the board
   shows no card of the old identity, no lift and no announcement naming one. A move still in
   flight then neither announces nor emits `moved` or `move-error`.
 - Two boards on one page over the same read and pair show each other's optimistic card until the

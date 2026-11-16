@@ -6,10 +6,8 @@ export interface UploadRow {
   id: string
   name: string
   size: number
-  /** 'uploading' shows a progress bar, 'ready' a success badge, another word shows as is. */
+  /** 'ready' (or none) shows a success badge, another word (`scanning`) shows as is. */
   status?: string
-  /** 0..100 while uploading. */
-  progress?: number
 }
 
 /** One file this page sends. */
@@ -18,6 +16,10 @@ export interface Upload {
   name: string
   size: number
   state: 'uploading' | 'done' | 'failed'
+  /** 0..100 of the body sent (Client.upload's onProgress); undefined while the platform cannot tell. */
+  progress: number | undefined
+  /** The ids the live list held when the upload started: a row not among them may be this upload's. */
+  before: ReadonlySet<string>
   /** The id of the answer, once there is one. */
   id: string | undefined
   error: string | undefined
@@ -36,6 +38,11 @@ export interface Entry {
   upload: Upload | undefined
 }
 
+/** The percent of an upload's body sent, undefined when its total is unknown. */
+export function percent(loaded: number, total: number | null): number | undefined {
+  return total === null || total <= 0 ? undefined : Math.min(100, Math.round((loaded / total) * 100))
+}
+
 /**
  * The entry a new pick replaces: with `maxFiles` 1, the one finished file in the list. None while
  * it still uploads (an upload cannot be cancelled), and none when the list holds more than one
@@ -47,20 +54,22 @@ export function replaceable(entries: readonly Entry[], maxFiles: number | undefi
 }
 
 /**
- * Merges the page's uploads with the live rows (none without a live list). An upload shows until
- * the list has its row: by id once answered, before that the uploading row of its name and size.
- * A failed upload has no row and always shows.
+ * Merges the page's uploads with the live rows (none without a live list). An answered upload
+ * gives way to the row of its id. The server pushes that row before its answer arrives, so until
+ * the answer a new row of an uploading file's name and size is hidden behind the upload. A failed
+ * upload has no row and always shows.
  */
 export function entriesOf(uploads: readonly Upload[], rows: readonly UploadRow[] | undefined): Entry[] {
-  const listed = (upload: Upload): boolean => rows !== undefined && upload.state !== 'failed' && rows.some((row) => (upload.id !== undefined
-    ? row.id === upload.id
-    : row.status === 'uploading' && row.name === upload.name && row.size === upload.size))
+  const listed = (upload: Upload): boolean => upload.id !== undefined && rows !== undefined && rows.some((row) => row.id === upload.id)
+  const answered = new Set(uploads.map((upload) => upload.id))
+  const pending = uploads.filter((upload) => upload.state === 'uploading')
+  const behind = (row: UploadRow): boolean => !answered.has(row.id)
+    && pending.some((upload) => !upload.before.has(row.id) && row.name === upload.name && row.size === upload.size)
   const local = uploads.filter((upload) => !listed(upload)).map((upload): Entry => ({
     key: `upload-${upload.key}`, name: upload.name, size: upload.size, status: upload.state === 'done' ? 'ready' : upload.state,
-    progress: undefined, error: upload.error, id: upload.id, upload,
+    progress: upload.state === 'uploading' ? upload.progress : undefined, error: upload.error, id: upload.id, upload,
   }))
-  return [...local, ...(rows ?? []).map((row): Entry => ({
-    key: row.id, name: row.name, size: row.size, status: row.status ?? 'ready',
-    progress: row.status === 'uploading' ? row.progress : undefined, error: undefined, id: row.id, upload: undefined,
+  return [...local, ...(rows ?? []).filter((row) => !behind(row)).map((row): Entry => ({
+    key: row.id, name: row.name, size: row.size, status: row.status ?? 'ready', progress: undefined, error: undefined, id: row.id, upload: undefined,
   }))]
 }

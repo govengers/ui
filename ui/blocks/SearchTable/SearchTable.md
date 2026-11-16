@@ -96,7 +96,10 @@ page and search in the URL (`syncQuery`) let the agent link to a list state.
 ## Gotchas
 
 - Skeleton rows show only while `!error && loading` and nothing was loaded yet; a refused read
-  shows the danger banner with Retry instead of the table, never a skeleton.
+  shows the danger banner with Retry, never a skeleton. The table stays under the banner with
+  the rows shown before: a refused new search, filter, sort or page keeps the rows and total of
+  the query before (livewire D76, its first page never arrives). Only a refusal with no row
+  shown replaces the table.
 - Live errors carry no HTTP status: the text branches on `error.code` (`not_found`,
   `forbidden` get `ui.notFound` and `ui.forbidden`), every other refusal shows its message.
 - A dropped socket keeps the last rows on screen under the muted `ui.stale` line (`hideStale`

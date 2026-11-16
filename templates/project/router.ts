@@ -34,13 +34,13 @@ export async function devLogin(id: string, redirect: Redirect): Promise<void> {
   await router?.replace(safeRedirect(redirect))
 }
 
-// govengers/auth has no change-password route: wire the app's own call here or drop the route.
-const change = async (): Promise<void> => { throw new Error('Changing the password is not available.') }
-
-/** LoginPage's props for the way back in `redirect`; LoginRoute.vue binds them. */
+/**
+ * LoginPage's props for the way back in `redirect`; LoginRoute.vue binds them. govengers/auth has
+ * no change-password route: once the app has its own call, add `change` here and a
+ * `changePassword` route (LoginPage card).
+ */
 export const loginProps = (redirect: Redirect) => ({
   login: (credentials: LoginCredentials) => login(credentials, redirect),
-  change,
   providers: providers.map((provider) => ({ name: provider.name, label: provider.label, href: session.loginHref(provider, redirect) })),
 })
 
