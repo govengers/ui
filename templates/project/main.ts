@@ -25,6 +25,7 @@ const i18n = createI18n({
 // Who the cookie names decides the first route: resume before the router is installed, since
 // installing it runs the first navigation and its guard. Mount once that navigation resolved:
 // before it the route has no meta, and App.vue would render the product shell on /login once.
+// A failed first navigation (a route chunk lost after a deploy) still mounts the shell.
 session.resume()
   .catch((error: unknown) => console.error('session: GET /auth/me failed', error))
   .then(async () => {
@@ -34,6 +35,6 @@ session.resume()
       .use(i18n)
       // One pair per signed-in identity, replaced by the session on every change (livewire D66).
       .use(livePlugin(session.pair))
-    await router.isReady()
+    await router.isReady().catch((error: unknown) => console.error('router: first navigation failed', error))
     app.mount('#app')
   })
