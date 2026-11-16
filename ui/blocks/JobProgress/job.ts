@@ -1,16 +1,16 @@
 // JobProgress's job shape: the view govengers/jobs answers (postgresadapter.View, J55), and what
 // the block shows of it: when a job counts as done, which actions it offers, its progress.
 
-export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
-
-/** What kind of error the last failed attempt had (govengers/jobs ErrorClass). */
-export type JobErrorClass = 'transient' | 'permanent' | 'lease_expired'
-
 /** What JobProgress reads of a job; govengers/jobs' view carries these fields and more. */
 export interface JobLike {
   id: string
   kind: string
-  status: JobStatus
+  /**
+   * postgresadapter.State: queued | running | succeeded | failed | cancelled. A string, since
+   * livewire generates a named Go string type as string unless the application lists it in
+   * generate.Options.Enums; an unknown status shows as it is.
+   */
+  status: string
   /** Percent, 0 to 100; null while the attempt reported none, 100 once succeeded. */
   progress: number | null
   /** What the handler said with its last report, "row 214 of 500". */
@@ -19,7 +19,8 @@ export interface JobLike {
   result?: unknown
   /** The last failed attempt's error, "" without one; kept when a retry succeeded. */
   error?: string | null | undefined
-  errorClass?: JobErrorClass | null | undefined
+  /** govengers/jobs ErrorClass of the last failed attempt: transient | permanent | lease_expired. */
+  errorClass?: string | null | undefined
   /** A cancel reached the running job; it stops at its next heartbeat. */
   cancelRequested?: boolean | undefined
 }
@@ -27,7 +28,7 @@ export interface JobLike {
 /** A job that ended: succeeded, failed (dead) or cancelled. */
 export const finished = (job: JobLike): boolean => job.status === 'succeeded' || job.status === 'failed' || job.status === 'cancelled'
 
-/** Whether the job finished and was not reported yet: `done` fires once per job id. */
+/** Whether the job finished and was not reported yet; the caller forgets `reported` when the job runs again. */
 export function finishedNow(job: JobLike | undefined, reported: string | undefined): job is JobLike {
   return job !== undefined && finished(job) && job.id !== reported
 }

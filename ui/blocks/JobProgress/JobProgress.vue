@@ -2,18 +2,18 @@
 // JobProgress: the background-mode block (D29) over govengers/jobs' job view. Follows one job
 // live (`target` + `id`), or shows a job the page already holds (`job`, a row of the live jobs
 // list): its status, its progress, why it failed, Cancel and Retry when the page passes the
-// mutations, and the way to its result, which comes from the item read. Emits `done` once.
+// mutations, and the way to its result, which comes from the item read. Emits `done` once per run.
 import { computed, shallowRef, useSlots, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RouteLocationRaw } from 'vue-router'
 import { ApiError, type LiveTarget, type MutationTarget } from '@/api/runtime'
-import { useLive, useLiveConnection } from '@/api/vue'
+import { useLive, useLiveConnection, useLiveStatus } from '@/api/vue'
 import Badge from '../../Badge/Badge.vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
 import Skeleton from '../../Skeleton/Skeleton.vue'
 import { formatPercent } from '../../format'
-import { actionsOf, barValue, errorClassKey, finishedNow, type JobLike, type JobStatus } from './job'
+import { actionsOf, barValue, errorClassKey, finished, finishedNow, type JobLike } from './job'
 
 const props = withDefaults(defineProps<{
   /** The job item read, e.g. live['jobs.item']; with `job` it is read once for the result. */
@@ -45,30 +45,48 @@ const current = computed(() => props.job ?? live?.data.value)
 const actions = computed(() => (current.value === undefined ? { cancel: false, retry: false } : actionsOf(current.value)))
 const bar = computed(() => current.value?.status === 'queued' || current.value?.status === 'running')
 
-const badges: Record<JobStatus, { variant: 'neutral' | 'accent' | 'success' | 'danger'; label: string }> = {
+// A status the block does not know (a newer govengers/jobs) shows as it is, neutral.
+const badges: Partial<Record<string, { variant: 'neutral' | 'accent' | 'success' | 'danger'; label: string }>> = {
   queued: { variant: 'neutral', label: 'ui.queued' },
   running: { variant: 'accent', label: 'ui.running' },
   succeeded: { variant: 'success', label: 'ui.succeeded' },
   failed: { variant: 'danger', label: 'ui.failed' },
   cancelled: { variant: 'neutral', label: 'ui.cancelled' },
 }
-const badge = computed(() => (current.value?.status === 'running' && current.value.cancelRequested === true
-  ? { variant: 'neutral' as const, label: 'ui.cancelling' }
-  : badges[current.value?.status ?? 'queued']))
+const badge = computed(() => {
+  const status = current.value?.status ?? 'queued'
+  const known = status === 'running' && current.value?.cancelRequested === true ? { variant: 'neutral' as const, label: 'ui.cancelling' } : badges[status]
+  return known === undefined ? { variant: 'neutral' as const, text: status } : { variant: known.variant, text: t(known.label) }
+})
 
 // A list row carries no result (govengers/jobs leaves it out of the list): a succeeded row
 // without one is read once through the item read. A finished job never changes.
 const fetched = shallowRef<{ id: string; connection: unknown; result: unknown }>()
 const wantsResult = props.resultRoute !== undefined || slots.result !== undefined
-watch([() => (props.job?.status === 'succeeded' && props.job.result == null ? props.job.id : undefined), connection], async ([id, socket]) => {
-  if (id === undefined || props.target === undefined || !wantsResult || (fetched.value?.id === id && fetched.value.connection === socket)) return
-  try {
-    const item = await socket.query(props.target, { id })
-    if (props.job?.id === id && connection.value === socket) fetched.value = { id, connection: socket, result: item.result }
-  } catch {
-    // shortcut: an unreadable result (a job past its retention) shows no result; a refusal message may be wanted later.
+const status = useLiveStatus()
+const resultId = () => (props.job?.status === 'succeeded' && props.job.result == null ? props.job.id : undefined)
+let reading: { id: string; connection: unknown } | undefined
+async function readResult(): Promise<void> {
+  const id = resultId()
+  const socket = connection.value
+  if (id === undefined || props.target === undefined || !wantsResult) return
+  if ((fetched.value?.id === id && fetched.value.connection === socket) || (reading?.id === id && reading.connection === socket)) return
+  const keep = (result: unknown) => {
+    if (props.job?.id === id && connection.value === socket) fetched.value = { id, connection: socket, result }
   }
-}, { immediate: true })
+  reading = { id, connection: socket }
+  try {
+    keep((await socket.query(props.target, { id })).result)
+  } catch (error) {
+    // shortcut: a refusal (a job past its retention) is final and shows no result; a refusal message may be wanted later.
+    // A lost socket is not: the read runs again once the socket is open.
+    if (error instanceof ApiError) keep(undefined)
+  } finally {
+    if (reading?.id === id && reading.connection === socket) reading = undefined
+  }
+}
+watch([resultId, connection], readResult, { immediate: true })
+watch(() => status.value === 'open', (open) => open && void readResult())
 const result = computed(() => {
   const job = current.value
   if (job?.status !== 'succeeded') return undefined
@@ -79,8 +97,9 @@ const route = computed(() => (result.value === undefined || current.value === un
 
 // Cancel and Retry run over the socket; the answer upserts the job into the live reads.
 const running = shallowRef<'cancel' | 'retry'>()
-const failure = shallowRef<{ connection: unknown; message: string }>()
-const actionError = computed(() => (failure.value?.connection === connection.value ? failure.value.message : undefined))
+// A refusal belongs to its job on its connection: another id or a new pair shows none.
+const failure = shallowRef<{ connection: unknown; id: string; message: string }>()
+const actionError = computed(() => (failure.value?.connection === connection.value && failure.value.id === current.value?.id ? failure.value.message : undefined))
 async function act(action: 'cancel' | 'retry'): Promise<void> {
   const mutation = action === 'cancel' ? props.cancel : props.retry
   const job = current.value
@@ -92,7 +111,7 @@ async function act(action: 'cancel' | 'retry'): Promise<void> {
     await socket.call(mutation, { id: job.id }, undefined)
   } catch (error) {
     const message = error instanceof ApiError && error.code === 'conflict' ? t('ui.jobChanged') : error instanceof Error ? error.message : String(error)
-    failure.value = { connection: socket, message }
+    failure.value = { connection: socket, id: job.id, message }
   } finally {
     running.value = undefined
   }
@@ -100,6 +119,7 @@ async function act(action: 'cancel' | 'retry'): Promise<void> {
 
 let reported: string | undefined
 watch(current, (job) => {
+  if (job !== undefined && !finished(job)) reported = undefined // a retry runs the id again: its end is reported too
   if (!finishedNow(job, reported)) return
   reported = job.id
   emit('done', job)
@@ -116,7 +136,7 @@ watch(current, (job) => {
     <template v-else>
       <div class="ui-job-progress__head" aria-live="polite">
         <span class="ui-job-progress__title">{{ title ?? current.kind }}</span>
-        <Badge :variant="badge.variant" dot>{{ t(badge.label) }}</Badge>
+        <Badge :variant="badge.variant" dot>{{ badge.text }}</Badge>
       </div>
       <div v-if="bar" class="ui-job-progress__bar">
         <progress class="ui-job-progress__progress" max="100" :value="barValue(current)" :aria-label="title ?? current.kind" />

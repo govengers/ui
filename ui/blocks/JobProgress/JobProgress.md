@@ -53,6 +53,9 @@ Do not load:
 queued | running | succeeded | failed | cancelled, progress: number | null (percent, null until
 reported), progressMessage?, result?, error?, errorClass?: transient | permanent | lease_expired |
 null, cancelRequested? }`. The view carries more (queue, attempt, times); pass it as it is.
+`status` and `errorClass` are typed `string`: livewire's generator writes a named Go string type
+as `string` unless the application lists it in `generate.Options.Enums`, and a union from
+`generate.EnumOf` fits too. A status the block does not know shows as it is, in a neutral badge.
 
 ## Slots
 
@@ -64,7 +67,7 @@ null, cancelRequested? }`. The view carries more (queue, attempt, times); pass i
 
 | Event | Payload | When |
 |-------|---------|------|
-| `done` | `JobLike` | the job is `succeeded`, `failed` or `cancelled`: once per job id, also when the first push already shows it finished |
+| `done` | `JobLike` | the job is `succeeded`, `failed` or `cancelled`: once per run, also when the first push already shows it finished; a retried job reports its next end again |
 
 ## With livewire
 
@@ -91,7 +94,8 @@ offer the result: a row that succeeded without a result reads its item once
 Cancel and Retry run over the socket; the answer upserts the job into every live read of `jobs`,
 so the badge changes at once. A running job's cancel is a request (`cancelRequested`, badge
 "Cancelling") that its worker honours on the next heartbeat. A refusal shows under the job: 409
-(the job finished or was retried meanwhile) as `ui.jobChanged`, anything else with its message.
+(the job finished or was retried meanwhile) as `ui.jobChanged`, anything else with its message;
+it belongs to that job and connection, so another `id` or a new pair shows none.
 
 ## Agent
 
@@ -116,7 +120,8 @@ row), progress steps are not.
 - `done` fires for finished rows of a list too; listen on the one you started.
 - The result is the handler's JSON (`jobs.SetResult`, at most 64 KiB): a reference and a summary.
   `resultRoute` reads it; the block never shows it raw. The retention deletes finished jobs (7
-  days by default), and with them the result: an unreadable item shows no result.
+  days by default), and with them the result: a refused item read shows no result. A list row
+  whose read was lost with the socket reads it again once the socket is open.
 - `progress` is `null` until the attempt's first report and again after a claim: the bar is
   indeterminate then, never 0 %. A failed job keeps the progress of its last attempt.
 - Copies before D75 read `resultRoute` from the job row and `progress` as a number: a re-copy
