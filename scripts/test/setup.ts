@@ -10,7 +10,7 @@ const view = dom.window as unknown as Record<string, unknown>
 const globals = globalThis as Record<string, unknown>
 // The DOM names the pieces and tests use; bun's own Event classes cannot be dispatched on jsdom nodes.
 for (const name of [
-  'window', 'document', 'navigator', 'location', 'localStorage', 'sessionStorage', 'getComputedStyle', 'requestAnimationFrame', 'cancelAnimationFrame',
+  'window', 'document', 'navigator', 'location', 'history', 'localStorage', 'sessionStorage', 'getComputedStyle', 'requestAnimationFrame', 'cancelAnimationFrame',
   'Node', 'Document', 'Element', 'HTMLElement', 'SVGElement', 'MathMLElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLDialogElement', 'Text', 'Comment', 'DocumentFragment', 'ShadowRoot', 'MutationObserver', 'Storage', 'DOMException',
   'Event', 'CustomEvent', 'UIEvent', 'KeyboardEvent', 'MouseEvent', 'PointerEvent', 'FocusEvent', 'InputEvent', 'ClipboardEvent',
 ]) {

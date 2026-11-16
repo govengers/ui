@@ -5,7 +5,7 @@ Everything from stages 02 and 03.
 
 ## Process
 1. `bun run check` (0 errors), `bun scripts/ui-lint.ts ui pages` (clean), `bun test scripts ui
-   demo/src` (green).
+   pages demo/src` (green).
 2. Tokens or presets touched: add any new text/surface pair to `scripts/contrast.ts`, then
    `just contrast` passes for every preset in both themes.
 3. `just index` (INDEX.md regenerated; the card's front matter validated by `scripts/cards.ts`).

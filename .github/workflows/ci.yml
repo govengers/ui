@@ -23,7 +23,7 @@ jobs:
       - run: bun run lint
       - run: bun scripts/template-check.ts
       - run: bun scripts/screenshots.ts --check
-      - run: bun test scripts ui demo/src
+      - run: bun test scripts ui pages demo/src
       - run: DEMO_BASE=/ui/ bun run build
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -34,7 +34,7 @@ template-check:
     bun scripts/template-check.ts
 
 test:
-    bun test scripts ui demo/src
+    bun test scripts ui pages demo/src
 
 # The demonstrator on http://localhost:5173
 demo:
