@@ -100,7 +100,8 @@ it belongs to that job and connection, so another `id` or a new pair shows none.
 ## Agent
 
 "Open result" is a link (`to` = `resultRoute(result, job)`) with `data-action="openResult"`.
-Cancel and Retry carry `data-action` = the mutation's name (`cancelJob`, `retryJob`). The bar is a
+Cancel and Retry carry `data-action` = the mutation's name (`cancelJob`, `retryJob`); a lost
+result read offers Retry as `data-action="retryResult"`. The bar is a
 native `<progress>` (role `progressbar`, its value while running and reported, indeterminate
 otherwise), named by the title. Status changes are announced (`aria-live="polite"` on the title
 row), progress steps are not.
@@ -121,7 +122,8 @@ row), progress steps are not.
 - The result is the handler's JSON (`jobs.SetResult`, at most 64 KiB): a reference and a summary.
   `resultRoute` reads it; the block never shows it raw. The retention deletes finished jobs (7
   days by default), and with them the result: a refused item read shows no result. A list row
-  whose read was lost with the socket reads it again once the socket is open.
+  whose read was lost with the socket says so with Retry, and reads it again once the socket is
+  open (a page without a live read leaves the socket idle: only Retry brings the result then).
 - `progress` is `null` until the attempt's first report and again after a claim: the bar is
   indeterminate then, never 0 %. A failed job keeps the progress of its last attempt.
 - Copies before D75 read `resultRoute` from the job row and `progress` as a number: a re-copy

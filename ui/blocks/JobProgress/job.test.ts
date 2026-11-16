@@ -11,7 +11,7 @@ describe('job', () => {
     expect(finishedNow(undefined, undefined)).toBe(false)
   })
 
-  test('finishedNow: once per job id, again for the next job', () => {
+  test('finishedNow: not again for the reported run, again for the next job', () => {
     expect(finishedNow(job('succeeded'), 'job-1')).toBe(false)
     expect(finishedNow(job('failed', { id: 'job-2' }), 'job-1')).toBe(true)
   })

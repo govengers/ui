@@ -90,3 +90,28 @@ test('a list row whose result read lost its socket reads it again once the socke
   await settle(8)
   expect(button('openResult')).not.toBeNull()
 })
+
+test('a result read lost with the socket on a page without a live read offers Retry', async () => {
+  const row = ref<Job | undefined>()
+  view = mount(defineComponent(() => () => (row.value === undefined ? null : h(JobProgress, { job: row.value, target: live['jobs.item'], resultRoute }))) as Component)
+  await settle()
+  const succeeded = view.engine.store.tables.jobs.find((job) => job.id === 'job-1')
+  if (succeeded === undefined) throw new Error('job-1 is seeded')
+  row.value = { ...succeeded, status: 'succeeded', result: null }
+  await settle(0)
+  await Promise.resolve()
+  view.engine.store.dropSockets() // no subscription keeps the socket needed: it goes idle, never open
+  await settle(8)
+  expect(button('openResult')).toBeNull()
+  expect(view.root.querySelector('[role="alert"]')).not.toBeNull()
+  button('retryResult')?.click()
+  await settle()
+  expect(button('openResult')).not.toBeNull()
+  expect(view.root.querySelector('[role="alert"]')).toBeNull()
+})
+
+test('a status named like an Object member shows as it is', async () => {
+  view = mount(JobProgress as Component, () => ({ job: { id: 'a', kind: 'export', status: 'constructor', progress: null } }))
+  await settle()
+  expect(view.root.textContent).toContain('constructor')
+})

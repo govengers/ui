@@ -55,7 +55,7 @@ const badges: Partial<Record<string, { variant: 'neutral' | 'accent' | 'success'
 }
 const badge = computed(() => {
   const status = current.value?.status ?? 'queued'
-  const known = status === 'running' && current.value?.cancelRequested === true ? { variant: 'neutral' as const, label: 'ui.cancelling' } : badges[status]
+  const known = status === 'running' && current.value?.cancelRequested === true ? { variant: 'neutral' as const, label: 'ui.cancelling' } : Object.hasOwn(badges, status) ? badges[status] : undefined
   return known === undefined ? { variant: 'neutral' as const, text: status } : { variant: known.variant, text: t(known.label) }
 })
 
@@ -66,6 +66,9 @@ const wantsResult = props.resultRoute !== undefined || slots.result !== undefine
 const status = useLiveStatus()
 const resultId = () => (props.job?.status === 'succeeded' && props.job.result == null ? props.job.id : undefined)
 let reading: { id: string; connection: unknown } | undefined
+// A read lost with the socket: retried once the socket is open, and by hand, since a page without
+// a live read leaves the socket idle after the drop and it never opens by itself.
+const lost = shallowRef<{ id: string; connection: unknown; message: string }>()
 async function readResult(): Promise<void> {
   const id = resultId()
   const socket = connection.value
@@ -75,12 +78,13 @@ async function readResult(): Promise<void> {
     if (props.job?.id === id && connection.value === socket) fetched.value = { id, connection: socket, result }
   }
   reading = { id, connection: socket }
+  lost.value = undefined
   try {
     keep((await socket.query(props.target, { id })).result)
   } catch (error) {
     // shortcut: a refusal (a job past its retention) is final and shows no result; a refusal message may be wanted later.
-    // A lost socket is not: the read runs again once the socket is open.
     if (error instanceof ApiError) keep(undefined)
+    else if (props.job?.id === id && connection.value === socket) lost.value = { id, connection: socket, message: error instanceof Error ? error.message : String(error) }
   } finally {
     if (reading?.id === id && reading.connection === socket) reading = undefined
   }
@@ -92,6 +96,10 @@ const result = computed(() => {
   if (job?.status !== 'succeeded') return undefined
   if (props.job === undefined || job.result != null) return job.result ?? undefined
   return fetched.value?.id === job.id && fetched.value.connection === connection.value ? fetched.value.result ?? undefined : undefined
+})
+const resultError = computed(() => {
+  const read = lost.value
+  return read !== undefined && read.id === resultId() && read.connection === connection.value ? read.message : undefined
 })
 const route = computed(() => (result.value === undefined || current.value === undefined ? undefined : props.resultRoute?.(result.value, current.value)))
 
@@ -148,6 +156,10 @@ watch(current, (job) => {
         {{ current.error }}
       </p>
       <slot v-if="result !== undefined" name="result" :result="result" :job="current" />
+      <p v-if="resultError" class="ui-job-progress__error" role="alert">
+        {{ resultError }}
+        <Button variant="ghost" size="sm" data-action="retryResult" @click="readResult()">{{ t('ui.retry') }}</Button>
+      </p>
       <p v-if="actionError" class="ui-job-progress__error" role="alert">{{ actionError }}</p>
       <div v-if="route || (cancel && actions.cancel) || (retry && actions.retry)" class="ui-job-progress__actions">
         <Button v-if="cancel && actions.cancel" variant="ghost" :size="variant === 'inline' ? 'sm' : 'md'" :data-action="cancel.name" :loading="running === 'cancel'" @click="act('cancel')">
