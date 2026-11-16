@@ -6,7 +6,7 @@ import Field from '../Field/Field.vue'
 import Icon from '../Icon/Icon.vue'
 import Input from '../Input/Input.vue'
 
-const city = ref('Stuttgart')
+const city = ref('Frankfurt')
 const applied = ref('none')
 const filterOpen = ref(false)
 const ranges = ['Today', 'Last 7 days', 'Last 30 days', 'This year']

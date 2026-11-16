@@ -8,7 +8,7 @@ import Input from '../Input/Input.vue'
 const edit = ref(false)
 const filters = ref(false)
 const history = ref(false)
-const customer = ref({ name: 'Acme GmbH', email: 'billing@acme.example', city: 'Stuttgart' })
+const customer = ref({ name: 'Acme GmbH', email: 'billing@acme.example', city: 'Frankfurt' })
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const customer = ref({ name: 'Acme GmbH', email: 'billing@acme.example', city: '
         <p class="muted">3 active</p>
       </template>
       <div class="stack">
-        <Field label="City"><Input model-value="Stuttgart" name="city" /></Field>
+        <Field label="City"><Input model-value="Frankfurt" name="city" /></Field>
         <Field label="Created after"><Input model-value="2026-01-01" name="createdAfter" type="date" /></Field>
       </div>
       <template #actions>

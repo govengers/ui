@@ -29,7 +29,7 @@ onMounted(() => preview.value?.toggle())
     <h2>Row actions (default trigger, align end)</h2>
     <div class="row">
       <span class="name">Acme GmbH</span>
-      <span class="muted">Stuttgart</span>
+      <span class="muted">Frankfurt</span>
       <Menu :items="rowItems" label="Actions for Acme GmbH" />
     </div>
     <p class="muted">last activated: {{ last }}</p>

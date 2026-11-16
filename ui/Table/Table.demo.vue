@@ -7,7 +7,7 @@ import Icon from '../Icon/Icon.vue'
 interface Customer { id: number; name: string; email: string; status: 'active' | 'trial' | 'paused'; revenue: number; city: string }
 
 const customers: Customer[] = [
-  { id: 1, name: 'Acme GmbH', email: 'billing@acme.example', status: 'active', revenue: 48200, city: 'Stuttgart' },
+  { id: 1, name: 'Acme GmbH', email: 'billing@acme.example', status: 'active', revenue: 48200, city: 'Frankfurt' },
   { id: 2, name: 'Borealis AG', email: 'finance@borealis.example', status: 'trial', revenue: 0, city: 'Zürich' },
   { id: 3, name: 'Cobalt Systems', email: 'ap@cobalt.example', status: 'active', revenue: 12950, city: 'Munich' },
   { id: 4, name: 'Delta Freight', email: 'office@delta.example', status: 'paused', revenue: 3100, city: 'Hamburg' },
