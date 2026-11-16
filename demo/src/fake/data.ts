@@ -11,7 +11,7 @@ export type OrderStatus = 'draft' | 'open' | 'paid' | 'shipped' | 'cancelled'
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'CHF'
 export type UserRole = 'admin' | 'member'
 export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
-export type FileStatus = 'uploading' | 'ready'
+export type FileStatus = 'scanning' | 'ready'
 export type MessageRole = 'user' | 'agent'
 export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'review' | 'done'
 
@@ -56,14 +56,13 @@ export interface Job {
   createdAt: string
 }
 
-/** An attachment; `progress` counts while the server receives it. */
+/** An attachment; `scanning` until the server checked it. */
 export interface FileItem {
   id: string
   name: string
   size: number
   type: string
   status: FileStatus
-  progress: number
   customerId: string | null
   /** Where the file is shown from; the fake hands out an object URL of the uploaded blob. */
   url: string | null
@@ -194,7 +193,7 @@ export const fields: Record<ListTable, readonly FieldMeta[]> = {
     { name: 'name', type: 'string', filter: true, sort: true, search: true },
     { name: 'type', type: 'string', filter: true, sort: true, search: false },
     { name: 'size', type: 'int', filter: true, sort: true, search: false },
-    { name: 'status', type: 'enum', enum: ['uploading', 'ready'], filter: true, sort: true, search: false },
+    { name: 'status', type: 'enum', enum: ['scanning', 'ready'], filter: true, sort: true, search: false },
     { name: 'customerId', type: 'string', filter: true, sort: false, search: false },
     { name: 'createdAt', type: 'time', filter: true, sort: true, search: false },
   ],
@@ -325,7 +324,7 @@ export function seedTables(seed = 1): Tables {
     ['meeting-notes.txt', 'text/plain', 2_301],
     ['site-photo.jpg', 'image/jpeg', 1_532_118],
   ].map(([name, type, size], index) => ({
-    id: `fil-${index + 1}`, name: String(name), type: String(type), size: Number(size), status: 'ready' as const, progress: 100,
+    id: `fil-${index + 1}`, name: String(name), type: String(type), size: Number(size), status: 'ready' as const,
     customerId: customers[index * 7]?.id ?? null, url: null, createdAt: at(10 - index),
   }))
   const conversation: Message[] = [

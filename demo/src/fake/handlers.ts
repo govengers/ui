@@ -211,9 +211,9 @@ export function createHandlers(context: HandlerContext): Handlers {
   }
 
   /**
-   * An upload (D17), REST only. fetch reports no upload progress, so the fake reports it the way a
-   * server can: the file's row in `files` counts its progress live while the body "arrives", and
-   * the answer is the finished row.
+   * An upload (D17), REST only. The body "arrives" for a while (the client's onProgress counts it,
+   * livewire D79), then the handler inserts the file's row, which is pushed before the answer
+   * reaches the client, as on a real server; a scan turns it ready afterwards.
    */
   async function receiveUpload(parameters: Record<string, string>, body: unknown, contentType: string | null): Promise<Answer> {
     let file: Blob
@@ -234,13 +234,11 @@ export function createHandlers(context: HandlerContext): Handlers {
     if (file.size > maximumUploadBytes) throw new Refusal('invalid_request', { file: `at most ${maximumUploadBytes} bytes` })
     const customerId = parameters['customerId']
     if (customerId !== undefined && customerOf(customerId) === undefined) throw new Refusal('invalid_request', { customerId: 'unknown customer' })
-    const { id } = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'uploading', progress: 0, customerId: customerId ?? null, url: URL.createObjectURL(file), createdAt: now() })
-    let row: FileItem | undefined
-    for (const progress of [25, 50, 75, 100]) {
-      await new Promise((resolve) => setTimeout(resolve, latency * 2))
-      row = update('files', id, progress === 100 ? { status: 'ready', progress } : { progress })
-    }
-    return { status: 201, payload: row }
+    await new Promise((resolve) => setTimeout(resolve, latency * 6))
+    const row = insert('files', { id: uuidv7(), name: name ?? 'file', size: file.size, type, status: 'scanning', customerId: customerId ?? null, url: URL.createObjectURL(file), createdAt: now() })
+    await new Promise((resolve) => setTimeout(resolve, latency))
+    setTimeout(() => update('files', row.id, { status: 'ready' }), latency * 4)
+    return { status: 201, payload: { ...row } }
   }
 
   /**

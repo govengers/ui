@@ -192,23 +192,23 @@ describe('fake engine', () => {
     pair.end()
   })
 
-  test('an upload counts its progress live and answers the finished file', async () => {
+  test('an upload pushes its row before it answers it, then the scan turns it ready', async () => {
     const { pair } = setup()
-    const progress: number[] = []
+    const statuses: string[] = []
     const watched = collector<ListResponse<FileItem>>()
     pair.connection.subscribe(live.files, {}, {
       ...watched.listener,
       next: (state) => {
         const row = state.data.items.find((file) => file.name === 'report.pdf')
-        if (row !== undefined && progress.at(-1) !== row.progress) progress.push(row.progress)
+        if (row !== undefined && statuses.at(-1) !== row.status) statuses.push(row.status)
         watched.listener.next(state)
       },
     })
     await eventually('the files arrived', () => watched.states.length === 1)
     const file = await uploadFile(pair.client, { name: 'report.pdf' }, new Blob(['%PDF-1.7'], { type: 'application/pdf' }))
-    expect(file).toMatchObject({ name: 'report.pdf', type: 'application/pdf', size: 8, status: 'ready', progress: 100 })
-    await eventually('the last progress arrived', () => progress.at(-1) === 100)
-    expect(progress).toEqual([0, 25, 50, 75, 100])
+    expect(file).toMatchObject({ name: 'report.pdf', type: 'application/pdf', size: 8, status: 'scanning' })
+    expect(statuses).toEqual(['scanning'])
+    await eventually('the scan finished', () => statuses.at(-1) === 'ready')
     const refused = await refusal(uploadFile(pair.client, {}, new Blob(['x'], { type: 'application/zip' }), { contentType: 'application/zip' as 'text/plain' }))
     expect(refused.fields['file']).toStartWith('must be one of')
     pair.end()

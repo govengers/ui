@@ -26,7 +26,7 @@ onMounted(() => {
 
 <template>
   <section class="narrow">
-    <h2>Rows and progress from live.files</h2>
+    <h2>Rows from live.files, scanned after the upload</h2>
     <FileUpload
       ref="withList"
       :upload="uploads.uploadFile"

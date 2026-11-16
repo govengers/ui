@@ -1,8 +1,8 @@
 <script setup lang="ts" generic="Params extends object, Response, Query extends object, Row extends UploadRow">
 // FileUpload: the dropzone (FileDropzone) and the list of files, through the pair's
-// Client.upload (D17, multipart with the file name). Client.upload reports no progress (fetch);
-// with `files` the server's live rows show it (status 'uploading' with progress 0..100), else an
-// indeterminate bar runs until the answer. fileUpload.ts merges the two lists.
+// Client.upload (D17, multipart with the file name). The bar shows the bytes sent (onProgress,
+// livewire D79), indeterminate where the platform cannot tell; with `files` the server's live
+// rows follow once answered. fileUpload.ts merges the two lists.
 import { computed, reactive, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError, type ListResponse, type LiveTarget, type MutationTarget, type UploadTarget } from '@/api/runtime'
@@ -12,13 +12,13 @@ import Button from '../../Button/Button.vue'
 import Icon from '../../Icon/Icon.vue'
 import { formatBytes } from '../../format'
 import FileDropzone from './FileDropzone.vue'
-import { entriesOf, replaceable, type Entry, type Upload, type UploadRow } from './fileUpload'
+import { entriesOf, percent, replaceable, type Entry, type Upload, type UploadRow } from './fileUpload'
 
 const props = defineProps<{
   /** The upload descriptor, e.g. `uploads.uploadFile`; its content types are the picker's `accept`. */
   upload: UploadTarget<Params, Response, string>
   params?: Params | undefined
-  /** The live list of uploaded files: its rows, progress included, are what the list shows. Read once. */
+  /** The live list of uploaded files: its rows are what the list shows. Read once. */
   files?: LiveTarget<Query, ListResponse<Row>> | undefined
   /** The filter document of the `files` read, e.g. the files of one customer. Read once. */
   filter?: unknown
@@ -79,10 +79,13 @@ function add(chosen: Iterable<File>): void {
 }
 
 async function send(file: File, replacing: Entry | undefined): Promise<void> {
-  const upload = reactive<Upload>({ key: ++lastKey, name: file.name, size: file.size, state: 'uploading', id: undefined, error: undefined })
+  const before = new Set((list?.items.value ?? []).map((row) => row.id))
+  const upload = reactive<Upload>({ key: ++lastKey, name: file.name, size: file.size, state: 'uploading', progress: undefined, before, id: undefined, error: undefined })
   uploads.unshift(upload)
   try {
-    const response = await pair.value.client.upload(props.upload, props.params ?? ({} as Params), file, { multipart: true, filename: file.name })
+    const response = await pair.value.client.upload(props.upload, props.params ?? ({} as Params), file, {
+      multipart: true, filename: file.name, onProgress: (loaded, total) => (upload.progress = percent(loaded, total)),
+    })
     const id = (response as { id?: unknown } | null)?.id
     upload.id = typeof id === 'string' || typeof id === 'number' ? String(id) : undefined
     upload.state = 'done'
