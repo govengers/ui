@@ -5,10 +5,14 @@ import './ui/tokens.css'
 import './ui/base.css'
 import './ui/presets/neutral.css'
 import { messages as uiMessages } from './ui/messages'
+import { installFeedbackBuffer } from './ui/blocks/FeedbackCapture/feedback'
 import { livePlugin } from './api/vue'
 import App from './App.vue'
 import { createAppRouter } from './router'
 import { session } from './session'
+
+// FeedbackCapture's ring buffer: before anything logs or fetches. Drop it with FeedbackCapture.
+installFeedbackBuffer()
 
 const i18n = createI18n({
   legacy: false,
