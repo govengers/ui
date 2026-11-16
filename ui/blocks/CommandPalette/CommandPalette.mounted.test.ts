@@ -41,6 +41,7 @@ async function type(root: HTMLElement, text: string, wait = 200): Promise<HTMLIn
   return input
 }
 
+const listed = (root: HTMLElement): string[] => [...root.querySelectorAll('[role="option"]')].map((option) => option.textContent ?? '')
 const enter = (input: HTMLInputElement): boolean => input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
 
 describe('CommandPalette', () => {
@@ -121,5 +122,54 @@ describe('CommandPalette', () => {
     await type(palette.root, 'secret')
     ;(palette.root.querySelector('[role="option"]') as HTMLElement).click()
     expect(localStorage.length).toBe(0)
+    await type(palette.root, '')
+    expect(listed(palette.root).join()).not.toContain('Task secret')
+    palette.pair.value.end()
+    palette.pair.value = palette.pairFor('')
+    await flush()
+    expect(listed(palette.root).join()).not.toContain('Task secret')
+  })
+
+  test("storageKey '' lists no pick, neither for the identity nor for the next", async () => {
+    jest.useFakeTimers()
+    palette = mount(CommandPalette, () => ({ groups, inline: true, hotkey: '', storageKey: '' }))
+    await type(palette.root, 'secret-of-ada')
+    ;(palette.root.querySelector('[role="option"]') as HTMLElement).click()
+    await type(palette.root, '')
+    expect(listed(palette.root).join()).not.toContain('Task secret-of-ada')
+    palette.pair.value.end()
+    palette.pair.value = palette.pairFor('test:bob')
+    await flush()
+    expect(listed(palette.root).join()).not.toContain('Task secret-of-ada')
+  })
+
+  test('a slow group below does not keep the top result from becoming active', async () => {
+    jest.useFakeTimers()
+    picks.length = 0
+    const slow: PaletteGroup[] = [
+      ...groups,
+      { key: 'files', label: 'Files', search: (_, text) => new Promise((resolve) => setTimeout(() => resolve([{ id: 'f1', label: `File ${text}` }]), 3000)) },
+    ]
+    palette = mount(CommandPalette, () => ({ groups: slow, inline: true, hotkey: '', onSelect: (pick: RecentPick) => picks.push(pick) }))
+    const input = await type(palette.root, 'fix', 400)
+    enter(input)
+    expect(picks.map((pick) => pick.id)).toEqual(['t1'])
+  })
+
+  test('a slow group above keeps the faster results below it inactive', async () => {
+    jest.useFakeTimers()
+    picks.length = 0
+    const slow: PaletteGroup[] = [
+      { key: 'files', label: 'Files', search: (_, text) => new Promise((resolve) => setTimeout(() => resolve([{ id: 'f1', label: `File ${text}` }]), 3000)) },
+      ...groups,
+    ]
+    palette = mount(CommandPalette, () => ({ groups: slow, inline: true, hotkey: '', onSelect: (pick: RecentPick) => picks.push(pick) }))
+    const input = await type(palette.root, 'fix', 400)
+    enter(input)
+    expect(picks).toEqual([])
+    jest.advanceTimersByTime(3000)
+    await flush()
+    enter(input)
+    expect(picks.map((pick) => pick.id)).toEqual(['f1'])
   })
 })

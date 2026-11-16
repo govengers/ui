@@ -71,16 +71,18 @@ results are `role="option"` with their label as text.
 ## Gotchas
 
 - Nothing is active on an empty query (Enter does nothing until an arrow key); typing or pasting
-  makes the first option active once every group answered, and the results come before the
-  actions, so Enter opens the top hit. Enter while a group still searches does nothing (unless an
-  arrow key chose an option): the top would be an action the results push down. The active option
+  makes the first option active once its group and every group above it answered, and the
+  results come before the actions, so Enter opens the top hit. Until then Enter does nothing
+  (unless an arrow key chose an option): an answer above would push the top down. A slower group
+  below does not hold it back. The active option
   is kept by id, so an answer never moves the highlight. A text no result matches leaves the
   matching actions first.
 - The end of the connection (logout, 4401) or a new pair (account switch) clears the text and the
   results and aborts the searches; the end also removes that identity's recent picks from storage
   (as the runtime removes its snapshots, livewire D66), a new pair loads its own. A pair without an
-  identity keeps none. The palette removes them only while it is mounted: mount it in the shell. A
-  storage that is blocked or full keeps the picks for the page only.
+  identity, or `storageKey` `''`, keeps none, not even in memory. The palette removes them only
+  while it is mounted: mount it in the shell. A storage that is blocked or full keeps the picks
+  for the page only, until the end or a new identity.
 - One keydown handler on the dialog; it stops the keys it handles, so page hotkeys do not fire
   under it. Composition (IME) keys are ignored.
 - Home and End move the active option only while the input is empty; otherwise they move the

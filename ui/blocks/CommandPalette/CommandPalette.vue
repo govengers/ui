@@ -106,8 +106,11 @@ function settle(key: string, from: AbortController, entry: { state: Section['sta
 
 function pick(group: string, result: PaletteResult): void {
   const entry: RecentPick = { group, ...result }
-  recent.value = addRecent(recent.value, entry)
-  if (storageKey.value) writeRecent(storage, storageKey.value, recent.value)
+  // Only under a key: the watch on the key is what drops the picks at the end or for a new identity.
+  if (storageKey.value) {
+    recent.value = addRecent(recent.value, entry)
+    writeRecent(storage, storageKey.value, recent.value)
+  }
   close()
   emit('select', entry)
 }
@@ -148,11 +151,19 @@ const indexOf = (option: Option): number => options.value.indexOf(option)
 const active = computed(() => options.value.findIndex((option) => option.id === activeId.value))
 const searching = computed(() => sections.value.some((section) => section.state === 'loading'))
 const nothing = computed(() => text.value.trim() !== '' && options.value.length === 0 && !searching.value)
-// Typing (or a paste) makes the first option active once every group answered: before, the top
-// is an action the results would push down, and Enter would run it instead of opening a result.
-watch([options, searching], () => {
+// Typing (or a paste) makes the first option active once no group above it, nor its own, still
+// searches: an answer above could push it down, and Enter would run an action instead of opening
+// a result. Later groups cannot move it, so one slow group does not keep Enter dead.
+const settledFirst = computed(() => {
+  for (const section of sections.value) {
+    if (section.state === 'loading') return undefined
+    if (section.options.length > 0) return section.options[0]?.id
+  }
+  return undefined
+})
+watch([options, settledFirst], () => {
   if (text.value.trim() === '' || active.value >= 0) return
-  activeId.value = searching.value ? undefined : options.value[0]?.id
+  activeId.value = settledFirst.value
 })
 
 // One handler on the dialog: arrows, Home, End and Enter; Escape is the dialog's own cancel.
