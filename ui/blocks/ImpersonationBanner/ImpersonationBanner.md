@@ -38,7 +38,7 @@ Do not load:
 |------|------|---------|-------|
 | `identity` | `SessionIdentity \| null` | required | `session.identity.value`; `impersonator` set means impersonating |
 | `stop` | `() => Promise<void>` | required | `session.stopImpersonating`; its error's message shows in the banner |
-| `endsAt` | `string \| Date \| undefined` | `identity.impersonationEndsAt` | no countdown when neither is known |
+| `endsAt` | `string \| Date \| undefined` | `identity.impersonationEndsAt` | overrides `/auth/me`'s end; no countdown when neither is known |
 | `readOnly` | `boolean` | `false` | the app's own rule (e.g. `authorization.Real(...)` refusing writes) |
 
 ## Events
@@ -61,9 +61,13 @@ Stop is `data-action="stopImpersonation"`. Never bound: drive mode pauses on it 
 
 ## Gotchas
 
-- govengers/auth's `/auth/me` (`auth.IdentityHandler`) does not answer the end time; an app adds
-  `impersonationEndsAt` to its own `/auth/me` or passes `endsAt` (the start time plus the
-  configured `MaximumDuration`).
+- The end comes from `/auth/me`: govengers/auth's `IdentityHandler` answers
+  `impersonationEndsAt` (RFC 3339 UTC) while the identity impersonates (auth D70). Against an
+  older auth, or an app's own handler without it, pass `endsAt` (the start time plus the
+  configured `MaximumDuration`) or live without the countdown.
+- The countdown runs on the browser's clock. A clock ahead of the server's emits `expired` early:
+  `session.resume()` then still reads the impersonation and the banner says it ended until the
+  server ends it (the session's minute poll, or the next request).
 - The countdown ticks every second inside an `aria-live="off"` span; the end is announced once.
 - Warning, not danger: acting as someone is deliberate, not a failure (the pattern's earlier
   "danger" is replaced, D59).

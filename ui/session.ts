@@ -4,7 +4,7 @@
 import { shallowRef, type ShallowRef } from 'vue'
 import type { LivePair } from '@/api/runtime'
 
-/** The public identity govengers/auth answers (auth.IdentityResponse), plus the impersonation end when the app adds it. */
+/** The public identity govengers/auth answers (auth.IdentityResponse), the impersonation end included. */
 export interface SessionIdentity {
   provider: string
   subject: string
@@ -19,7 +19,7 @@ export interface SessionIdentity {
   permissions?: string[] | undefined
   /** Set while an admin acts as this identity. */
   impersonator?: SessionIdentity | undefined
-  /** RFC 3339; when the app's /auth/me answers it, the banner counts down. */
+  /** RFC 3339 UTC; govengers/auth's /auth/me answers it while impersonating (auth D70), and the banner counts down. */
   impersonationEndsAt?: string | undefined
 }
 
