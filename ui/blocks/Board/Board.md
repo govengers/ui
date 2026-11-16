@@ -91,7 +91,8 @@ or a cancel, focus is back on the moved card's grip until the move settled (its 
 later pushes never move focus, and a press, focus elsewhere or the card's menu opened again ends
 the restore at once. A lift aims between two cards, not at a position number: a card another
 user puts into the column keeps the spot the user picked (the drop lands between the same
-neighbours) and leaves the lifted card's element in place. A card lifted by keyboard keeps focus
+neighbours) and leaves the lifted card's element in place. Until the user moves it, a lift sits
+wherever the list has the card, so putting it back down reads as cancelled after any push. A card lifted by keyboard keeps focus
 on its grip through pushes that still move it (a neighbour moved elsewhere), so another user's
 move never cancels the lift.
 

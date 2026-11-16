@@ -175,6 +175,24 @@ describe('Board keyboard path', () => {
     expect(live_(root)).not.toContain('cancelled')
   })
 
+  test('a lift never moved stays where the list has the card through a push and drops as cancelled', async () => {
+    const { root, engine } = await mountBoard()
+    const [above, id] = cardsIn(root, 'todo') as [string, string]
+    const rank = (task: string): number => engine.store.tables.tasks.find((candidate) => candidate.id === task)!.position
+    grip(root, id).focus()
+    key(grip(root, id), ' ')
+    await settle(1)
+    // Another user's card lands between the card above and the lifted one.
+    const pushed = cardsIn(root, 'backlog')[0]!
+    engine.store.update('tasks', pushed, { status: 'todo', position: (rank(above) + rank(id)) / 2 })
+    await settle()
+    expect(cardsIn(root, 'todo').slice(0, 3)).toEqual([above, pushed, id])
+    key(grip(root, id), ' ')
+    await settle()
+    expect(placements).toHaveLength(0)
+    expect(live_(root)).toContain('cancelled')
+  })
+
   test('a push that moves the lifted card in the DOM keeps the lift and its focus (Chrome blurs moved nodes)', async () => {
     const { root, engine } = await mountBoard()
     const todo = (): number[] => engine.store.tables.tasks.filter((task) => task.status === 'todo').map((task) => task.position)

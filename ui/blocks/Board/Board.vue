@@ -91,8 +91,15 @@ const columnLabel = (key: string): string => props.columns.find((column) => colu
 const spotOf = (item: Item): Spot => ({ column: columnOf(item), index: cardsOf(columnOf(item)).findIndex((card) => card.id === item.id) })
 // The lift aims between two cards, not at an index: another user's card put into the column keeps
 // the user's spot and leaves the lifted card's element where it is (a moved node loses focus).
-const aimed = computed<Lift | null>(() => (lift.value === null ? null : { ...lift.value, to: resolve(cardsOf(lift.value.to.column), lift.value.id, lift.value.to) }))
-const aimAt = (current: Lift, spot: Spot): Lift => ({ ...current, to: aim(cardsOf(spot.column), current.id, spot) })
+// A lift not moved yet stays at the card's own spot in the list (D72).
+const aimed = computed<Lift | null>(() => {
+  const current = lift.value
+  if (current === null) return null
+  const item = lifted.value
+  if (current.home && item !== undefined) return { ...current, to: aim(cardsOf(columnOf(item)), current.id, spotOf(item)) }
+  return { ...current, to: resolve(cardsOf(current.to.column), current.id, current.to) }
+})
+const aimAt = (current: Lift, spot: Spot): Lift => ({ ...current, home: false, to: aim(cardsOf(spot.column), current.id, spot) })
 const counts = computed(() => new Map(props.columns.map((column) => [column.key, without(cardsOf(column.key), lift.value?.id ?? '').length])))
 /** "Backlog, position 2 of 4" for card `id` at `spot`: the column's other cards plus this one. */
 const where = (spot: Spot, id: string): string => t('ui.cardPosition', { column: columnLabel(spot.column), n: spot.index + 1, total: without(cardsOf(spot.column), id).length + 1 })
@@ -141,7 +148,7 @@ onScopeDispose(() => window.removeEventListener('pointerdown', release, true))
 function start(item: Item, mode: Lift['mode']): boolean {
   if (lift.value !== null) return false
   const from = spotOf(item)
-  lift.value = { id: item.id, to: aim(cardsOf(from.column), item.id, from), mode }
+  lift.value = { id: item.id, to: aim(cardsOf(from.column), item.id, from), mode, home: true }
   announcement.value = t('ui.cardLifted', { card: props.itemLabel(item), where: where(from, item.id) })
   return true
 }

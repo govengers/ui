@@ -38,6 +38,8 @@ export interface Lift {
   to: Target
   /** pointer: the card follows the pointer and a placeholder marks the spot; keyboard: the card itself moves. */
   mode: 'pointer' | 'keyboard'
+  /** Not moved yet: the target is wherever the list has the card, so a push leaves it a cancel. */
+  home?: boolean
 }
 
 /** Where a drop lands: the column, the index, its neighbours and a rank between them. */

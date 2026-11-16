@@ -395,3 +395,9 @@ switchable style presets.
   read as cancelled, and Vue moved the lifted element, which loses focus in Chrome and ended the
   keyboard lift. The hidden origin of a pointer drag sits where the list has the card, not at a
   remembered index. Amends D67.
+
+- **D72 A lift not moved yet sits where the list has the card.** Until the first arrow key or
+  pointer move, a lift's target is the card's own spot in the current list (`home` on `Lift`),
+  not the cards around it at lift time. A card another user put between the card above and the
+  lifted one would otherwise draw the lifted card above it and turn a put-back into a move.
+  Amends D71.
