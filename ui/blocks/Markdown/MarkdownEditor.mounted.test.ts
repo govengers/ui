@@ -1,8 +1,9 @@
-// MarkdownEditor mounted (D69): file drops, uploads in flight and mention answers.
+// MarkdownEditor mounted (D69): file drops, uploads in flight, mention answers and the format keys.
 import { afterEach, describe, expect, test } from 'bun:test'
-import { ref } from 'vue'
+import { defineComponent, h, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { uploads, type FileItem } from '../../../demo/src/fake/api'
-import { mount, settle, type Mounted } from '../../../scripts/test/mount'
+import { key, mount, settle, type Mounted } from '../../../scripts/test/mount'
 import MarkdownEditor, { type MentionOption } from './MarkdownEditor.vue'
 
 let editor: Mounted | undefined
@@ -92,5 +93,68 @@ describe('MarkdownEditor mentions', () => {
     answer([{ value: 'ada', label: 'Ada' }])
     await settle(1)
     expect(root.querySelectorAll('[role="option"]').length).toBe(0)
+  })
+})
+
+describe('MarkdownEditor format keys', () => {
+  /** Selects all of the textarea and presses `name` with the modifiers. */
+  function press(root: HTMLElement, name: string, init: KeyboardEventInit): KeyboardEvent {
+    const textarea = area(root)
+    textarea.focus()
+    textarea.setSelectionRange(0, textarea.value.length)
+    return key(textarea, name, init)
+  }
+
+  test('bold and italic name their keys in the label and in aria-keyshortcuts', async () => {
+    const { root } = mountEditor()
+    await settle(1)
+    expect(root.querySelector('button[aria-label="Bold (Ctrl+B)"]')?.getAttribute('aria-keyshortcuts')).toBe('Control+B Meta+B')
+    expect(root.querySelector('button[aria-label="Italic (Ctrl+I)"]')?.getAttribute('aria-keyshortcuts')).toBe('Control+I Meta+I')
+    expect(root.querySelector('button[aria-label="Heading"]')?.hasAttribute('aria-keyshortcuts')).toBe(false)
+  })
+
+  test('the key is named in the locale (Strg in German) and by the command sign on Apple platforms', async () => {
+    const German = defineComponent({
+      setup() {
+        useI18n().locale.value = 'de'
+        return () => h(MarkdownEditor, { name: 'comment', modelValue: '' })
+      },
+    })
+    const german = mount(German)
+    await settle(1)
+    expect(german.root.querySelector('button[aria-label="Fett (Strg+B)"]')).not.toBeNull()
+    german.unmount()
+    Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0)' })
+    try {
+      const { root } = mount(MarkdownEditor, () => ({ name: 'comment', modelValue: '' }))
+      await settle(1)
+      expect(root.querySelector('button[aria-label="Bold (⌘B)"]')?.getAttribute('aria-keyshortcuts')).toBe('Control+B Meta+B')
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>)['userAgent']
+    }
+  })
+
+  test('Ctrl+B and Cmd+I wrap the selection, also under Caps Lock', async () => {
+    const { root } = mountEditor()
+    await settle(1)
+    expect(press(root, 'b', { ctrlKey: true }).defaultPrevented).toBe(true)
+    await settle(1)
+    expect(text.value).toBe('**draft**')
+    press(root, 'i', { metaKey: true })
+    await settle(1)
+    expect(text.value).toBe('_**draft**_')
+    press(root, 'B', { ctrlKey: true })
+    await settle(1)
+    expect(text.value).toBe('**_**draft**_**')
+  })
+
+  test('Shift, Alt or no modifier leave the text alone', async () => {
+    const { root } = mountEditor()
+    await settle(1)
+    for (const init of [{ ctrlKey: true, shiftKey: true }, { metaKey: true, altKey: true }, {}]) {
+      expect(press(root, 'b', init).defaultPrevented).toBe(false)
+    }
+    await settle(1)
+    expect(text.value).toBe('draft')
   })
 })

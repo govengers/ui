@@ -24,6 +24,8 @@ const render = createMarkdownRenderer(typeof window === 'undefined' ? undefined 
 <style scoped>
 .ui-markdown { overflow-wrap: anywhere; line-height: var(--ui-leading); }
 .ui-markdown :deep(:is(p, ul, ol, pre, table, blockquote)) { margin: 0 0 var(--ui-space-3); }
+.ui-markdown :deep(:is(p, ul, ol, blockquote)) { max-width: var(--ui-measure); }
+.ui-markdown :deep(p:has(img)) { max-width: none; }
 .ui-markdown :deep(:is(h1, h2, h3, h4, h5, h6)) { margin: var(--ui-space-4) 0 var(--ui-space-2); }
 .ui-markdown :deep(h1) { font-size: var(--ui-text-xl); }
 .ui-markdown :deep(h2) { font-size: var(--ui-text-lg); }

@@ -18,6 +18,13 @@ export interface Mounted {
   unmount(): void
 }
 
+/** The unmount of every view still mounted; setup.ts unmounts what a test left after it. */
+const live = new Set<() => void>()
+
+export function unmountAll(): void {
+  for (const unmount of [...live]) unmount()
+}
+
 /** Mounts `component` with `props` (a function re-renders with its current answer). */
 export function mount(component: Component, props: () => Record<string, unknown> = () => ({}), slots: Record<string, (scope: never) => unknown> = {}): Mounted {
   const engine = createFakeEngine({ latency: 0 })
@@ -33,14 +40,15 @@ export function mount(component: Component, props: () => Record<string, unknown>
   const app = createApp({ render: () => h(component, props(), slots) })
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:any(.*)*', component: { render: () => null } }] })
   app.use(createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages })).use(router).use(livePlugin(pair)).mount(root)
-  return {
-    root, engine, pair, pairFor,
-    unmount: () => {
-      app.unmount()
-      pair.value.end()
-      root.remove()
-    },
+  // Once only: the test, its file's afterEach and the harness may each ask.
+  const unmount = (): void => {
+    if (!live.delete(unmount)) return
+    app.unmount()
+    pair.value.end()
+    root.remove()
   }
+  live.add(unmount)
+  return { root, engine, pair, pairFor, unmount }
 }
 
 /** Lets the fake engine answer (its timers run at 0 ms) and Vue render. */

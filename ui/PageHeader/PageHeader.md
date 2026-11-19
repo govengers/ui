@@ -51,3 +51,10 @@ Do not load:
 
 The primary action in `actions` carries `data-action`. The driver finds a page's main action
 by `[data-page] .ui-page-header [data-action]`.
+
+## Gotchas
+
+- The `tabs` row is never wider than the header: a `Tabs` strip longer than the screen scrolls
+  sideways inside it, so a page with many counted tabs does not scroll sideways on a phone. The
+  row has `min-width: 0`; without it a flex item cannot shrink below its content and the strip
+  set the width of the whole page.

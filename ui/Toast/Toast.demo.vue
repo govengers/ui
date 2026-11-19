@@ -9,6 +9,10 @@ function archive() {
   archived.value += 1
   toast({ message: 'Customer archived.', action: { label: 'Undo', run: () => { archived.value -= 1 } } })
 }
+// Three show, the fourth waits; closing one lets it in while the others slide together.
+function fourAtOnce() {
+  for (const month of ['January', 'February', 'March', 'April']) toast({ message: `${month} report exported.` })
+}
 </script>
 
 <template>
@@ -22,6 +26,7 @@ function archive() {
       <Button @click="toast({ message: 'Could not delete the customer: it still has open invoices.', variant: 'danger' })">Danger</Button>
       <Button data-action="archiveCustomer" @click="archive">Archive (with Undo)</Button>
       <Button variant="ghost" @click="toast({ message: 'Stays until closed.', duration: Infinity })">Until closed</Button>
+      <Button variant="ghost" @click="fourAtOnce">Four at once</Button>
     </div>
     <p class="muted">archived: {{ archived }}</p>
   </section>

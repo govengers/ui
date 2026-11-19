@@ -3,6 +3,7 @@
 // record loads, a Banner with Retry when the read fails, the page's Fields in the default slot,
 // the save failure no field explains, and the ActionBar after the fields (D27: drive mode pauses
 // on the Save button, found by its data-action). Enter submits through the native <form>.
+// The leave guard is useLiveForm's, not this card's: the form state may outlive the card (D96).
 import { nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionBar from '../../ActionBar/ActionBar.vue'
@@ -44,6 +45,12 @@ async function submit(): Promise<void> {
   if (saved) emit('saved')
 }
 
+// A refused field's error clears once the user leaves it with another value than the refused one.
+function leave(event: FocusEvent): void {
+  const { name } = event.target as Partial<HTMLInputElement>
+  if (name) props.form.settle(name)
+}
+
 function cancel(): void {
   props.form.reset()
   emit('cancelled')
@@ -51,7 +58,7 @@ function cancel(): void {
 </script>
 
 <template>
-  <form ref="element" class="ui-detail-form" @submit.prevent="submit">
+  <form ref="element" class="ui-detail-form" @submit.prevent="submit" @focusout="leave">
     <Card :title="title" as="section">
       <div class="ui-detail-form__body" :aria-busy="form.loading.value || undefined">
         <Banner v-if="form.error.value" variant="danger">

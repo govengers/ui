@@ -88,7 +88,8 @@ const groupTitle: Record<string, string> = { ui: 'Components', 'ui/blocks': 'Blo
 .side a { color: var(--ui-ink-2); text-decoration: none; padding: var(--ui-space-1) var(--ui-space-2); border-radius: var(--ui-radius-sm); font-size: var(--ui-text-sm); }
 .side a:hover { background: var(--ui-surface-2); color: var(--ui-ink); }
 .side a.router-link-active { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
-.main { padding: var(--ui-page-p); max-width: var(--ui-page-max); width: 100%; }
+/* min-width 0: a demo wider than the column overflows inside it, where it shows, instead of widening the page. */
+.main { padding: var(--ui-page-p); max-width: var(--ui-page-max); width: 100%; min-width: 0; }
 @media (max-width: 48rem) {
   .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .top { flex-wrap: wrap; padding: var(--ui-space-2) var(--ui-space-3); gap: var(--ui-space-2); position: static; }

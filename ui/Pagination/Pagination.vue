@@ -53,11 +53,15 @@ function resize(event: Event) {
           </select>
         </label>
         <div class="ui-pagination__pages">
-          <Button variant="ghost" :label="t('ui.first')" :disabled="page <= 1" @click="emit('update:page', 1)"><template #icon><Icon name="chevrons-left" /></template></Button>
-          <Button variant="ghost" :label="t('ui.previous')" :disabled="page <= 1" @click="emit('update:page', page - 1)"><template #icon><Icon name="chevron-left" /></template></Button>
+          <span class="ui-pagination__pair">
+            <Button variant="ghost" :label="t('ui.first')" :disabled="page <= 1" @click="emit('update:page', 1)"><template #icon><Icon name="chevrons-left" /></template></Button>
+            <Button variant="ghost" :label="t('ui.previous')" :disabled="page <= 1" @click="emit('update:page', page - 1)"><template #icon><Icon name="chevron-left" /></template></Button>
+          </span>
           <span class="ui-pagination__page">{{ t('ui.pageOf', { page, pages }) }}</span>
-          <Button variant="ghost" :label="t('ui.next')" :disabled="page >= pages" @click="emit('update:page', page + 1)"><template #icon><Icon name="chevron-right" /></template></Button>
-          <Button variant="ghost" :label="t('ui.last')" :disabled="page >= pages" @click="emit('update:page', pages)"><template #icon><Icon name="chevrons-right" /></template></Button>
+          <span class="ui-pagination__pair">
+            <Button variant="ghost" :label="t('ui.next')" :disabled="page >= pages" @click="emit('update:page', page + 1)"><template #icon><Icon name="chevron-right" /></template></Button>
+            <Button variant="ghost" :label="t('ui.last')" :disabled="page >= pages" @click="emit('update:page', pages)"><template #icon><Icon name="chevrons-right" /></template></Button>
+          </span>
         </div>
       </div>
     </template>
@@ -82,7 +86,10 @@ function resize(event: Event) {
   font-size: var(--ui-text-sm);
 }
 .ui-pagination__controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-1); margin-inline-start: auto; }
-.ui-pagination__pages { display: flex; align-items: center; gap: var(--ui-space-1); }
+/* Wraps on a narrow screen (about 280px of buttons and page text) instead of overflowing it; each
+   pair of arrows stays together. */
+.ui-pagination__pages { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--ui-space-1); }
+.ui-pagination__pair { display: flex; gap: var(--ui-space-1); }
 .ui-pagination__size { display: inline-flex; align-items: center; gap: var(--ui-space-2); margin-inline-end: var(--ui-space-3); }
 .ui-pagination__select {
   min-height: var(--ui-control-h);

@@ -75,6 +75,8 @@ function onChange(event: Event) {
   border: var(--ui-border-width) solid var(--ui-border-strong);
   border-radius: var(--ui-radius-control);
   text-overflow: ellipsis;
+  /* At least 1rem on touch screens, or the phone zooms the page on focus (D84). */
+  font-size: max(var(--ui-field-text-min), 1em);
   cursor: pointer;
   transition: border-color var(--ui-duration-fast) var(--ui-ease);
 }
@@ -83,7 +85,7 @@ function onChange(event: Event) {
 .ui-select[data-size="lg"] { font-size: var(--ui-text-lg); }
 .ui-select[data-size="lg"] .ui-select__control { min-height: var(--ui-control-h-lg); }
 .ui-select__control:focus-visible { border-color: var(--ui-focus); outline-offset: var(--ui-border-width); }
-.ui-select__control[aria-invalid="true"] { border-color: var(--ui-danger); }
+.ui-select__control[aria-invalid="true"], .ui-select__control:user-invalid { border-color: var(--ui-danger); }
 .ui-select__control:has(.ui-select__placeholder:checked) { color: var(--ui-placeholder); }
 .ui-select__control option { color: var(--ui-ink); }
 .ui-select__control:disabled { background: var(--ui-sunk); color: var(--ui-disabled-ink); cursor: not-allowed; }

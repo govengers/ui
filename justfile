@@ -6,8 +6,8 @@ default:
 install:
     bun install
 
-# Everything CI runs.
-ci: check index-check contrast lint template-check test build
+# Everything CI runs, the tests as CI runs them (one process, fixed order).
+ci: check index-check contrast lint template-check test-ci build
 
 # Type-check every component, page, script and the demo.
 check:
@@ -33,7 +33,12 @@ lint:
 template-check:
     bun scripts/template-check.ts
 
+# The edit loop, under 2 s: four workers with the harness's reset after every test (D103; Bun 1.4.4 or later).
 test:
+    bun test --parallel=4 --no-isolate scripts ui pages demo/src
+
+# The tests as the remote CI runs them: one process, fixed order, about 3.6 s (D103).
+test-ci:
     bun test scripts ui pages demo/src
 
 # The demonstrator on http://localhost:5173
@@ -46,3 +51,7 @@ build:
 # Render every component, block and page in the default preset, light and dark, into screenshots/.
 screenshots:
     bun run screenshots
+
+# List every control of every demo under 44 by 44 px on a touch screen, both densities (D87). Local, not in CI.
+touch-probe *args:
+    bun scripts/touch-probe.ts {{args}}

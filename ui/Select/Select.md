@@ -62,3 +62,5 @@ and other attributes land on the wrapper, the control is `.ui-select__control` i
   `null`. Give a placeholder or an initial value.
 - The placeholder cannot be chosen again once a value is set; clearing is the caller's job.
 - With `required` from the Field, native validation treats the placeholder as empty.
+- On touch screens the text is at least 16 px (`--ui-field-text-min`, D84), whatever the `size`
+  or density: phone browsers zoom the page when a focused field's text is smaller.

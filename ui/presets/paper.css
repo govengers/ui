@@ -1,6 +1,6 @@
 /*
- * preset: paper. Warm bone surfaces, ink teal, tight corners (card stock has a 2 mm corner),
- * a quiet coral accent that never carries white text.
+ * preset: paper. Warm bone surfaces, tight corners (card stock has a 2 mm corner), an ink-teal
+ * accent carrying bone text. Shadows fall straight down, as in the other presets.
  * Tokens only (D6). Fonts stay the system stack; a project wanting Archivo self-hosts it and
  * overrides --ui-font-sans in DESIGN.md.
  */
@@ -20,7 +20,7 @@
   --ui-placeholder: light-dark(#637377, #8d9b98);
 
   --ui-border: light-dark(#d9d1c3, #34444a);
-  --ui-border-strong: light-dark(#8d8a80, #6f8184);
+  --ui-border-strong: light-dark(#87847b, #6f8184);
   --ui-divider: light-dark(#e2dacc, #2b393b);
 
   --ui-accent: light-dark(#04556a, #6fb5c5);
@@ -40,6 +40,6 @@
   --ui-radius-card: 3px;
 
   --ui-shadow-sm: 0 1px 1px rgb(30 42 46 / 0.08);
-  --ui-shadow-md: 1px 2px 6px rgb(30 42 46 / 0.14);
-  --ui-shadow-lg: 2px 6px 18px rgb(30 42 46 / 0.22);
+  --ui-shadow-md: 0 2px 6px rgb(30 42 46 / 0.14);
+  --ui-shadow-lg: 0 6px 18px rgb(30 42 46 / 0.22);
 }

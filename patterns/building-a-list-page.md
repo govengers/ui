@@ -33,8 +33,9 @@ file, not of the page.
 
 ## Data flow
 
-- The page owns one `filter` ref: `toFilterDocument(clauses, tabFilter, search)` from
-  `FacetFilter`'s `facets.ts`, with `rangeToConditions('createdAt', range)` ANDed in.
+- The page owns one `filter` ref: `toFilterDocument(clauses, { base, facets })` from
+  `FacetFilter`'s `facets.ts`, `base` holding the tab's clause and
+  `rangeToConditions('createdAt', range)`; SearchTable adds the search.
 - `SearchTable` gets `target = live.customers` and that `filter`; it owns sort, page and search.
 - `FacetFilter` gets `distinct = live['customers.distinct']` (one subscription per facet with
   the filter minus that facet's own clauses) or `facetsRead` when the backend offers a combined
@@ -45,8 +46,30 @@ file, not of the page.
 ## States the page must show
 
 Loading skeleton (`!error && loading`), a refused subscription as a Banner with Retry (never the
-skeleton), stale data with the quiet stale notice, an empty list with "Clear search" when a
-search or filter is active, the first page after a filter change.
+skeleton), stale data with the quiet stale notice, the first page after a filter change, and an
+empty list that says why it is empty:
+
+- A search, a facet or a range narrows it: "No customers match" and Clear filters, which empties
+  all three. The page writes only the URL keys of the blocks that follow the URL (facets, `t`) in
+  one awaited write, then sets their models and empties the search last (`ListPage.md`).
+- Nothing narrows, the default view and a total of 0 for the current query (a first run): what the
+  entity is for in one sentence and the primary create action, so the empty page teaches its next
+  step. While the list still shows the query before (SearchTable's `stale`), the empty state keeps
+  what it showed: right after Clear filters the old total is still 0.
+- Nothing narrows, another tab, or an empty page past the last one: the title only.
+
+## Deleting
+
+- Reversible (the backend soft-deletes and offers a restore call): delete at once and toast with
+  an Undo action that calls restore. No confirm: the undo is the safety net.
+- Irreversible: a `Dialog variant="danger"` that names the item ("Delete Acme?") or the count
+  ("Delete 3 customers?"), with "Cancel" and the verb "Delete" naming the same item or count on
+  the confirm button. The title keeps its text while the dialog leaves.
+- Rare and very destructive (a workspace, an account): the dialog also asks for the typed name.
+- Confirm only what cannot be undone: a dialog on every routine action trains the click-through
+  (NN/g, "Confirmation Dialogs Can Prevent User Errors (If Not Overused)").
+
+The `ListPage` recipe confirms, because its delete is final.
 
 ## Agent
 

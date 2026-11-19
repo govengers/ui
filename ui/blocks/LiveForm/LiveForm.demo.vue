@@ -8,12 +8,20 @@ import { calls, live, type Customer, type UpdateCustomer } from '@/fake/api'
 import { engine } from '@/fake/live'
 
 const customer = engine.store.tables.customers[0] as Customer
-const { fields, item, errors, touched, conflicts, saving, save, reset } = useLiveForm({
+// The scripted edit below is not the visitor's: no leave guard here (the DetailPage demo shows it).
+const { fields, item, errors, touched, conflicts, saving, save, reset, settle } = useLiveForm({
   target: live['customers.item'],
   params: { id: customer.id },
   call: calls.updateCustomer,
   pick: (record: Customer): UpdateCustomer => ({ name: record.name, email: record.email, country: record.country }),
+  leaveGuard: false,
 })
+
+/** A refused field's error clears once the user leaves it with another value (settle). */
+function leave(event: FocusEvent): void {
+  const { name } = event.target as Partial<HTMLInputElement>
+  if (name) settle(name)
+}
 
 /** Someone else edits the record: an untouched field refills, a touched one keeps its text. */
 function changeOnServer(): void {
@@ -33,7 +41,7 @@ const stop = watch(item, (loaded) => {
 <template>
   <section class="narrow">
     <h2>A plain Field stack over useLiveForm</h2>
-    <form class="stack" @submit.prevent="save()">
+    <form class="stack" @submit.prevent="save()" @focusout="leave">
       <Field label="Name" :error="errors.name" :hint="conflicts.includes('name') ? 'Changed elsewhere since you started editing.' : undefined">
         <Input v-model="fields.name" name="name" />
       </Field>

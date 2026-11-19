@@ -125,6 +125,7 @@ const statusVariant: Record<OrderStatus, 'neutral' | 'accent' | 'success' | 'war
 
 <style scoped>
 .dashboard__tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: var(--ui-space-4); }
-.dashboard__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: var(--ui-space-4); align-items: start; }
+/* A column never wider than the page: on a narrow phone one column takes what is there. */
+.dashboard__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: var(--ui-space-4); align-items: start; }
 .dashboard__stack { display: grid; gap: var(--ui-space-3); }
 </style>

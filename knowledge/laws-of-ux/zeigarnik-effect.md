@@ -22,7 +22,8 @@ the work, and visible progress pulls them to the end.
 - JobProgress follows a job live by id and offers "Open result" when it is done; a job's result
   names a route the dock can open (D29).
 - The Filters button counts the active facets: a reminder that the list is narrowed.
-- Gap: no piece guards leaving a page with unsaved changes yet; the hint is the only signal.
+- LiveForm asks before a navigation to another path or a page unload drops unsaved edits
+  (`useLeaveGuard`, D96); a query-only change (a tab, a filter) and a saved form stay silent.
 
 ## Review questions
 

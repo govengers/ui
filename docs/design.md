@@ -485,3 +485,264 @@ switchable style presets.
   `omit` member of an `Effect` (an optimistic upsert leaves out a target's detail-only fields, as
   the list's rows do, livewire D93). `vue.ts` is unchanged apart from its header. Still no tag,
   so D73's rule holds: the next tag replaces both files byte for byte. Amends D73.
+
+## UX hardening (18.11.2026)
+
+- **D84 The touch floor holds for every size and every density.** Under `(pointer: coarse)` the
+  three control heights are `max(<the density's value>, var(--ui-touch-min))`, declared after the
+  compact block for both densities, so `size="sm"` and compact controls reach 44 px too (WCAG 2.2
+  SC 2.5.5). D9 and D49 promised it; the old block set `sm` to 36 px and lost to the compact
+  selector. A preset does not set the control heights: one that did would undercut this block
+  (none does). The text of Input, Select and Textarea is at least `--ui-field-text-min` (0 on fine
+  pointers, 1rem on coarse ones), because phone browsers zoom the page when a focused field's text
+  is smaller than 16 px. `scripts/tokens.test.ts` resolves the tokens for both pointers and both
+  densities. Amends D38, D49.
+- **D85 A line is measured against every ground it sits on.** `--ui-border-strong` reaches 3:1
+  (WCAG 2.2 SC 1.4.11) on `--ui-bg`, `--ui-surface` and `--ui-surface-2` in every preset and
+  theme; four values moved. `just contrast` also scans the style blocks of `ui/` and `pages/`,
+  the demos excepted, and fails on a rule that sets `color` and `background` to a token pair
+  nobody declared. It sees pairs inside one rule only; `exemptPairs` names what is left out and
+  why. Amends D16.
+- **D86 Token housekeeping.** `--ui-duration-slow` is removed: no piece, page or template ever
+  read it; a project that reads it in its own styles declares it in its preset. New tokens:
+  `--ui-loading-delay`, `--ui-sticky-top`, `--ui-measure`, `--ui-tooltip-w`,
+  `--ui-field-text-min`. The typography, shape, elevation and motion blocks say in a comment what
+  each step is for; ink tokens stay solid colours because the contrast script can measure nothing
+  else (P7). Paper's shadows fall straight down like the other presets'. Headings wrap balanced.
+  Amends D6.
+- **D87 Local browser probes are scripts.** `scripts/touch-probe.ts` (`just touch-probe`) opens
+  every demo in a touch context, in both densities, and lists every control under 44 by 44 CSS
+  px. A control placed off the page, cut off by an ancestor's hidden overflow or visually hidden
+  is not a target; an input counts with its label's box, nothing else inside a label does. Two
+  lists in the script keep it honest: `exempt` names the exceptions of WCAG 2.2 SC 2.5.5 (links in
+  a sentence) and boxes that take no pointer action (a disabled task box), `known` names the
+  targets that were too small when the probe was written and are not fixed yet, each with its
+  measured width and height. The probe fails on anything else, on a known target that measures
+  smaller than its record on a side under 44 px, and, over every demo, on an entry that matches
+  nothing, so it catches a regression without hiding a debt and no waiver outlives its target.
+  The records hold for the system font of the machine that measured them; on another operating
+  system or font they are measured again, never lowered to make a run pass. It runs locally like
+  the screenshots, never in CI (D46, D69). Amends D69.
+- **D88 The bulk bar and the row menu are parts, not pieces.** The bar lives in `Table.vue`
+  (`ui-table__bulk`: count, Clear, the `bulk` slot); the row menu is `Menu` through
+  SearchTable's `rowActions`. D32 and D34 name them as pieces. Amends D32, D34.
+- **D89 Five more mechanical rules.** `UL-004` colour function literals, `UL-005` literal font
+  sizes, `UL-006` bare `vh`, `UL-007` `:hover` outside `@media (hover: hover)`, `UL-013` an
+  icon-only Button without `label`. A touch screen keeps `:hover` on the last element tapped
+  (MDN, `hover` media feature), so hover rules live inside the media query; `100vh` is taller
+  than the visible area while a phone's browser bar shows (CSS Values and Units Level 4, large and
+  dynamic viewport units), so heights use `dvh`. The rules read no comments and no quoted
+  strings: a size or a colour in prose is not a value. A target project gets the rules with its
+  next copy of `ui-lint.ts`. Amends D12, D47.
+- **D90 Tooltip is the one hint on hover and focus.** `ui/Tooltip` shows one plain sentence: after
+  `tooltipDelay` on a hovering mouse or pen, at once on keyboard focus. Shown by focus it stays
+  until blur or Escape; shown by hover it stays while the pointer is on the trigger or the panel,
+  the gap between them counting as the panel, and leaves `tooltipGrace` after the pointer left both;
+  any press on the trigger, by pointer or by key, hides it (WCAG 2.2 SC 1.4.13, APG Tooltip
+  pattern). Nothing shows while the trigger's own menu or popover is open (`aria-haspopup` with
+  `aria-expanded="true"`). Escape cancels the key's default, so a modal dialog or a popover under
+  the tooltip stays for the next Escape. The focus a modal dialog moves to its first control while
+  it opens shows nothing, so a dialog opened by keyboard closes with one Escape. It is
+  `popover="manual"`: `hint` is not widely available and `auto` would close an open menu. Two forms:
+  around one element, or as a child of its trigger. Touch shows nothing, so a tooltip never carries
+  what the user needs. The placement code is `ui/Popover/place.ts`, shared with Popover; it looks
+  through a `display: contents` anchor, and `end` takes the inline start where only that has room.
+  The native `title` attribute is not used for names. Amends D51.
+- **D91 A loading Button keeps its focus.** `loading` sets `aria-busy` and `aria-disabled` and
+  swallows every press on the Button, so a second press, a held key, a middle or modified click on a
+  link and the form's implicit submit (a click on its first submit button) do nothing. Native
+  `disabled` is for `disabled` only and gives way while `loading` is set; a Button that turns
+  disabled while it has the focus (a load that ends with `disabled` set) is held: `aria-disabled`,
+  the disabled look and the guard, until the focus leaves, then natively disabled; its focus ring
+  stays at full strength, because the fill, border and content dim instead of the element. HTML's
+  focus fixup moves the focus to the body when the focused control becomes disabled, and the
+  Authoring Practices advise keeping some disabled controls focusable so users can find them (APG,
+  "Focusability of disabled controls"). Script can still get past the guard (two `click()` calls in
+  one task, a click that is not cancelable, `requestSubmit()`), so a handler that must not run twice
+  checks its own busy flag. After `--ui-loading-delay` the spinner shows and the content turns
+  invisible by opacity, which forced colours keep, so the width does not change and a fast answer
+  shows nothing. An icon-only Button shows its `label` through Tooltip. Amends D44.
+- **D92 Phone navigation reaches everything.** Under 48rem, with more than five items or a
+  `navFooter`, the bar shows the first four items and a More tab that opens a Sheet with the rest
+  and the footer (WCAG 2.2 SC 1.4.10: no content or function is lost when the layout reflows). The
+  tabs share the bar equally and a long or enlarged label ends in an ellipsis, so More never leaves
+  the screen. More is marked when the current page sits behind it; any navigation closes the sheet
+  and focus returns to More. A double tap or a held Enter on More acts once: the rest of the press
+  that opened the sheet (the second click, the key's repeats) does nothing in it, and the first
+  click or key that is not part of that press ends the guard; of the keys coming up only Enter does.
+  A second tap counts as part of that press where the browser counts taps in the click's `detail`
+  (Chrome does; a phone's Safari is not verified). Crossing 48rem closes the sheet and a Popover or
+  Dialog open in the footer; the footer is one node that moves between the nav and the sheet,
+  keeping what is typed in it, and focus on something the crossing hides goes to More on phones,
+  else to the current link, else the first. The skip link and the nav's name are `ui.*` keys (D44).
+  The shell sets `--ui-sticky-top` to the top bar's height; a scroll box that is not the page sets
+  it again (the nav and the dock `0px`, a padded box minus its top padding: the bodies of Dialog and
+  Sheet). On phones the bar is `--ui-tabbar-h` high plus the bottom safe-area inset it pads under
+  its tabs, and the shell sets `--ui-sticky-bottom` to that on the root (not with `bare`, not
+  without a tab), so a sticky ActionBar and the collapsed dock strip stand on the bar instead of
+  covering it, and the scroll padding of the box a sticky ActionBar sticks in (the page, a Dialog's
+  or Sheet's body) keeps a field the browser, a script or Tab focuses clear of it (WCAG 2.2 SC
+  2.4.11). The rail hides label and count from the screen only, shows the name through Tooltip and
+  keeps its links 44 px wide on touch; the phone bar hides the count the same way. Ghost Buttons in
+  the `actions` slot read `--ui-on-chrome` through `--ui-ink-2`, the token their resting colour
+  reads, so the rule does not depend on Button's selectors (D102 replaces this); a focus ring on the
+  top bar is `--ui-on-chrome`, on the current phone tab `--ui-on-accent-soft`. The title gives way
+  to a crowded `actions` slot with an ellipsis.
+- **D93 How long a toast stays.** `duration ?? (action || variant === 'danger' ? Infinity : 5000)`:
+  an error or a toast with a follow-up stays until closed (WCAG 2.2 SC 2.2.1), anything else five
+  seconds, any number overrides. Each live region shows its first three: three toasts that stay hold
+  the queue of their region, which is intended, and an error never waits behind follow-ups, because
+  errors have their own region. A toast fades out in `--ui-duration-fast` and is inert while it
+  fades; it leaves the flow at once, held where it stood, and the others slide into its place.
+  Closing the toast that holds focus by keyboard moves focus to the next toast itself, else back to
+  where it came from; an Enter held through the close repeats nothing, because repeats are dropped
+  until the key comes up or another key is pressed. A pointer close only gives focus back, without
+  scrolling the page. Hovering pauses the countdown only where the pointer can hover (`(hover:
+  hover)`): a touch screen keeps `:hover` on the last element tapped.
+- **D94 Dialog enters and leaves like Sheet.** Opacity and a small translate on the panel, a fading
+  backdrop, `@starting-style` and `allow-discrete` for `display` and `overlay`; not for `inline`.
+  The exit runs only where `@supports (overlay: auto)` holds; elsewhere the dialog closes at once,
+  because without `overlay` it would leave the top layer and fade at its place in the page. Under
+  reduced motion `base.css` cuts the panel's transition and a rule in `Dialog.vue` the backdrop's,
+  which `base.css` does not reach. Where `@starting-style` is missing the dialog appears as before.
+  The panel shows for `--ui-duration` after it closed, so a caller keeps what it shows until the
+  next open and does not reset it at close; a value that must not outlive the dialog, such as a
+  secret, is still cleared at close, only the view around it is kept.
+- **D95 Native validity shows once the user has changed a field; radios are RadioGroup.** Input,
+  Select, Textarea and RadioGroup paint the invalid border on `:user-invalid` beside the `error`
+  from the server: after the user changed a field and left it, or tried to submit, never on a fresh
+  form or after a bare focus and blur (measured in Chromium). The Field's error starts with an alert
+  icon, so it is not told by colour alone (WCAG 2.2 SC 1.4.1). `ui/RadioGroup` is the one radio
+  piece: native inputs under one name inside `Field group`, which passes its `required` to every
+  radio, a default selection always; the arrow keys and Tab are the browser's (APG, Radio Group
+  pattern). A typed-name confirm keeps its Delete enabled, takes Enter in the name as the click, and
+  refuses with a field error and the focus back in the field.
+- **D96 A form's submit is never disabled, and edits are not lost silently.** Stepper's Continue
+  stays enabled. A field with a native constraint is refused by the browser, which focuses it and
+  says why; a step that only `canContinue` refuses emits `blocked`, the page shows why next to the
+  field, and the frame focuses the first field marked invalid. `useLiveForm` registers
+  `useLeaveGuard`, which asks before a navigation to another path or a page unload while the form is
+  dirty; the guard lives as long as the form state, not as long as the card that shows it.
+  `leaveGuard: false` turns it off for a form whose edits may be dropped and for a form that saves
+  on change. A leave the app forces is never cancellable half way: a page that discarded the record
+  (delete, archive) resets the form first, and an action that ends something and then leaves (a
+  logout) navigates first. An error is about the value the server refused: it clears once the user
+  leaves the field with another value (`settle`, which waits until no pointer is down, so the line
+  going away never moves a button from under a press; a press ends with its release, its cancel, a
+  context menu or the window's blur) and once a push changes an untouched field. Amends D33.
+- **D97 Placeholders wait and match what comes.** Skeleton shows after `--ui-loading-delay`, with
+  its box held from the start; the delay holds under reduced motion, which shortens durations only.
+  Table's loading rows are Skeleton, as many as `loadingRows`, which SearchTable sets to its page
+  size; the rows, their row lines and card frames wait for the same delay, so a fast read shows the
+  header over an empty box, or empty space in card mode, never ruled empty rows or blank cards. A
+  placeholder row has the cells of a data row, the select cell 44 px and the actions cell a
+  control's height, so it is as tall as a data row of plain text and a few pixels shorter than one
+  with a taller custom cell. A sticky table header sits at `--ui-sticky-top`. When the Table turns
+  into cards, its header is hidden from assistive technology too, because each cell names its column
+  and the header's controls would be invisible tab stops; SearchTable shows Select all, a sort
+  select and a direction button instead, and a Table without it gets them from its page (Table
+  exposes `toggleAll`, `allChosen`, `someChosen`).
+- **D98 The dock follows the stream only from the bottom, and an answer can be stopped.** AgentDock
+  scrolls to the newest text only while the reader is within about one line of the bottom, else it
+  offers "Jump to latest" over the log's bottom edge, which scrolls down and puts focus on the log;
+  any scroll up by the reader stops the following at once, a change of the log's size (the dock, the
+  window, a draft over several lines) keeps a following reader at the bottom and leaves a reader who
+  scrolled up where they are, and a message the user sends always scrolls. The log is named
+  `ui.conversation`, apart from the dock's region around it. With a `cancel` call the send button is
+  Stop while the agent answers (it is thinking, or its newest message has `streaming: true`), and
+  the form and Enter send nothing until the answer ended; the draft stays. When the answer ends,
+  focus that would drop to the page goes to the composer, and for 500 ms a press on the button sends
+  nothing, so a double click on Stop never sends the draft. After a cancel the server ends the
+  answer (clears `streaming`, or adds an agent message), else Stop stays. Amends D25.
+- **D99 A failed upload can be retried.** FileUpload keeps the `File` of an upload until it is in or
+  refused and offers Retry on a failed row, from byte 0, unless the server refused the file with
+  field errors (`retryable`). Every try of one upload sends the same Idempotency-Key, so a file
+  whose answer was lost is not stored twice. A retry counts like a new pick: without room it is
+  refused with `ui.tooManyFiles` and the row stays failed. A retried replacement still replaces: the
+  old file goes only once the new one is in. Retry leaves focus on the file's row. This page's
+  uploads stay on top in pick order while the piece is mounted, each in its place, also when the
+  server's row takes the upload's place, so neither the focus nor the pointer loses its row; the
+  other rows follow in the server's order, which a reload applies to all. The row shows the
+  percentage while the runtime reports one. Amends D76.
+- **D100 The starter restores scroll and shows the palette.** `router.ts` returns to the saved
+  position once the page is tall enough to hold it (live rows arrive after the navigation; it waits
+  at most 1 s, and a newer navigation or a reader who scrolled meanwhile ends the wait without a
+  scroll), to a hash below the top bar, stays where it is when only the query changed (filters,
+  tabs, a page number), else goes to the top. The shell has a visible Search button for the palette
+  with its shortcut (`aria-keyshortcuts`, a `<kbd>` hint where a keyboard is likely, Control named
+  by `ui.keyCtrl`, the command sign on Apple platforms); on a phone it and the other top-bar buttons
+  show their icon alone, the word dropped from the slot and `label` naming the icon, so the top bar
+  keeps room for its title. Sign out has one state in `router.ts` (`signOutState`: idle, asking,
+  ending, slow) that the guard and the shell read. It goes to the signed-out route first, so the
+  leave guards and every `beforeEach` decide: only their refusal keeps the session and the user's
+  edits. Once they let the user go, the route's `beforeEnter` sends the logout request before that
+  screen has loaded, so a `beforeResolve` refusal comes too late (a guard that asks the user belongs
+  in `beforeEach` or a component's leave guard), and while a sign-out asks, any navigation to that
+  route that gets through starts it; a guard must answer every question it asks, since one left open
+  keeps the sign-out asking (Sign out does nothing) until a reload. Any other end of that navigation
+  (a lost chunk, a throwing guard, a link or Back) still ends the session. While the request is out
+  the shell shows "Signing out" in place of any page; when the sign-out has not ended after 10 s,
+  whatever it waits on (the request, the screen's chunk), with the sentence that the user may still
+  be signed in and a Reload; "signed out" shows only once nobody is signed in and no sign-out runs.
+  A refusal (a logout that throws counts as one) takes the user back to the page, signed in, with a
+  toast and Retry; the page is mounted afresh, so its local state is gone. Once nobody is signed in,
+  a page reached meanwhile gives way to a full load of the signed-out screen (a redirect provider's
+  logout leaves the page itself). The signed-out screen with somebody signed in and no sign-out
+  running (a deep link, another tab signed in) goes home. Two clicks send one request. The words are
+  `ui.*` keys (`ui.signOut`, `ui.signingOut`, `ui.signOutSlow`, `ui.signOutFailed`); `logout` takes
+  the shell's `t`. Amends D61, D74.
+- **D101 An empty state speaks only for the query it read.** SearchTable's `empty` slot gets
+  `stale`, true while the rows and total on screen are not known to be the current query's (a
+  changed filter, search, sort or page whose first page has not arrived, or a socket that is not
+  open; livewire D76). A page that tells a first run from a filtered list decides only when `stale`
+  is false and the total of the current query is 0, and keeps the case it showed while the list is
+  stale: right after Clear filters the old total is still 0, and a first run shown then would offer
+  a create action while records exist. SearchTable also exposes `clearSearch()`, so a page's Clear
+  filters drops a text still in the search debounce, and in offset mode a page whose rows all left
+  (deletes, live changes) steps back to the last page instead of standing empty past it, showing
+  placeholders, not an empty state, until that page arrives; a page that has rows never steps back,
+  since a total under a count cap is a lower bound. Amends D32.
+- **D102 Button offers `--ui-button-ghost-ink`.** The ghost variant's text at rest reads
+  `var(--ui-button-ghost-ink, var(--ui-ink-2))`, the first custom property a piece offers to its
+  surroundings, named in a table on its card. AppShell sets it to `--ui-on-chrome` on the `actions`
+  slot and to `initial` inside a popover or a dialog there, which sit on a surface; hover keeps
+  `--ui-ink` on `--ui-surface-2`. Before, the shell redefined `--ui-ink-2` inside such a Button,
+  which reached everything in it: a neutral Badge in a top-bar ghost Button measured 1.02 to 1.11:1
+  in light themes, now 7.41 to 10.08:1 in every preset and theme, while the Button's own colours at
+  rest and hovered did not change. Amends D92.
+- **D103 The two-second budget is the edit loop's.** `just test` runs the suite in four workers,
+  each one process with the harness's reset after every test (`bun test --parallel=4 --no-isolate`):
+  665 tests in 1.37 to 1.49 s (19.11.2026). `just ci` runs the tests as the remote CI does, in one
+  process in fixed order: 3.69 to 3.75 s, about half of it waiting on 0 ms timers that the fake
+  engine and `settle()` chain, which Bun runs after about a millisecond. That run, with the merge
+  step's ten random-order runs, is the check that no test depends on another file; its time is
+  stated, not budgeted. No test was removed or shortened for the budget. `just test` needs `bun test
+  --parallel` (Bun 1.4.4 or later; older releases were not tried). Amends D69.
+- **D104 Button has a pressed state.** `:active` paints one step past hover through
+  `--ui-accent-active`, `--ui-danger-active` and `--ui-surface-3`: the hover colour, or
+  `--ui-surface-2`, with 15 and 8 percent of `--ui-ink` mixed in by `color-mix(in srgb, ...)`, so
+  presets need no edit; `scripts/contrast.ts` resolves that form and measures the text on them (5.94
+  to 13.74:1). The step past hover is 1.04 to 1.27:1; the smallest, paper light's primary, comes from
+  a hover colour near the ink already, and from rest, as on a touch screen, it is clear. Secondary
+  and ghost set `--ui-ink` with the ground, because a ghost Button whose ink comes from its
+  surroundings (the top bar, D102) gets no hover rule before a press on a touch screen. A secondary
+  Button's `--ui-border-strong` stands 2.46 to 2.75:1 on its own pressed ground, under D85's 3:1,
+  while it keeps 3:1 against the page outside; a press lasts as long as the finger, so the pair is
+  exempt with that reason instead of darkened. Colour only: no scaling, no shadow, nothing moves. The
+  press shows in its first frame and eases back on release (the top bar's ghost Buttons change
+  without a fade, AppShell's card); a fade into it would show the top bar's dark ink on the chrome
+  for a frame. Disabled, loading and held Buttons (anything `aria-disabled`) show no press. Space
+  held shows it; Enter clicks on its key down and shows nothing (Chromium sets `:active` for Space
+  only). Forced colours keep the system's colours and show no press. Why: a press with no feedback
+  within about 100 ms gets repeated (NN/g, response time limits).
+
+
+- **D106 The Tooltip inverts the page.** Its panel paints `--ui-ink` with `--ui-surface` text
+  (11.89 to 18.08:1) in both themes. A tooltip mostly sits on a Card, a Dialog or a Table: on their
+  surface ground it read as part of what it covers (1.00:1 against a card, its border 1.05 to
+  1.71:1 against its surroundings, its shadow lost in dark themes). Inverted it stands 11.9 to
+  19.1:1 off a card or the page, and since it holds one plain sentence (D90), the one pair
+  `{ --ui-surface, --ui-ink }` covers it. Its border is the page's surface colour: where the panel
+  meets the top bar's chrome, which equals the ink in light themes, that border is its edge (17.72,
+  8.00 and 19.56:1 in neutral, paper and slate light, was 1.00, 1.74 and 1.08); on a card or the
+  page it disappears, and forced colours draw it as a line (21:1). Amends D90.

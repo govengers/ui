@@ -100,7 +100,9 @@ onMounted(load)
   text-align: start;
   cursor: pointer;
 }
-.ui-dev-login__user:hover:not(:disabled) { background: var(--ui-surface-2); }
+@media (hover: hover) {
+  .ui-dev-login__user:hover:not(:disabled) { background: var(--ui-surface-2); }
+}
 .ui-dev-login__user:disabled { cursor: progress; opacity: var(--ui-disabled-opacity); }
 .ui-dev-login__user[aria-busy='true'] { border-color: var(--ui-accent); }
 .ui-dev-login__who { display: grid; flex: 1; min-width: 0; }

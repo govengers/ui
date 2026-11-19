@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Stepper: a multi-step form frame (D33). The page owns the current step (v-model) and its
 // validation (canContinue); the frame draws the step list, the current step's content and the
-// Back / Continue / Finish bar. Enter in a field continues: the frame is the <form>.
+// Back / Continue / Finish bar. Enter in a field continues: the frame is the <form>. Continue is
+// never disabled: the browser refuses a native constraint first, `blocked` reports the rest (D96).
 import { computed, nextTick, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionBar from '../../ActionBar/ActionBar.vue'
@@ -13,7 +14,7 @@ const props = withDefaults(defineProps<{
   steps: readonly StepItem[]
   /** The key of the current step. */
   modelValue: string
-  /** The page's verdict on the current step: Continue, Finish and forward jumps wait for it. */
+  /** The page's verdict on the current step: while false, Continue emits `blocked` and forward jumps wait. */
   canContinue?: boolean | undefined
   /** A save runs: Continue and Finish spin, nothing navigates. */
   busy?: boolean | undefined
@@ -24,7 +25,7 @@ const props = withDefaults(defineProps<{
   linear?: boolean | undefined
 }>(), { canContinue: true })
 
-const emit = defineEmits<{ 'update:modelValue': [key: string]; finish: []; enter: [key: string] }>()
+const emit = defineEmits<{ 'update:modelValue': [key: string]; finish: []; enter: [key: string]; blocked: [] }>()
 const { t } = useI18n()
 const id = useId()
 const panel = ref<HTMLElement | null>(null)
@@ -54,9 +55,14 @@ function go(target: number): void {
   if (key !== undefined && !props.busy) emit('update:modelValue', key)
 }
 
-function submit(): void {
-  if (props.busy || !props.canContinue) return
-  if (last.value) emit('finish')
+// A refused step: the page answers `blocked` with the reason at the field, the focus goes there.
+async function submit(): Promise<void> {
+  if (props.busy) return
+  if (!props.canContinue) {
+    emit('blocked')
+    await nextTick()
+    panel.value?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+  } else if (last.value) emit('finish')
   else go(index.value + 1)
 }
 </script>
@@ -105,7 +111,6 @@ function submit(): void {
         variant="primary"
         type="submit"
         :loading="busy"
-        :disabled="!canContinue"
         :data-action="last ? finishAction : (current?.action ?? 'continue')"
       >
         {{ last ? (finishLabel ?? t('ui.finish')) : t('ui.continue') }}
@@ -150,7 +155,9 @@ function submit(): void {
   text-align: start;
 }
 button.ui-stepper__target { cursor: pointer; }
-button.ui-stepper__target:hover { background: var(--ui-surface-2); }
+@media (hover: hover) {
+  button.ui-stepper__target:hover { background: var(--ui-surface-2); }
+}
 
 .ui-stepper__marker {
   display: inline-flex;

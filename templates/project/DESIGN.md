@@ -33,7 +33,8 @@ mechanical part. Changing it is a decision, recorded below with a date.
 1. A new page picks a recipe above or gets an exception below before it is built.
 2. No component outside `src/ui/`. Need one: `ui-copy` from govengers/ui first; otherwise write
    it in `src/ui/<Name>/` in the same style and add it to `src/ui/INDEX.md`.
-3. No colour, length or font that is not a token. `just ui-lint` runs in CI.
+3. No colour, length or font that is not a token. Hover styles sit inside
+   `@media (hover: hover)`; heights use `dvh`, never `vh`. `just ui-lint` runs in CI.
 4. One primary action per page, in the `PageHeader`. `danger` only for destructive actions.
 5. Every page root carries `data-page`, every mutating button `data-action`, every field `name`.
 6. Agent drive mode: submits of <none> may run unattended; everything else pauses on the submit.

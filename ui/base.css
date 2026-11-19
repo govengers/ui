@@ -21,7 +21,7 @@ body {
 }
 
 h1, h2, h3, h4, p { margin: 0; }
-h1, h2, h3, h4 { line-height: var(--ui-leading-tight); font-weight: var(--ui-weight-semibold); }
+h1, h2, h3, h4 { line-height: var(--ui-leading-tight); font-weight: var(--ui-weight-semibold); text-wrap: balance; }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }

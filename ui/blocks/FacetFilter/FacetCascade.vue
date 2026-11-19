@@ -155,7 +155,10 @@ defineExpose({ enter })
   font-size: var(--ui-text-sm);
   text-align: start;
 }
-.ui-facet-cascade__field:hover, .ui-facet-cascade__value:hover, .ui-facet-cascade__field:focus-visible, .ui-facet-cascade__value:focus-visible { background: var(--ui-surface-2); }
+@media (hover: hover) {
+  .ui-facet-cascade__field:hover, .ui-facet-cascade__value:hover { background: var(--ui-surface-2); }
+}
+.ui-facet-cascade__field:focus-visible, .ui-facet-cascade__value:focus-visible { background: var(--ui-surface-2); }
 .ui-facet-cascade__field[data-state="active"] { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 .ui-facet-cascade__field:focus-visible, .ui-facet-cascade__value:focus-visible { outline-offset: calc(var(--ui-border-width) * -2); }
 .ui-facet-cascade__label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

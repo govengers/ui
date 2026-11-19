@@ -76,6 +76,9 @@ const previewOpen = ref(true)
 .wide { width: 16rem; justify-content: space-between; }
 .options { display: flex; flex-direction: column; padding: var(--ui-space-1); }
 .option { min-height: var(--ui-control-h); padding: 0 var(--ui-space-3); background: none; border: 0; border-radius: var(--ui-radius-sm); text-align: start; font-size: var(--ui-text-sm); }
-.option:hover, .option[aria-selected="true"] { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
+@media (hover: hover) {
+  .option:hover { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
+}
+.option[aria-selected="true"] { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 .preview { min-height: 20rem; }
 </style>

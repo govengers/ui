@@ -64,3 +64,10 @@ carry `data-action` like everywhere else (D23). A link card is followed by its h
   content is invalid and unreachable). Put them on a non-link card instead.
 - `overflow: hidden` clips the body to the radius; a popover or menu opened from inside escapes
   only through the top layer (`popover`, `<dialog>`), which is the native way anyway.
+- `flush` content needs no corners of its own: the same clip rounds it. Something with its own
+  corners closer than `--ui-radius-card` to both edges of a card corner (an image or a panel
+  with a thin inset) takes `max(0px, calc(var(--ui-radius-card) - <inset>))`, the inset counting
+  the card's border width, so the two curves stay concentric (the shape comment in
+  `ui/tokens.css`). Pieces in the padded header, body and footer keep their own radius: their
+  inline inset is `--ui-card-p`, wider than the card's radius in every shipped preset and
+  density.

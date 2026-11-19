@@ -7,9 +7,9 @@ import type { StepItem } from './stepper'
 import JobProgress from '../JobProgress/JobProgress.vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
+import Checkbox from '../../Checkbox/Checkbox.vue'
 import Field from '../../Field/Field.vue'
 import Input from '../../Input/Input.vue'
-import Switch from '../../Switch/Switch.vue'
 
 const steps: StepItem[] = [
   { key: 'source', title: 'Source', description: 'What to export' },
@@ -28,8 +28,18 @@ const entered = ref<string[]>([])
 const finished = ref(false)
 const connection = useLiveConnection()
 
+// The browser refuses an empty name (`required`); a name of spaces and a taken one only the page
+// knows, so Continue emits `blocked` and the step shows why from then on.
+const taken = ['customers', 'orders']
+const nameError = computed(() => {
+  const value = name.value.trim()
+  if (value === '') return 'Enter a name.'
+  return taken.includes(value.toLowerCase()) ? `An export named "${value}" exists already.` : undefined
+})
+const blockedOn = ref<string>()
+
 const canContinue = computed(() => {
-  if (step.value === 'source') return name.value.trim() !== ''
+  if (step.value === 'source') return nameError.value === undefined
   if (step.value === 'run') return succeeded.value
   return true
 })
@@ -54,6 +64,7 @@ async function move(next: string) {
 
 function restart() {
   name.value = ''
+  blockedOn.value = undefined
   churned.value = false
   jobId.value = undefined
   succeeded.value = false
@@ -86,24 +97,23 @@ const shortStep = ref('team')
       @update:model-value="move"
       @enter="(key) => entered.push(key)"
       @finish="finished = true"
+      @blocked="blockedOn = step"
     >
       <template #default="{ step: current }">
-        <Field v-if="current.key === 'source'" label="Export name" hint="Becomes the file name" required>
+        <Field v-if="current.key === 'source'" label="Export name" hint="Becomes the file name; customers and orders are taken" :error="blockedOn === 'source' ? nameError : undefined" required>
           <Input v-model="name" name="exportName" autocomplete="off" />
         </Field>
-        <Switch v-else-if="current.key === 'options'" v-model="churned" name="includeChurned" label="Include churned customers" />
-        <div v-else-if="current.key === 'review'" class="review">
+        <Checkbox v-else-if="current.key === 'options'" v-model="churned" name="includeChurned" label="Include churned customers" />
+        <div v-else-if="current.key === 'review'" class="stack">
           <p>Export <strong>{{ name }}</strong>, {{ churned ? 'with' : 'without' }} churned customers.</p>
           <p class="muted">Continue starts the export on the server; the next step follows it live.</p>
           <Banner v-if="error" variant="danger">{{ error }}</Banner>
         </div>
-        <JobProgress
-          v-else-if="current.key === 'run' && jobId"
-          :target="live['jobs.item']"
-          :id="jobId"
-          :title="`Export ${name}`"
-          @done="(job) => (succeeded = job.status === 'succeeded')"
-        />
+        <div v-else-if="current.key === 'run' && jobId" class="stack">
+          <!-- Above the job, not under it: on a phone the sticky action bar covers the end of the step. -->
+          <p v-if="blockedOn === 'run' && !succeeded" class="muted" role="alert">Done waits until the export has succeeded.</p>
+          <JobProgress :target="live['jobs.item']" :id="jobId" :title="`Export ${name}`" @done="(job) => (succeeded = job.status === 'succeeded')" />
+        </div>
       </template>
     </Stepper>
     <p class="muted">entered: {{ entered.join(', ') }}</p>
@@ -122,7 +132,7 @@ const shortStep = ref('team')
 </template>
 
 <style scoped>
-.review { display: flex; flex-direction: column; gap: var(--ui-space-3); }
+.stack { display: flex; flex-direction: column; gap: var(--ui-space-3); }
 .muted { color: var(--ui-muted); font-size: var(--ui-text-sm); }
 .narrow { max-width: 24rem; padding: var(--ui-space-4); border: var(--ui-border-width) dashed var(--ui-border); border-radius: var(--ui-radius-card); }
 </style>

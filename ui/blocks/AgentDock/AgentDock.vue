@@ -3,7 +3,7 @@
 // read, sending is a call with the mode; an agent message that carries a plan gets "Show me"
 // (guide: Spotlight, the user acts) and "Do it" (drive: AgentCursor acts visibly). Everything the
 // dock renders carries data-agent-ui, so the cursor's "user input stops the plan" skips it.
-import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ListResponse, LiveTarget, MutationTarget, NoParameters } from '@/api/runtime'
 import { useLiveConnection, useLiveList } from '@/api/vue'
@@ -17,13 +17,17 @@ import Spotlight from '../../Spotlight/Spotlight.vue'
 import Textarea from '../../Textarea/Textarea.vue'
 import type { DrivePlan } from '../../agent/types'
 import { formatAge } from '../../format'
+import { useComposer } from './composer'
 import { guideStops, thinking, thread, type AgentMode, type ChatMessage, type GuideStop } from './dock'
+import { useFollow } from './follow'
 
 const props = withDefaults(defineProps<{
   /** The thread, e.g. `live.conversation`; read whole without parameters, shown oldest first. */
   conversation: LiveTarget<never, ListResponse<ChatMessage>>
   /** The call that sends a message, e.g. `calls.sendMessage`; body `{ text, mode }`. */
   send: MutationTarget<NoParameters, { text: string; mode: AgentMode }, unknown>
+  /** The call that stops the answer being written, e.g. `calls.cancelAnswer`; Stop replaces Send while the agent answers. */
+  cancel?: MutationTarget<NoParameters, undefined, unknown> | undefined
   /** The plan attached to an agent message, if any. */
   planOf?: ((message: ChatMessage) => DrivePlan | undefined) | undefined
   /** Mutating actions drive mode may submit without a pause, from DESIGN.md (D27). */
@@ -45,32 +49,18 @@ const plans = computed(() => new Map(messages.value.map(message => [message.id, 
 const heading = computed(() => props.title ?? t('ui.agent'))
 const modes = computed(() => [['chat', t('ui.chat')], ['guide', t('ui.guide')], ['drive', t('ui.drive')]] as const)
 
-const log = ref<HTMLElement | null>(null)
-const draft = ref('')
-const sending = ref(false)
-const failure = ref('')
+// The log follows new text only while the reader is at its bottom; else Jump to latest shows (D98).
+const { log, unseen, onScroll, toBottom, jump } = useFollow(() => messages.value)
 
-async function submit() {
-  const text = draft.value.trim()
-  if (text === '' || sending.value) return
-  sending.value = true
-  failure.value = ''
-  try {
-    await connection.value.call(props.send, {}, { text, mode: mode.value })
-    draft.value = ''
-  } catch (error) {
-    const fields = (error as { fields?: Record<string, string> }).fields
-    failure.value = fields?.['text'] ?? (error instanceof Error ? error.message : String(error))
-  } finally {
-    sending.value = false
-  }
-}
-
-function onKey(event: KeyboardEvent) {
-  if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return
-  event.preventDefault()
-  void submit()
-}
+// Composer: one call at a time; with a cancel call Stop replaces Send while the agent answers (D98).
+const { form, field, draft, pending, stopping, failure, stoppable, submit, onAction, onKey } = useComposer({
+  messages: () => messages.value,
+  connection: () => connection.value,
+  send: () => props.send,
+  cancel: () => props.cancel,
+  mode: () => mode.value,
+  sending: toBottom,
+})
 
 // Guide: the user walks the plan's stops with Next and Back; the dock navigates between pages.
 const guide = shallowRef<{ stops: GuideStop[]; index: number } | null>(null)
@@ -120,12 +110,6 @@ function takeOver() {
 
 // The shell collapses the dock while a plan runs (AppShell dockCollapsed), so the plan reaches the page.
 watch(() => guide.value !== null || driving.value !== null, running => emit('running', running))
-
-// The newest message stays in view.
-watch(() => [messages.value.length, thinking(messages.value)], async () => {
-  await nextTick()
-  log.value?.scrollTo({ top: log.value.scrollHeight })
-})
 </script>
 
 <template>
@@ -142,33 +126,42 @@ watch(() => [messages.value.length, thinking(messages.value)], async () => {
     <div class="ui-agent-dock__modes" role="group" :aria-label="heading">
       <Button v-for="[value, label] in modes" :key="value" size="sm" variant="ghost" class="ui-agent-dock__mode" :aria-pressed="mode === value" @click="mode = value">{{ label }}</Button>
     </div>
-    <div ref="log" class="ui-agent-dock__log" role="log" :aria-busy="list.loading.value">
-      <Banner v-if="list.error.value" variant="danger">
-        {{ list.error.value.message }}
-        <template #action><Button size="sm" @click="list.retry()">{{ t('ui.retry') }}</Button></template>
-      </Banner>
-      <Skeleton v-else-if="list.loading.value" :lines="4" />
-      <div v-for="message in messages" :key="message.id" class="ui-agent-dock__message" :data-variant="message.role">
-        <p class="ui-agent-dock__text">{{ message.text }}</p>
-        <time class="ui-agent-dock__time" :datetime="message.createdAt">{{ formatAge(message.createdAt, locale) }}</time>
-        <div v-if="plans.get(message.id)" class="ui-agent-dock__plan">
-          <Button v-if="mode !== 'drive'" size="sm" @click="showMe(plans.get(message.id)!)">
-            <template #icon><Icon name="sparkles" /></template>{{ t('ui.showMe') }}
-          </Button>
-          <Button v-if="mode !== 'guide'" size="sm" @click="doIt(plans.get(message.id)!)">
-            <template #icon><Icon name="play" /></template>{{ t('ui.doIt') }}
-          </Button>
+    <div class="ui-agent-dock__thread">
+      <div ref="log" class="ui-agent-dock__log" role="log" tabindex="0" :aria-label="t('ui.conversation')" :aria-busy="list.loading.value" @scroll="onScroll">
+        <Banner v-if="list.error.value" variant="danger">
+          {{ list.error.value.message }}
+          <template #action><Button size="sm" @click="list.retry()">{{ t('ui.retry') }}</Button></template>
+        </Banner>
+        <Skeleton v-else-if="list.loading.value" :lines="4" />
+        <div v-for="message in messages" :key="message.id" class="ui-agent-dock__message" :data-variant="message.role">
+          <p class="ui-agent-dock__text">{{ message.text }}</p>
+          <time class="ui-agent-dock__time" :datetime="message.createdAt">{{ formatAge(message.createdAt, locale) }}</time>
+          <div v-if="plans.get(message.id)" class="ui-agent-dock__plan">
+            <Button v-if="mode !== 'drive'" size="sm" @click="showMe(plans.get(message.id)!)">
+              <template #icon><Icon name="sparkles" /></template>{{ t('ui.showMe') }}
+            </Button>
+            <Button v-if="mode !== 'guide'" size="sm" @click="doIt(plans.get(message.id)!)">
+              <template #icon><Icon name="play" /></template>{{ t('ui.doIt') }}
+            </Button>
+          </div>
         </div>
+        <p v-if="thinking(messages)" class="ui-agent-dock__thinking" role="status">
+          <span class="ui-agent-dock__dots" aria-hidden="true"><span /><span /><span /></span>{{ t('ui.thinking') }}
+        </p>
       </div>
-      <p v-if="thinking(messages)" class="ui-agent-dock__thinking" role="status">
-        <span class="ui-agent-dock__dots" aria-hidden="true"><span /><span /><span /></span>{{ t('ui.thinking') }}
-      </p>
+      <Button v-if="unseen" size="sm" class="ui-agent-dock__jump" @click="jump">
+        <template #icon><Icon name="arrow-down" /></template>{{ t('ui.jumpToLatest') }}
+      </Button>
     </div>
     <p v-if="failure" class="ui-agent-dock__failure" role="alert">{{ failure }}</p>
-    <form class="ui-agent-dock__composer" @submit.prevent="submit">
-      <Textarea v-model="draft" name="message" :rows="1" :placeholder="t('ui.askAgent')" :aria-label="t('ui.askAgent')" @keydown="onKey" />
-      <Button type="submit" variant="primary" data-action="sendMessage" :label="t('ui.send')" :loading="sending" :disabled="draft.trim() === ''">
-        <template #icon><Icon name="arrow-up" /></template>
+    <form ref="form" class="ui-agent-dock__composer" @submit.prevent="submit">
+      <Textarea ref="field" v-model="draft" name="message" :rows="1" :placeholder="t('ui.askAgent')" :aria-label="t('ui.askAgent')" @keydown="onKey" />
+      <!-- One button for Send and Stop, so focus stays on it from Send to Stop; the way back is composer.ts's watch. -->
+      <Button
+        :type="stoppable ? 'button' : 'submit'" variant="primary" :data-action="stoppable ? cancel?.name : send.name"
+        :label="stoppable ? t('ui.stop') : t('ui.send')" :loading="pending || stopping" :disabled="!stoppable && draft.trim() === ''" @click="onAction"
+      >
+        <template #icon><Icon :name="stoppable ? 'square' : 'arrow-up'" /></template>
       </Button>
     </form>
     <Spotlight
@@ -198,7 +191,9 @@ watch(() => [messages.value.length, thinking(messages.value)], async () => {
 .ui-agent-dock__mode { flex: 1; }
 .ui-agent-dock__mode[aria-pressed="true"] { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 
+.ui-agent-dock__thread { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .ui-agent-dock__log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--ui-space-3); padding: var(--ui-space-4); }
+.ui-agent-dock__log:focus-visible { outline-offset: calc(var(--ui-border-width) * -2); }
 .ui-agent-dock__message { display: flex; flex-direction: column; gap: var(--ui-space-1); max-width: 85%; }
 .ui-agent-dock__message[data-variant="user"] { align-self: flex-end; align-items: flex-end; }
 .ui-agent-dock__text { padding: var(--ui-space-2) var(--ui-space-3); border-radius: var(--ui-radius-card); background: var(--ui-surface-2); font-size: var(--ui-text-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -216,6 +211,8 @@ watch(() => [messages.value.length, thinking(messages.value)], async () => {
 }
 @keyframes ui-agent-dock-blink { 50% { opacity: 0.2; } }
 
+/* Over the log's bottom edge, so the log never changes height; it goes once the reader is at the bottom. */
+.ui-agent-dock__jump { position: absolute; inset-block-end: var(--ui-space-2); inset-inline: 0; width: fit-content; margin-inline: auto; box-shadow: var(--ui-shadow-md); }
 .ui-agent-dock__failure { padding: 0 var(--ui-space-4); font-size: var(--ui-text-sm); color: var(--ui-danger); }
 .ui-agent-dock__composer { display: flex; align-items: flex-end; gap: var(--ui-space-2); padding: var(--ui-space-3) var(--ui-space-4); border-top: var(--ui-border-width) solid var(--ui-divider); }
 .ui-agent-dock__composer :deep(.ui-textarea) { flex: 1; }

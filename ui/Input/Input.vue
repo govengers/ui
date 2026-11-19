@@ -97,8 +97,9 @@ defineExpose({ focus: () => input.value?.focus() })
 .ui-input[data-size="sm"] { min-height: var(--ui-control-h-sm); font-size: var(--ui-text-sm); }
 .ui-input[data-size="lg"] { min-height: var(--ui-control-h-lg); font-size: var(--ui-text-lg); }
 .ui-input:focus-within { border-color: var(--ui-focus); outline: 2px solid var(--ui-focus); outline-offset: 1px; }
-.ui-input[data-invalid] { border-color: var(--ui-danger); }
-.ui-input:has(.ui-input__control:disabled) { background: var(--ui-sunk); color: var(--ui-disabled-ink); }
+/* :user-invalid: a native constraint failed after the user left the field or submitted (D95). */
+.ui-input[data-invalid], .ui-input:has(.ui-input__control:user-invalid) { border-color: var(--ui-danger); }
+.ui-input:has(.ui-input__control:disabled) { background: var(--ui-sunk); color: var(--ui-disabled-ink); cursor: not-allowed; }
 
 .ui-input__control {
   flex: 1;
@@ -108,7 +109,10 @@ defineExpose({ focus: () => input.value?.focus() })
   border: 0;
   outline: 0;
   min-height: inherit;
+  /* At least 1rem on touch screens, or the phone zooms the page on focus (D84). */
+  font-size: max(var(--ui-field-text-min), 1em);
 }
+.ui-input__control:disabled { cursor: not-allowed; }
 .ui-input__affix { display: inline-flex; align-items: center; padding: 0 var(--ui-space-3); color: var(--ui-muted); }
 .ui-input__affix + .ui-input__control { padding-left: 0; }
 .ui-input__reveal {
@@ -122,5 +126,7 @@ defineExpose({ focus: () => input.value?.focus() })
   color: var(--ui-muted);
   border-radius: var(--ui-radius-control);
 }
-.ui-input__reveal:hover { color: var(--ui-ink); }
+@media (hover: hover) {
+  .ui-input__reveal:hover { color: var(--ui-ink); }
+}
 </style>

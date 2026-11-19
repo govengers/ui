@@ -19,7 +19,7 @@ onUnmounted(() => clearInterval(ticker))
   <section>
     <h2>Dashboard row: static, live, forbidden, loading</h2>
     <div class="grid">
-      <StatusTile label="Revenue this month" :value="482310" unit="EUR" :delta="12.4" state="ok" state-label="On track" to="/ui/blocks/JobProgress">
+      <StatusTile label="Revenue this month" :value="482310" unit="EUR" :delta="12.4" period="vs last month" state="ok" state-label="On track" to="/ui/blocks/JobProgress">
         Click: the whole tile is a link
       </StatusTile>
       <StatusTile label="Active customers" :value="active.total.value ?? 0" :loading="active.loading.value" state="ok" state-label="Live">

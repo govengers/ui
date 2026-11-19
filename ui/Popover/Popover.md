@@ -21,6 +21,7 @@ base of `Menu` and of every block with custom dropdown content (filters, pickers
 |------|------|-----|
 | this card | always | the contract |
 | `Popover.vue` | to use it: skim; to change it: read | the behaviour |
+| `place.ts` | only when changing where the panel goes | the placement, shared with Tooltip |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 
 Do not load:
@@ -73,9 +74,12 @@ and name. Buttons inside that mutate data carry their own `data-action` (D23).
 ## Gotchas
 
 - The trigger slot must render one element: its box is the anchor. The wrapper is
-  `display: contents`, so a full-width trigger stays full width.
+  `display: contents`, so a full-width trigger stays full width; a `display: contents` element in
+  the slot (a `Tooltip` around the trigger) is looked through to its first element.
 - `top`, `left`, `max-height`, `min-width` (with `matchWidth`) and `data-placement` on the panel
   belong to the script; style the content, not the panel's position.
+- The placement is `place.ts`, shared with `Tooltip` (D90): copy it with `Popover.vue`, and a
+  placement fix there moves both.
 - Opening one popover closes any other open one that is not its ancestor (native `popover="auto"`).
   Nest a popover inside another's content to keep both open.
 - Focus returns to the trigger on Escape and `close()` because the browser remembers what was

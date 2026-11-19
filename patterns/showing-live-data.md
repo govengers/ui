@@ -1,8 +1,8 @@
 ---
 name: Showing live data
 tier: pattern
-intent: [live updates, websocket, real-time, subscription, stale data, presence, loading and error states]
-uses: [SearchTable, StatusTile, JobProgress, ConnectionBanner, Skeleton, Banner, EmptyState]
+intent: [live updates, websocket, real-time, subscription, stale data, presence, loading and error states, which loader, optimistic update]
+uses: [SearchTable, StatusTile, JobProgress, ConnectionBanner, Skeleton, Banner, EmptyState, Button, FileUpload]
 livewire: true
 status: ready
 ---
@@ -22,6 +22,21 @@ list. The page never polls and never upserts its own writes; the push renders th
 | `stale` | the last data stays on screen under a quiet notice (`ui.stale`) |
 
 A screen with several subscriptions exposes one failure and one retry, not one per block.
+
+## Which loader
+
+| Wait | Show |
+|------|------|
+| first load of a known shape | `Skeleton` in that shape, after `--ui-loading-delay`, so a fast answer flashes nothing |
+| a call from a button | that Button's `loading` |
+| countable work | `FileUpload` or `JobProgress`: indeterminate until the first report, never a made-up value |
+| a refetch (filter, sort, page) | the old rows stay until the new ones arrive |
+
+Past about 1 s show that work runs, past 10 s a percent-done indicator and a way to stop (NN/g,
+"Response Times: The 3 Important Limits"). A change shows before the answer only if a refusal
+reverts it and the user is told (the runtime's `optimistic` option; Board announces it, pages show
+`move-error`). Anything irreversible (a payment, a deletion) keeps its Button `loading` and reports
+success only after the answer; the runtime hides a removed row at once and returns it on an error.
 
 ## Lists
 

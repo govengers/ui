@@ -87,5 +87,7 @@ per transition (`payOrder`, `cancelOrder`) keeps `data-action` unambiguous; a sh
   exit (cancelled from open): pass the history, or leave the exit out of `states`.
 - The block does not check that a transition is allowed: the server does, and the page only
   offers the allowed ones. A refusal (409 conflict) shows as the error.
+- The confirm keeps its title, sentence, tone, error and running call (spinner, disabled Cancel, no
+  X) while the dialog fades out (D94); a press on it then does nothing.
 - The demo's `updateOrder` is answered by the demo itself (the fake engine has none, D50); a
   project passes its generated descriptors.

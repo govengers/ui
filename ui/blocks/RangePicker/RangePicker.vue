@@ -91,7 +91,7 @@ if (props.syncQuery) {
 <template>
   <Popover ref="popover" :label="t('ui.timeRange')" @open="onOpen">
     <template #trigger="{ toggle, expanded }">
-      <Button v-bind="expanded" :aria-label="`${t('ui.timeRange')}: ${label}`" @click="toggle">
+      <Button v-bind="expanded" class="ui-range-picker__trigger" :aria-label="`${t('ui.timeRange')}: ${label}`" @click="toggle">
         <template #icon><Icon name="clock" /></template>
         <span class="ui-range-picker__label">{{ label }}<Icon name="chevron-down" size="sm" /></span>
       </Button>
@@ -123,6 +123,8 @@ if (props.syncQuery) {
 </template>
 
 <style scoped>
+/* An absolute range is long: on a narrow phone it wraps inside the button instead of widening the page. */
+.ui-range-picker__trigger { max-width: 100%; white-space: normal; line-height: var(--ui-leading-tight); text-align: start; }
 .ui-range-picker__label { display: inline-flex; align-items: center; gap: var(--ui-space-2); }
 .ui-range-picker { display: flex; flex-wrap: wrap; }
 .ui-range-picker__quick { display: flex; flex-direction: column; min-width: 11rem; padding: var(--ui-space-1); }
@@ -140,8 +142,10 @@ if (props.syncQuery) {
   text-align: start;
   white-space: nowrap;
 }
-.ui-range-picker__item:hover, .ui-range-picker__item:focus-visible { background: var(--ui-surface-2); }
-.ui-range-picker__item:focus-visible { outline-offset: calc(var(--ui-border-width) * -2); }
+@media (hover: hover) {
+  .ui-range-picker__item:hover { background: var(--ui-surface-2); }
+}
+.ui-range-picker__item:focus-visible { background: var(--ui-surface-2); outline-offset: calc(var(--ui-border-width) * -2); }
 .ui-range-picker__item[aria-checked="true"] { color: var(--ui-accent); font-weight: var(--ui-weight-medium); }
 .ui-range-picker__separator { height: var(--ui-border-width); margin: var(--ui-space-1) calc(var(--ui-space-1) * -1); background: var(--ui-divider); }
 .ui-range-picker__absolute {

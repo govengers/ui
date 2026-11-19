@@ -2,7 +2,7 @@
 // Tabs: a tab list or, when the items carry `to`, a nav of router links (counted list tabs).
 // modelValue names the active tab in both forms. The tab list uses a roving tabindex: arrows,
 // Home and End move focus and select at once (automatic activation). Panels belong to the page.
-import { computed } from 'vue'
+import { computed, useTemplateRef, watch } from 'vue'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import Badge from '../Badge/Badge.vue'
 
@@ -29,6 +29,35 @@ const routed = computed(() => props.items.every(item => item.to !== undefined))
 const tabbable = computed(() => props.items.find(item => item.value === props.modelValue && !item.disabled)?.value
   ?? props.items.find(item => !item.disabled)?.value)
 
+// A strip wider than its box scrolls sideways: the active tab is scrolled into it, the page never
+// moves. A new active tab is always placed; a change of the items (counts arrive later and widen the
+// tabs) or of the strip's size (a rotation) places it again unless the user has scrolled the strip
+// since the active tab last changed: a wheel, a swipe, a press on the strip itself (its scrollbar),
+// or the arrow, Home and End keys in a nav of links (in a tab list they change the tab).
+const strip = useTemplateRef<HTMLElement>('strip')
+let moved = false
+const touched = (): void => { moved = true }
+function reveal(): void {
+  const box = strip.value
+  const active = box?.querySelector<HTMLElement>('[aria-current="page"], [aria-selected="true"]')
+  if (!box || !active || box.scrollWidth <= box.clientWidth) return
+  const outer = box.getBoundingClientRect()
+  const inner = active.getBoundingClientRect()
+  if (inner.left < outer.left) box.scrollLeft -= outer.left - inner.left
+  else if (inner.right > outer.right) box.scrollLeft += inner.right - outer.right
+}
+const follow = (): void => { if (!moved) reveal() }
+watch(() => props.modelValue, () => { moved = false; reveal() }, { flush: 'post' })
+watch(() => props.items, follow, { flush: 'post', deep: true })
+watch(strip, (element, _, onCleanup) => {
+  if (!element) return
+  reveal()
+  if (typeof ResizeObserver === 'undefined') return // no observer where the platform has none
+  const observer = new ResizeObserver(follow)
+  observer.observe(element)
+  onCleanup(() => observer.disconnect())
+}, { flush: 'post' })
+
 function onKeydown(event: KeyboardEvent) {
   const tabs = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('[role="tab"]:not(:disabled)')]
   const index = tabs.indexOf(event.target as HTMLButtonElement)
@@ -43,7 +72,8 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <nav v-if="routed" class="ui-tabs" :data-size="size" :aria-label="label">
+  <nav v-if="routed" ref="strip" class="ui-tabs" :data-size="size" :aria-label="label" @wheel.passive="touched" @touchmove.passive="touched"
+    @pointerdown.self="touched" @keydown.left="touched" @keydown.right="touched" @keydown.home="touched" @keydown.end="touched">
     <RouterLink v-for="item in items" :key="item.value" v-slot="{ href, navigate }" :to="item.to!" custom>
       <a
         class="ui-tabs__tab"
@@ -57,7 +87,8 @@ function onKeydown(event: KeyboardEvent) {
       </a>
     </RouterLink>
   </nav>
-  <div v-else class="ui-tabs" :data-size="size" role="tablist" :aria-label="label" @keydown="onKeydown">
+  <div v-else ref="strip" class="ui-tabs" :data-size="size" role="tablist" :aria-label="label" @wheel.passive="touched" @touchmove.passive="touched"
+    @pointerdown.self="touched" @keydown="onKeydown">
     <button
       v-for="item in items"
       :key="item.value"
@@ -99,11 +130,12 @@ function onKeydown(event: KeyboardEvent) {
   transition: color var(--ui-duration-fast) var(--ui-ease), border-color var(--ui-duration-fast) var(--ui-ease);
 }
 .ui-tabs[data-size="sm"] .ui-tabs__tab { min-height: var(--ui-control-h-sm); padding: 0 var(--ui-space-2); font-size: var(--ui-text-xs); }
-@media (pointer: coarse) { .ui-tabs__tab, .ui-tabs[data-size="sm"] .ui-tabs__tab { min-height: var(--ui-touch-min); } }
 /* The list scrolls sideways, which clips an outside ring; draw it inside. */
 .ui-tabs__tab:focus-visible { outline-offset: -0.125rem; }
 
-.ui-tabs__tab:hover:not(:disabled, [aria-disabled]) { color: var(--ui-ink); }
+@media (hover: hover) {
+  .ui-tabs__tab:hover:not(:disabled, [aria-disabled]) { color: var(--ui-ink); }
+}
 .ui-tabs__tab[aria-selected="true"],
 .ui-tabs__tab[aria-current="page"] { color: var(--ui-ink); border-bottom-color: var(--ui-accent); }
 .ui-tabs__tab:disabled,

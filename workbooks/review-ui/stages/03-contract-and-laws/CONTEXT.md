@@ -19,8 +19,14 @@ The scope block; the recipe cards; a sibling page; the laws the recipe cards nam
 5. Agent surface (D23): `data-page` on the root, `data-action` equal to the call name on
    mutating buttons, `name` on fields, `actions.ts` present and bound. MINOR without agent
    features, MAJOR with.
-6. i18n: user strings only in `messages.ts` or `ui.*`; both locales present. MINOR.
-7. Laws: for each law the recipe card names, ask its "Review questions" of the page; a clear
+6. Words: a button starts with a specific verb and names the outcome ("Delete file", not "Yes"
+   or "OK"; WCAG 2.2 SC 2.4.6; NN/g, "Confirmation Dialogs Can Prevent User Errors"). An error
+   says what failed and gives the next step, or sits beside a Retry; "Invalid", "Failed" or
+   "Error" alone is a miss (WCAG 2.2 SC 3.3.1 and 3.3.3; NN/g, "Error-Message Guidelines"). An
+   empty state says which case it is (nothing yet, nothing matches the filter) and offers its
+   action (NN/g, "Designing Empty States in Complex Applications: 3 Guidelines"). MINOR.
+7. i18n: user strings only in `messages.ts` or `ui.*`; both locales present. MINOR.
+8. Laws: for each law the recipe card names, ask its "Review questions" of the page; a clear
    miss (a 32 px primary target on a phone page, nine equal actions in a header, no feedback
    within 400 ms on a save) is MAJOR, a judgement call MINOR, citing the law file.
 

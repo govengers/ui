@@ -59,6 +59,8 @@ defineExpose({ focus: () => textarea.value?.focus() })
   border: var(--ui-border-width) solid var(--ui-border-strong);
   border-radius: var(--ui-radius-control);
   color: var(--ui-ink);
+  /* At least 1rem on touch screens, or the phone zooms the page on focus (D84). */
+  font-size: max(var(--ui-field-text-min), 1em);
   resize: vertical;
   transition: border-color var(--ui-duration-fast) var(--ui-ease);
 }
@@ -66,6 +68,6 @@ defineExpose({ focus: () => textarea.value?.focus() })
   .ui-textarea { field-sizing: content; resize: none; }
 }
 .ui-textarea:focus-visible { border-color: var(--ui-focus); outline-offset: var(--ui-border-width); }
-.ui-textarea[aria-invalid="true"] { border-color: var(--ui-danger); }
+.ui-textarea[aria-invalid="true"], .ui-textarea:user-invalid { border-color: var(--ui-danger); }
 .ui-textarea:disabled { background: var(--ui-sunk); color: var(--ui-disabled-ink); cursor: not-allowed; }
 </style>

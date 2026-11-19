@@ -1,8 +1,10 @@
 <script setup lang="ts">
-// Avatar: a person's picture, or their initials when there is none or it fails to load, with an
-// optional presence dot. The root is one image to assistive technology: name plus status.
+// Avatar: a person's picture, or their initials when there is none or it fails to load (a person
+// icon without a name), with an optional presence mark told apart by shape, not only by colour.
+// The root is one image to assistive technology: name plus status.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Icon from '../Icon/Icon.vue'
 
 const props = withDefaults(defineProps<{
   name: string
@@ -19,13 +21,13 @@ watch(() => props.src, () => { failed.value = false })
 
 const initials = computed(() => props.name.trim().split(/\s+/).slice(0, 2).map(word => [...word][0] ?? '').join('').toUpperCase())
 const statusLabel = computed(() => ({ online: t('ui.online'), offline: t('ui.offline'), busy: t('ui.busy'), none: '' })[props.status])
-const label = computed(() => [props.alt ?? props.name, statusLabel.value].filter(Boolean).join(', '))
+const label = computed(() => [props.alt?.trim() || props.name.trim() || t('ui.unknownPerson'), statusLabel.value].filter(Boolean).join(', '))
 </script>
 
 <template>
   <span class="ui-avatar" :data-size="size" role="img" :aria-label="label">
     <img v-if="src && !failed" class="ui-avatar__image" :src="src" alt="" @error="failed = true">
-    <span v-else class="ui-avatar__initials">{{ initials }}</span>
+    <span v-else class="ui-avatar__initials"><template v-if="initials">{{ initials }}</template><Icon v-else name="user" /></span>
     <span v-if="status !== 'none'" class="ui-avatar__status" :data-status="status" />
   </span>
 </template>
@@ -66,7 +68,9 @@ const label = computed(() => [props.alt ?? props.name, statusLabel.value].filter
   border-radius: var(--ui-radius-pill);
   box-shadow: 0 0 0 2px var(--ui-surface);
 }
+/* Shape carries the status, colour only adds to it (WCAG 2.2 SC 1.4.1): a dot, a ring, a dot with a bar. */
 .ui-avatar__status[data-status="online"] { background: var(--ui-success); }
-.ui-avatar__status[data-status="offline"] { background: var(--ui-muted); }
+.ui-avatar__status[data-status="offline"] { border: 2px solid var(--ui-muted); background: var(--ui-surface); }
 .ui-avatar__status[data-status="busy"] { background: var(--ui-danger); }
+.ui-avatar__status[data-status="busy"]::after { content: ""; position: absolute; inset: 38% 20%; border-radius: var(--ui-radius-pill); background: var(--ui-surface); }
 </style>

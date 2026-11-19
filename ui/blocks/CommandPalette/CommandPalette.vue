@@ -8,7 +8,7 @@ import { useLiveConnection, useLivePair, useLiveStatus } from '@/api/vue'
 import Icon from '../../Icon/Icon.vue'
 import type { IconName } from '../../Icon/icons'
 import { boundActions, type BoundAction } from '../../agent/registry'
-import { addRecent, defaultStorage, humanize, matchActions, moveActive, readRecent, recentKey, removeRecent, writeRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
+import { addRecent, defaultStorage, highlight, humanize, matchActions, moveActive, readRecent, recentKey, removeRecent, writeRecent, type PaletteGroup, type PaletteResult, type RecentPick } from './palette'
 
 const props = withDefaults(defineProps<{
   groups: PaletteGroup[]
@@ -283,11 +283,14 @@ function onBackdropClick(event: MouseEvent): void {
           @click="option.run()"
         >
           <Icon :name="option.icon" size="sm" class="ui-command-palette__option-icon" />
-          <span class="ui-command-palette__label">{{ option.label }}</span>
+          <span class="ui-command-palette__label"><template v-for="(run, index) in highlight(option.label, text)" :key="index"><mark v-if="run.match" class="ui-command-palette__match">{{ run.text }}</mark><template v-else>{{ run.text }}</template></template></span>
           <span v-if="option.hint" class="ui-command-palette__hint">{{ option.hint }}</span>
         </div>
       </div>
-      <p v-if="nothing" class="ui-command-palette__nothing" role="status">{{ t('ui.noResults') }}</p>
+      <div v-if="nothing" class="ui-command-palette__nothing" role="status">
+        <p>{{ t('ui.noResults') }}</p>
+        <p class="ui-command-palette__nothing-hint">{{ t('ui.paletteNoResultsHint') }}</p>
+      </div>
       <p v-else-if="options.length === 0 && text.trim() === ''" class="ui-command-palette__nothing">{{ t('ui.paletteEmpty') }}</p>
     </div>
     <p class="ui-command-palette__footer">{{ t('ui.paletteKeys') }}</p>
@@ -342,9 +345,11 @@ function onBackdropClick(event: MouseEvent): void {
 .ui-command-palette__option[aria-selected="true"] { background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 .ui-command-palette__option-icon { flex: none; color: var(--ui-muted); }
 .ui-command-palette__label { flex: none; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-command-palette__match { background: none; color: inherit; font-weight: var(--ui-weight-semibold); }
 .ui-command-palette__hint { flex: 1; min-width: 0; overflow: hidden; color: var(--ui-muted); font-size: var(--ui-text-sm); text-overflow: ellipsis; white-space: nowrap; }
 .ui-command-palette__option[aria-selected="true"] :is(.ui-command-palette__hint, .ui-command-palette__option-icon) { color: inherit; }
 .ui-command-palette__nothing { padding: var(--ui-space-6) var(--ui-space-2); color: var(--ui-muted); text-align: center; }
+.ui-command-palette__nothing-hint { margin-block-start: var(--ui-space-1); font-size: var(--ui-text-sm); }
 .ui-command-palette__footer { padding: var(--ui-space-2) var(--ui-space-4); border-block-start: var(--ui-border-width) solid var(--ui-divider); }
 @media (prefers-reduced-motion: no-preference) {
   .ui-command-palette__spinner { animation: ui-command-palette-spin 1s linear infinite; }

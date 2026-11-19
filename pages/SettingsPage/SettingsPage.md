@@ -2,7 +2,7 @@
 name: SettingsPage
 tier: page
 intent: [settings page, preferences, configuration page, profile page, account page, notification settings, delete workspace, danger zone, theme setting, language setting]
-uses: [Page, PageHeader, Tabs, Card, Field, Input, Select, Switch, Button, Avatar, Banner, Skeleton, Dialog, Toast, DetailForm, LiveForm, FileUpload, theme, agent]
+uses: [Page, PageHeader, Tabs, Card, Field, Input, Select, RadioGroup, Switch, Button, Avatar, Banner, Skeleton, Dialog, Toast, DetailForm, LiveForm, FileUpload, theme, agent]
 livewire: true
 status: ready
 laws: [chunking, law-of-common-region, millers-law, pareto-principle, serial-position-effect, von-restorff-effect]
@@ -20,7 +20,7 @@ zone. Every Card is its own form with its own save, never one Save for the page
 |------|------|-----|
 | this card | always | the contract |
 | `SettingsPage.vue`, `actions.ts`, `messages.ts` | to use it: skim; to change it: read | the behaviour |
-| the cards of `Page`, `PageHeader`, `Tabs`, `Card`, `Field`, `Input`, `Select`, `Switch`, `Button`, `Avatar`, `Banner`, `Skeleton`, `Dialog`, `Toast`, `DetailForm`, `LiveForm`, `FileUpload`, `theme`, `agent` | when their props show up here | what the composed pieces do |
+| the cards of `Page`, `PageHeader`, `Tabs`, `Card`, `Field`, `Input`, `Select`, `RadioGroup`, `Switch`, `Button`, `Avatar`, `Banner`, `Skeleton`, `Dialog`, `Toast`, `DetailForm`, `LiveForm`, `FileUpload`, `theme`, `agent` | when their props show up here | what the composed pieces do |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 | the cards of its blocks, `patterns/` guide named below, the laws in `laws` | when composing | shape, reasons, review questions |
 
@@ -37,9 +37,9 @@ Do not load:
 | Tab | Cards | Data path |
 |-----|-------|-----------|
 | General | `DetailForm` "Workspace": company name, support email, time zone, default language | `useLiveForm(live.settings, calls.updateSettings, pick)`: Save sends only the touched fields |
-| Profile | "Profile": `Avatar`, `FileUpload` for the picture, name and email read only; "Appearance": theme and language | `useLive(live['users.item'], { id })`, `uploads.uploadFile`, `useTheme()`, the vue-i18n `locale` |
+| Profile | "Profile": `Avatar`, `FileUpload` for the picture, name and email read only; "Appearance": theme (`RadioGroup`, three options) and language (`Select`) | `useLive(live['users.item'], { id })`, `uploads.uploadFile`, `useTheme()`, the vue-i18n `locale` |
 | Notifications | two `Switch`es that save on change and toast "Saved" | a second `useLiveForm` on `live.settings` with its own `pick`; a refusal resets the switch |
-| Danger zone | the explanation and a danger Button; a danger `Dialog` that enables Delete only once the workspace name is typed | the name is `companyName` of the General form's record |
+| Danger zone | the explanation and a danger Button; a danger `Dialog` whose Delete refuses until the name matches: a wrong name gets a field error and the focus back in the name | the name is `companyName` of the General form's record |
 
 ## Props
 
@@ -64,7 +64,8 @@ active tab is derived from `route.query.tab`; an unknown value shows General.
 
 Field names equal the setting names (`companyName`, `supportEmail`, `timezone`, `language`,
 `notifyByEmail`, `weeklyDigest`); the profile's are `avatar`, `name`, `email`, `theme`, `locale`;
-the confirmation's is `workspaceName`.
+the confirmation's is `workspaceName`. `theme` names three radios: a plan picks one with
+`{ selector: '[name="theme"][value="dark"]' }` (RadioGroup card).
 
 ## Messages
 
@@ -88,7 +89,7 @@ so one `t` resolves the page's keys and the `ui.*` keys (`ui.cancel`, `ui.retry`
 - No `updateUser` call: name and email are read only, and an uploaded picture is not set on
   the user. A project with the call replaces the profile Fields with a `DetailForm` over
   `useLiveForm(live['users.item'], { id }, calls.updateUser)`.
-- No `deleteWorkspace` call: the dialog's Delete closes and toasts.
+- No `deleteWorkspace` call: the dialog's Delete closes and toasts once the name matches.
 - `Settings` has no currency field, so General has none.
 - The Profile language changes the vue-i18n `locale` for this tab only; a project persists it on
   the user, like the theme through `useTheme({ persist })`.
@@ -104,6 +105,11 @@ so one `t` resolves the page's keys and the `ui.*` keys (`ui.cancel`, `ui.retry`
 - `useTheme()` applies the theme through a watcher made by its first caller. Call it once in the
   shell (`App.vue`) so that caller never unmounts; if this page is the first, a theme chosen
   after leaving and coming back is not applied.
+- Delete refuses until the name matches and is never disabled (D95): a disabled button says
+  nothing about why and cannot take focus. A click with another name shows
+  `settings.danger.mismatch` under the field and focuses it; typing or closing clears it. Enter in
+  the name field does what the click does (the dialog holds no form, so there is no implicit
+  submit); an Enter that commits an input method's text does nothing.
 - The Danger zone button and the dialog's Delete both carry `data-action="deleteWorkspace"`.
   `resolveTarget` searches an open modal dialog first, so a plan's first click opens the dialog
   and its second lands on the dialog's Delete; drive mode pauses on both (mutating).

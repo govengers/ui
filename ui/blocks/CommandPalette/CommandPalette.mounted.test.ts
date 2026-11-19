@@ -1,5 +1,5 @@
 // CommandPalette mounted (D69): picks under a refusing storage, recents per identity, the active
-// option after a paste, and the order of results and actions.
+// option after a paste, the order of results and actions, the no-results hint and the marked words.
 import { afterEach, describe, expect, jest, test } from 'bun:test'
 import type { PaletteGroup, RecentPick } from './palette'
 import { mount, type Mounted } from '../../../scripts/test/mount'
@@ -164,6 +164,28 @@ describe('CommandPalette', () => {
     palette.pair.value = palette.pairFor('test:bob')
     await flush()
     expect(listed(palette.root).join()).not.toContain('Task secret-of-ada')
+  })
+
+  test('a text nothing matches stays in the input and the list says what to try', async () => {
+    jest.useFakeTimers()
+    const none: PaletteGroup[] = [{ key: 'tasks', label: 'Tasks', search: async () => [] }]
+    palette = mount(CommandPalette, () => ({ groups: none, inline: true, hotkey: '' }))
+    const input = await type(palette.root, 'zebra')
+    expect(input.value).toBe('zebra')
+    const status = palette.root.querySelector('[role="status"]')?.textContent ?? ''
+    expect(status).toContain('No results')
+    expect(status).toContain('Check the spelling or try fewer words')
+  })
+
+  test('typed words are marked in the labels, and a label stays text', async () => {
+    jest.useFakeTimers()
+    const html: PaletteGroup[] = [{ key: 'tasks', label: 'Tasks', search: async () => [{ id: 't1', label: 'Fix the login <b>now</b>' }] }]
+    palette = mount(CommandPalette, () => ({ groups: html, inline: true, hotkey: '' }))
+    await type(palette.root, 'login fix')
+    const option = palette.root.querySelector('[role="option"]') as HTMLElement
+    expect([...option.querySelectorAll('mark.ui-command-palette__match')].map((mark) => mark.textContent)).toEqual(['Fix', 'login'])
+    expect(option.querySelector('b')).toBeNull()
+    expect(option.textContent).toContain('Fix the login <b>now</b>')
   })
 
   test('a slow group below does not keep the top result from becoming active', async () => {

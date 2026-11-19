@@ -94,6 +94,8 @@ async function remove(): Promise<void> {
     await connection.value.call(calls.deleteCustomer, { id: props.id }, undefined)
     toast({ message: t('customers.detail.deleted', { name }), variant: 'success' })
     confirming.value = false
+    // The record is gone with its edits: the leave guard must not ask about them (D96).
+    form.reset()
     await router.push(listRoute)
   } catch (failure) {
     toast({ message: (failure as Error).message, variant: 'danger' })

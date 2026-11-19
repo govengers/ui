@@ -431,7 +431,10 @@ const overLimit = (column: BoardColumn): boolean => column.limit !== undefined &
   cursor: grab;
   touch-action: none;
 }
-.ui-board__grip:hover, .ui-board__grip[aria-pressed="true"] { background: var(--ui-surface-2); color: var(--ui-ink); }
+@media (hover: hover) {
+  .ui-board__grip:hover { background: var(--ui-surface-2); color: var(--ui-ink); }
+}
+.ui-board__grip[aria-pressed="true"] { background: var(--ui-surface-2); color: var(--ui-ink); }
 .ui-board__menu { flex: none; }
 .ui-board__placeholder { border: 2px dashed var(--ui-border-strong); border-radius: var(--ui-radius-control); }
 .ui-board__empty { padding: var(--ui-space-3); color: var(--ui-muted); font-size: var(--ui-text-sm); text-align: center; }

@@ -20,7 +20,7 @@ table (ICM, `workbooks/README.md`); procedure lives in the workbooks, facts in t
 | `skills/` | thin entry points that name a workbook; installed into `~/.claude/skills` and into projects |
 | `templates/project/` | files `start-project` copies into a target |
 | `demo/` | the demonstrator (`just demo`); `demo/src/fake/` the in-browser livewire engine |
-| `scripts/` | index, contrast, screenshots, ui-lint, cards; `scripts/test/` the mounted-test harness (D69); `just ci` runs them |
+| `scripts/` | index, contrast, screenshots, touch-probe (D87), ui-lint, cards, `tokens.test.ts` (the touch floor per pointer and density, D84); `scripts/test/` the mounted-test harness (D69); `just ci` runs all but screenshots and touch-probe |
 | `docs/design.md` | every decision, numbered D1 onward; a change is a new number |
 | `journal/`, `TODO.md` | run reports and the monthly line; defects seen on the way |
 
@@ -48,7 +48,9 @@ names. Do not browse other workbooks or pieces.
    gotchas live in `<Name>.md`; the code must not know more than the card says. A card without a
    `## Load` table or without front matter fails `just index`.
 3. **Tokens are the only knob** (P4): components read `var(--ui-*)`; presets override tokens;
-   `ui-lint` fails hex, raw px and font-family. A look no token expresses is a token request.
+   `ui-lint` fails hex, raw px, font-family, colour functions, literal font sizes, bare `vh`,
+   `:hover` outside `@media (hover: hover)` and an icon-only Button without `label` (D89). A look
+   no token expresses is a token request.
 4. **Native first, accessibility floor non-negotiable** (D9): names, focus, 44 px on touch,
    measured contrast, reduced motion. Ponytail never trims these.
 5. **Agent experience over developer experience** (P2): explicit imports, one way per job, one
@@ -56,8 +58,8 @@ names. Do not browse other workbooks or pieces.
 6. **The accessibility tree is the agent tree** (D23): `data-page`, `data-action` = livewire
    call name, `name` on fields. Pieces and recipes carry them; `ui-lint` checks pages.
 7. **Gates before done**: `bun run check`, `bun scripts/ui-lint.ts ui pages`, `just contrast`,
-   `just index`, screenshots for what changed and looked at, `bun test`. Never claim a check
-   you did not run.
+   `just index`, screenshots for what changed and looked at, `just touch-probe --only=<Name>` for
+   a piece with controls, `just test`. Never claim a check you did not run.
 8. **Learn loop, mandatory.** Every workbook run ends with `workbooks/_shared/learn/CONTEXT.md`:
    a run report in `journal/runs/`, one line in `journal/<yyyy-mm>.md`, safe fixes applied in
    the run, the rest for `groom`. A wrong or missing sentence on a card is fixed in the run.

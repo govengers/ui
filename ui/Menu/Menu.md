@@ -67,6 +67,9 @@ the driver can call it without opening the menu by hand. The menu is `role="menu
 
 - A destructive item does not act directly: its `run` opens a `Dialog` with `variant="danger"`.
   The menu closes and focus returns to the trigger first, so the dialog gives focus back there.
-- Arrow keys, Home and End move between enabled items; disabled items are skipped. Tab closes
-  the menu and moves on from the trigger.
+- Arrow keys, Home and End move between enabled items; disabled items are skipped. A letter
+  moves to the next enabled item whose text starts with it, wrapping (one key, no typed word;
+  APG Menu pattern). Tab closes the menu and moves on from the trigger.
+- Order items by intent, groups split by `-` separators; a `danger` item goes last, behind a
+  separator.
 - Placement, following and light dismiss are `Popover`'s; see its card.

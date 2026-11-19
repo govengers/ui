@@ -43,7 +43,8 @@ defineProps<{
 .ui-page-header__title { font-size: var(--ui-text-2xl); overflow-wrap: anywhere; }
 .ui-page-header__subtitle { margin-top: var(--ui-space-1); color: var(--ui-muted); }
 .ui-page-header__actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); align-items: center; }
-.ui-page-header__tabs { flex-basis: 100%; }
+/* min-width 0: the Tabs strip scrolls sideways inside the header instead of widening the page. */
+.ui-page-header__tabs { flex-basis: 100%; min-width: 0; }
 @media (max-width: 48rem) {
   .ui-page-header__title { font-size: var(--ui-text-xl); }
   .ui-page-header__actions { flex-basis: 100%; }

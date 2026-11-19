@@ -12,7 +12,9 @@ laws: [fittss-law, flow, jakobs-law, law-of-common-region, occams-razor, serial-
 
 A modal dialog on the native `<dialog>` with `showModal()`: the platform traps focus, closes on
 Escape and returns focus to the opener. Title, optional description, a body and a right-aligned
-actions footer; on phones it sits at the bottom, full width, and the footer stays visible.
+actions footer; on phones it sits at the bottom, full width, and the footer stays visible. It
+fades in and out like `Sheet` (D94): the panel fades and rises a little, the backdrop fades; an
+`inline` dialog does not move.
 
 ## Load
 
@@ -71,6 +73,18 @@ and that name.
 - First focus goes to the first focusable element, which is the X. For a form, put `autofocus` on
   the first field; a destructive confirm should keep the default so Enter does not delete.
 - A toast fired while the dialog is open sits behind it and is inert. Close first, then toast.
+- A delete the user can undo needs no confirm: a Toast with Undo
+  (`patterns/building-a-list-page.md`).
+- Motion: reduced motion skips the fade (`base.css` for the panel, a rule in `Dialog.vue` for the
+  backdrop, which `base.css` does not reach). Without `@starting-style` the dialog appears at once
+  as before. The exit runs only where `@supports (overlay: auto)` holds; elsewhere the dialog
+  disappears at once.
+- Keep what it shows until the next open, do not reset at close: the panel stays visible for
+  `--ui-duration` after it closed. Keep the title, description and body of the last open until
+  the dialog opens again, and drive `v-model` from its own boolean, not from clearing the item the
+  text reads (`:model-value="item !== null"` then `item = null` shows "Delete 0 customers?" while
+  it fades). A value that must not outlive the dialog, such as a secret, is still cleared at
+  close; only the view around it is kept.
 - `persistent` relies on `closedby="none"` where supported; elsewhere a second Escape without
   an interaction in between can still close the dialog (the browser's anti-trap rule), and
   `update:modelValue` reports it.

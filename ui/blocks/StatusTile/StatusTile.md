@@ -40,6 +40,7 @@ Do not load:
 | `value` | `string \| number` | required | a number is formatted with the app locale; a string is shown as is (pre-formatted money, `-`) |
 | `unit` | `string` | none | after the value, smaller |
 | `delta` | `number` | none | the change in percent: `12.5` shows +12.5 %, `0` is neutral |
+| `period` | `string` | none | what `delta` compares against, `vs last month`: muted text after the delta, outside its coloured pill; shown only with `delta` |
 | `invert` | `boolean` | `false` | a rise is bad (errors, churn): up turns danger, down success |
 | `state` | `ok \| warning \| danger \| neutral` | none | the lamp before the label |
 | `stateLabel` | `string` | none | names the lamp for assistive technology |
@@ -67,7 +68,8 @@ const active = useLiveList(live.customers, { filter: { where: { field: 'status',
 ## Agent
 
 A linked tile is one link whose name is all its text. The delta's arrow is decorative; the
-signed number carries the direction. The lamp is an image named `stateLabel`, else hidden.
+signed number and its period carry the direction. The lamp is an image named `stateLabel`, else
+hidden.
 
 ## Gotchas
 

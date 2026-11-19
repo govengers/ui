@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// Skeleton: a shimmering placeholder while data loads. Hidden from assistive technology; the
-// container that loads says aria-busy. width and height are the one place inline style is allowed.
+// Skeleton: a shimmering placeholder while data loads, shown after --ui-loading-delay. Hidden from
+// assistive technology; the container that loads says aria-busy. width and height are the one
+// place inline style is allowed.
 withDefaults(defineProps<{
   shape?: 'text' | 'circle' | 'rect' | undefined
   /** For `text`: the number of bars; the last of several is 60% wide. */
@@ -33,7 +34,16 @@ withDefaults(defineProps<{
 .ui-skeleton[data-shape="circle"],
 .ui-skeleton[data-shape="rect"] {
   background: linear-gradient(90deg, var(--ui-skeleton) 40%, var(--ui-skeleton-shine) 50%, var(--ui-skeleton) 60%) 100% 0 / 300% 100%;
-  animation: ui-skeleton-shimmer 1.5s linear infinite;
 }
+.ui-skeleton__line { animation: ui-skeleton-shimmer 1.5s linear infinite; }
+
+/* Hidden for --ui-loading-delay with its box reserved, so a fast answer shows no placeholder.
+   base.css shortens durations under reduced motion, never this delay. */
+.ui-skeleton { animation: ui-skeleton-appear 0s var(--ui-loading-delay) backwards; }
+.ui-skeleton[data-shape="circle"],
+.ui-skeleton[data-shape="rect"] {
+  animation: ui-skeleton-appear 0s var(--ui-loading-delay) backwards, ui-skeleton-shimmer 1.5s linear infinite;
+}
+@keyframes ui-skeleton-appear { from { visibility: hidden; } }
 @keyframes ui-skeleton-shimmer { to { background-position: 0 0; } }
 </style>

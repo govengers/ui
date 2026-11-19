@@ -3,6 +3,7 @@
 // required into the control through field.ts; the control does not need to know its label.
 // `group` makes it a fieldset with a legend for a set of checkboxes or radios.
 import { computed, provide, toRef } from 'vue'
+import Icon from '../Icon/Icon.vue'
 import { fieldId, fieldKey } from './field'
 
 const props = withDefaults(defineProps<{
@@ -32,7 +33,7 @@ provide(fieldKey, { id, describedBy, invalid, required: toRef(props, 'required')
       {{ label }}<span v-if="required" class="ui-field__required" aria-hidden="true"> *</span>
     </component>
     <slot />
-    <p v-if="error" :id="errorId" class="ui-field__error" role="alert">{{ error }}</p>
+    <p v-if="error" :id="errorId" class="ui-field__error" role="alert"><Icon name="alert-circle" size="sm" class="ui-field__error-icon" />{{ error }}</p>
     <p v-else-if="hint" :id="hintId" class="ui-field__hint">{{ hint }}</p>
   </component>
 </template>
@@ -44,5 +45,7 @@ provide(fieldKey, { id, describedBy, invalid, required: toRef(props, 'required')
 .ui-field__required { color: var(--ui-danger); }
 .ui-field__hint, .ui-field__error { font-size: var(--ui-text-xs); }
 .ui-field__hint { color: var(--ui-muted); }
-.ui-field__error { color: var(--ui-danger); }
+/* The icon marks the error besides the colour (WCAG 2.2 SC 1.4.1); 1em high, centred on the first line. */
+.ui-field__error { display: flex; gap: var(--ui-space-1); align-items: flex-start; color: var(--ui-danger); }
+.ui-field__error-icon { margin-top: calc((1lh - 1em) / 2); }
 </style>

@@ -1,7 +1,7 @@
 ---
 name: LiveForm
 tier: block
-intent: [live form, edit form state, useLiveForm, touched fields, dirty form, unsaved changes, save only changed fields, patch form, edit conflict, form field errors]
+intent: [live form, edit form state, useLiveForm, touched fields, dirty form, unsaved changes, save only changed fields, patch form, edit conflict, form field errors, leave guard, warn before leaving]
 uses: []
 livewire: true
 status: ready
@@ -13,14 +13,15 @@ laws: [peak-end-rule, postels-law, teslers-law, zeigarnik-effect]
 `useLiveForm` in `liveForm.ts`, a composable, not a component: the state of an edit form over
 one live record (D33). Save sends only the touched fields. A push refills only the untouched
 ones; a touched field keeps the user's text. Field errors come from `ApiError.fields`, and a
-retried save keeps its Idempotency-Key. Render it with `DetailForm` or with your own Field stack.
+retried save keeps its Idempotency-Key. While the form is dirty, leaving the page asks first
+(`useLeaveGuard`, D96). Render it with `DetailForm` or with your own Field stack.
 
 ## Load
 
 | Read | When | Why |
 |------|------|-----|
 | this card | always | the contract |
-| `liveForm.ts` | to use it: skim; to change it: read | the behaviour |
+| `liveForm.ts`, `leaveGuard.ts` | to use it: skim; to change it: read | the behaviour |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 | `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
 
@@ -43,6 +44,7 @@ None: a composable. Its options:
 | `call` | `MutationTarget<Params, Patch, unknown>` | required | the update (PATCH), `calls.updateCustomer`; same parameters as the read |
 | `pick` | `(item: Item) => Patch` | every field | the fields the form edits; give it, so `id` and `createdAt` stay out of `fields` |
 | `connection` | `MaybeRefOrGetter<LiveConnection>` | the provided pair's | |
+| `leaveGuard` | `boolean` | `true` | calls `useLeaveGuard(dirty)`; `false` for a form whose edits may be dropped, and for a form that saves on change (a switch that saves at once), which would ask during its own save |
 
 ## Returns (`LiveFormState<Item, Patch>`)
 
@@ -60,7 +62,13 @@ None: a composable. Its options:
 | `conflicts` | `ComputedRef<string[]>` | touched fields the server changed since the user started editing them |
 | `save()` | `Promise<boolean>` | sends `touched` only; with nothing touched it makes no call and answers true |
 | `reset()` | `void` | every field takes the server's value, errors clear |
+| `settle(name)` | `void` | the user left field `name`: its error clears when the value differs from the one it held when the refused save went out, once no pointer is down; `DetailForm` calls it on `focusout` |
 | `retry()` | `void` | subscribes the read again |
+
+`useLeaveGuard(dirty: Ref<boolean>)` in `leaveGuard.ts` is the guard on its own, for a form
+state that is not a LiveForm. While `dirty` it asks `window.confirm(t('ui.leaveUnsaved'))` before
+a navigation to another path (`router.beforeEach`) and holds the browser's prompt on a page unload
+(`beforeunload`); both go when the calling component's scope ends.
 
 ## Slots
 
@@ -86,6 +94,10 @@ const { fields, errors, saving, save } = useLiveForm({
   stays empty, because the fields already show the failure. A refusal naming a field the form
   does not have also goes to `saveError`, and so does any other failure.
 
+## Messages
+
+`ui.leaveUnsaved`.
+
 ## Agent
 
 The composable has no DOM. The page names each control after its field (`name="email"`) and the
@@ -103,4 +115,20 @@ submit `data-action` after the call (`updateCustomer`); `DetailForm` does that f
   under `v-if="item"` or behind `loading`, like `DetailForm`.
 - `fields` is not watched: nothing rebuilds it except a push of an untouched field and
   `reset()`. Never assign the whole record into it; set fields one by one.
-- Errors stay until the next `save()` or `reset()`; they do not clear while the user types.
+- A field's error clears when the user leaves it with another value than the refused one; a
+  custom Field stack calls `settle(name)` on blur (`@focusout` on the form, the control's `name`).
+  `settle` waits until no pointer is down, then one task: the error line going away moves what is
+  under it, and a press on Save that took the focus away would end its click on nothing. Never
+  clear an error yourself on blur. Every error clears on the next `save()` or `reset()`; none
+  clears while the user types.
+- An error is about the value the server refused. A push that changes an untouched refused field
+  clears its error, also while the save is still on its way.
+- The leave guard lives as long as the form state, not as long as the card that shows it: a page
+  that keeps its state across tabs keeps the guard, and so does a page a `KeepAlive` caches. A
+  query-only navigation (a tab, a filter) does not ask; two dirty forms on one page ask twice; the
+  unload prompt is unreliable on iOS Safari. Without a component or a router (a model test) there
+  is no guard.
+- A leave the app forces must not be cancellable half way. A page that leaves after it discarded
+  the record (delete, archive) calls `reset()` first, else the guard asks about edits to a record
+  that is gone. An action that ends something and then leaves (a logout) navigates first and acts
+  only when the navigation went through, else Cancel keeps the user on a page whose session ended.

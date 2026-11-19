@@ -48,7 +48,9 @@ const tag = computed(() => (props.to ? RouterLink : props.as))
   cursor: pointer;
   transition: box-shadow var(--ui-duration-fast) var(--ui-ease), transform var(--ui-duration-fast) var(--ui-ease), border-color var(--ui-duration-fast) var(--ui-ease);
 }
-.ui-card[data-interactive]:hover { box-shadow: var(--ui-shadow-md); border-color: var(--ui-border-strong); transform: translateY(-0.125rem); }
+@media (hover: hover) {
+  .ui-card[data-interactive]:hover { box-shadow: var(--ui-shadow-md); border-color: var(--ui-border-strong); transform: translateY(-0.125rem); }
+}
 
 .ui-card__header {
   display: flex;

@@ -24,7 +24,16 @@ withDefaults(defineProps<{
   background: var(--ui-bg);
   border-top: var(--ui-border-width) solid var(--ui-divider);
 }
-.ui-action-bar[data-sticky] { position: sticky; bottom: 0; z-index: var(--ui-z-sticky); }
+/* Above what else sticks to the bottom: AppShell's phone bar sets --ui-sticky-bottom. */
+.ui-action-bar[data-sticky] { position: sticky; bottom: var(--ui-sticky-bottom, 0px); z-index: var(--ui-z-sticky); }
+/* A field the browser (native validation), a script or Tab focuses scrolls clear of the bar and of
+   what it stands on, with a little room for the field's error line (WCAG 2.2 SC 2.4.11): the scroll
+   padding of the box the bar sticks in. The page's, unless the bar sits in a dialog or a popover,
+   whose bodies scroll themselves; a body that sets --ui-sticky-bottom below 0 (flush) pads 0. */
+:global(:root:has(.ui-action-bar[data-sticky]:not(dialog *, [popover] *))),
+:global(:is(.ui-dialog__body, .ui-sheet__body):has(.ui-action-bar[data-sticky])) {
+  scroll-padding-bottom: calc(max(0px, var(--ui-sticky-bottom, 0px)) + var(--ui-control-h) + 3 * var(--ui-space-3) + var(--ui-border-width));
+}
 .ui-action-bar[data-align="end"] { justify-content: flex-end; }
 .ui-action-bar[data-align="start"] { justify-content: flex-start; }
 .ui-action-bar[data-align="between"] { justify-content: space-between; }
