@@ -2,7 +2,7 @@
 name: Field
 tier: primitive
 intent: [form field, label, hint, validation error, required]
-uses: []
+uses: [Icon]
 livewire: false
 status: ready
 laws: [chunking, law-of-proximity, millers-law, paradox-of-the-active-user, postels-law]
@@ -20,6 +20,7 @@ and nothing else.
 |------|------|-----|
 | this card | always | the contract |
 | `Field.vue`, `field.ts` | to use it: skim; to change it: read | the behaviour |
+| the card of `Icon` | when its props show up here | what the composed piece does |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 
 Do not load:
@@ -36,16 +37,16 @@ Do not load:
 |------|------|---------|-------|
 | `label` | `string` | required | |
 | `hint` | `string` | none | shown under the control when there is no error |
-| `error` | `string` | none | shown instead of the hint, `role="alert"`; marks the control invalid |
+| `error` | `string` | none | shown instead of the hint, `role="alert"`, after an `alert-circle` icon so the error is not told by colour alone (WCAG 2.2 SC 1.4.1); marks the control invalid |
 | `required` | `boolean` | `false` | asterisk on the label, `required` on the control |
 | `hideLabel` | `boolean` | `false` | label for assistive technology only (search boxes) |
-| `group` | `boolean` | `false` | a `fieldset` with the label as `legend`; for `Checkbox` groups and radios |
+| `group` | `boolean` | `false` | a `fieldset` with the label as `legend`; for `Checkbox` groups and `RadioGroup` (radios are always a `RadioGroup` in a `Field group`, D95) |
 
 ## Slots
 
 | Slot | Content |
 |------|---------|
-| default | exactly one control: `Input`, `Textarea`, `Select`, `Checkbox`, `Switch` |
+| default | exactly one control: `Input`, `Textarea`, `Select`, `Checkbox`, `Switch`; with `group`, Checkboxes or one `RadioGroup` |
 
 ## With livewire
 
@@ -58,3 +59,7 @@ produces that map.
   carries its own label.
 - Write the control yourself without a Field when it has a visible label elsewhere (a table
   filter row); then pass `aria-label` on the control.
+- Native constraints (`required`, `type="email"`, `min`, `pattern`) paint the control's border
+  red through `:user-invalid`: only after the user changed and left the field or tried to submit,
+  never on a fresh form. The browser shows its own message on submit. Server errors still come
+  through `error`, which also writes the sentence and sets `aria-invalid` (D95).

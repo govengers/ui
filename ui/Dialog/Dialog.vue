@@ -102,13 +102,53 @@ function onClick(event: MouseEvent) {
   background: var(--ui-surface);
   color: var(--ui-ink);
   box-shadow: var(--ui-shadow-lg);
+  /* Not under [open]: during the exit open is gone while allow-discrete keeps display: flex. */
+  flex-direction: column;
 }
 /* Only when open: a display value on the closed dialog would override the UA's display: none. */
-.ui-dialog[open] { display: flex; flex-direction: column; }
+.ui-dialog[open] { display: flex; }
 .ui-dialog[data-size="sm"] { max-width: 24rem; }
 .ui-dialog[data-size="lg"] { max-width: 48rem; }
 .ui-dialog[data-inline] { position: static; margin: 0; }
 .ui-dialog::backdrop { background: var(--ui-scrim); }
+
+/* Entrance and exit like Sheet (D94), never for an inline preview: the panel fades and rises a
+   little, the backdrop fades. */
+.ui-dialog:not([data-inline]) {
+  opacity: 0;
+  translate: 0 var(--ui-space-2);
+  transition: opacity var(--ui-duration) var(--ui-ease), translate var(--ui-duration) var(--ui-ease);
+}
+.ui-dialog:not([data-inline])[open] { opacity: 1; translate: 0 0; }
+.ui-dialog:not([data-inline])::backdrop { opacity: 0; transition: opacity var(--ui-duration) var(--ui-ease); }
+.ui-dialog:not([data-inline])[open]::backdrop { opacity: 1; }
+/* The exit: display and overlay keep the closed dialog shown and in the top layer while it fades.
+   Without overlay it would leave the top layer and fade at its place in the page (the UA positions
+   only a modal dialog), so such an engine closes at once. */
+@supports (overlay: auto) {
+  .ui-dialog:not([data-inline]) {
+    transition:
+      opacity var(--ui-duration) var(--ui-ease),
+      translate var(--ui-duration) var(--ui-ease),
+      display var(--ui-duration) allow-discrete,
+      overlay var(--ui-duration) allow-discrete;
+  }
+  .ui-dialog:not([data-inline])::backdrop {
+    transition:
+      opacity var(--ui-duration) var(--ui-ease),
+      display var(--ui-duration) allow-discrete,
+      overlay var(--ui-duration) allow-discrete;
+  }
+}
+/* After the [open] rules: starting styles win by order, not by specificity. */
+@starting-style {
+  .ui-dialog:not([data-inline])[open] { opacity: 0; translate: 0 var(--ui-space-2); }
+  .ui-dialog:not([data-inline])[open]::backdrop { opacity: 0; }
+}
+/* base.css cuts transitions on elements, not on ::backdrop; same selector as above, so order wins. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog:not([data-inline])::backdrop { transition: none; }
+}
 
 /* Every part pads itself; the last one closes the panel. No padding on the dialog (backdrop test). */
 .ui-dialog > :last-child { padding-block-end: var(--ui-card-p); }
@@ -123,12 +163,18 @@ function onClick(event: MouseEvent) {
 .ui-dialog__close { margin-block: calc(var(--ui-space-2) * -1); margin-inline-end: calc(var(--ui-space-2) * -1); }
 .ui-dialog__description { padding: var(--ui-space-2) var(--ui-card-p) 0; color: var(--ui-muted); }
 .ui-dialog__body {
+  /* Its own scroll box: a sticky header in it sits flush with its top edge, not at the shell's
+     top bar and not at its padding; a sticky footer at its bottom edge (no padding there while the
+     actions follow, the panel's end padding without them, below). */
+  --ui-sticky-top: calc(-1 * var(--ui-space-4));
+  --ui-sticky-bottom: 0px;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
   padding: var(--ui-space-4) var(--ui-card-p) 0;
 }
+.ui-dialog__body:last-child { --ui-sticky-bottom: calc(-1 * var(--ui-card-p)); }
 .ui-dialog__actions {
   display: flex;
   flex-wrap: wrap;

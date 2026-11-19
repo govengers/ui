@@ -2,7 +2,7 @@
 // SettingsPage recipe (D8, building-a-settings-page): four tabs on ?tab=, each a stack of Cards
 // that are their own forms. General is a DetailForm over useLiveForm, Profile reads the user,
 // Notifications save on change, Danger zone confirms by typing the workspace name.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useLive, useLiveConnection } from '@/api/vue'
@@ -17,6 +17,7 @@ import Field from '../../ui/Field/Field.vue'
 import Input from '../../ui/Input/Input.vue'
 import Page from '../../ui/Page/Page.vue'
 import PageHeader from '../../ui/PageHeader/PageHeader.vue'
+import RadioGroup from '../../ui/RadioGroup/RadioGroup.vue'
 import Select from '../../ui/Select/Select.vue'
 import Skeleton from '../../ui/Skeleton/Skeleton.vue'
 import Switch from '../../ui/Switch/Switch.vue'
@@ -81,6 +82,8 @@ const notifications = useLiveForm({
   params: {},
   call: calls.updateSettings,
   pick: (settings: Settings): UpdateSettings => ({ notifyByEmail: settings.notifyByEmail, weeklyDigest: settings.weeklyDigest }),
+  // a switch saves at once: nothing is left unsaved
+  leaveGuard: false,
 })
 async function toggle(name: 'notifyByEmail' | 'weeklyDigest', value: boolean): Promise<void> {
   notifications.fields[name] = value
@@ -92,11 +95,29 @@ async function toggle(name: 'notifyByEmail' | 'weeklyDigest', value: boolean): P
   toast({ message: t('settings.notifications.failed'), variant: 'danger' })
 }
 
-// Danger zone: the delete button stays disabled until the workspace name is typed.
+// Danger zone: Delete refuses until the name matches. It stays enabled, so a click says why: a field
+// error and the focus back in the name (D95). Enter in the name is the click (the dialog holds no
+// form). Typing or closing clears the error.
 const confirming = ref(false)
 const typed = ref('')
+const refused = ref(false)
+const nameInput = ref<InstanceType<typeof Input> | null>(null)
 const workspace = computed(() => general.item.value?.companyName ?? '')
 const matches = computed(() => workspace.value !== '' && typed.value.trim() === workspace.value)
+watch(typed, () => { refused.value = false })
+function requestDelete(): void {
+  if (matches.value) return confirmDelete()
+  refused.value = true
+  nameInput.value?.focus()
+}
+function onNameKeydown(event: KeyboardEvent): void {
+  // Not while an input method composes the name: that Enter commits the text.
+  if (event.key === 'Enter' && !event.isComposing) requestDelete()
+}
+function closed(): void {
+  typed.value = ''
+  refused.value = false
+}
 function confirmDelete(): void {
   // REPLACE: the demo API has no deleteWorkspace call. A project calls it, then signs out:
   // await connection.value.call(calls.deleteWorkspace, {}, undefined)
@@ -159,8 +180,8 @@ useAgentAction(deleteWorkspace, () => { confirming.value = true })
       </Card>
       <Card :title="t('settings.profile.appearance')" as="section">
         <div class="settings-page__stack">
-          <Field :label="t('settings.profile.theme')">
-            <Select :model-value="theme" name="theme" :options="themes" @update:model-value="value => (theme = value as Theme)" />
+          <Field :label="t('settings.profile.theme')" group>
+            <RadioGroup :model-value="theme" name="theme" :options="themes" @update:model-value="value => (theme = value as Theme)" />
           </Field>
           <Field :label="t('settings.profile.language')" :hint="t('settings.profile.languageHint')">
             <Select :model-value="locale" name="locale" :options="languages" @update:model-value="value => (locale = value as 'en' | 'de')" />
@@ -206,14 +227,14 @@ useAgentAction(deleteWorkspace, () => { confirming.value = true })
         size="sm"
         :title="t('settings.danger.confirmTitle')"
         :description="t('settings.danger.confirmDescription', { name: workspace })"
-        @close="typed = ''"
+        @close="closed"
       >
-        <Field :label="t('settings.danger.confirmLabel')">
-          <Input v-model="typed" name="workspaceName" autocomplete="off" />
+        <Field :label="t('settings.danger.confirmLabel')" :error="refused ? t('settings.danger.mismatch') : undefined">
+          <Input ref="nameInput" v-model="typed" name="workspaceName" autocomplete="off" @keydown="onNameKeydown" />
         </Field>
         <template #actions>
           <Button @click="confirming = false">{{ t('ui.cancel') }}</Button>
-          <Button variant="danger" data-action="deleteWorkspace" :disabled="!matches" @click="confirmDelete">{{ t('settings.danger.delete') }}</Button>
+          <Button variant="danger" data-action="deleteWorkspace" @click="requestDelete">{{ t('settings.danger.delete') }}</Button>
         </template>
       </Dialog>
     </template>

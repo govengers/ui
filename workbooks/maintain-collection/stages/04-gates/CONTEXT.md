@@ -10,7 +10,8 @@ Everything from stages 02 and 03.
    `just contrast` passes for every preset in both themes.
 3. `just index` (INDEX.md regenerated; the card's front matter validated by `scripts/cards.ts`).
 4. `bun scripts/screenshots.ts --only=<Name>`; Read both PNGs and look at them; fix and repeat.
-   A token change: re-render the pieces that use it.
+   A token change: re-render the pieces that use it. A piece with controls: `just touch-probe
+   --only=<Name>` (every target at least 44 by 44 px on touch, D87).
 5. `README.md` tier table: add the name. A changed convention: a new numbered decision in
    `docs/design.md`, never an edit of an old one.
 6. One commit per piece: `<Name>: <what it does in one line>`; no attribution footers.

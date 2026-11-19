@@ -84,7 +84,15 @@ read error's Banner is `role="alert"`, and its Retry re-subscribes.
 - The action bar's hint names no field. "Changed elsewhere" means one of `conflicts`; put a
   per-field hint on the Field from the slot's `conflicts` when the form is long.
 - A control disabled while saving loses the focus; after the save the form gives it back, or
-  moves it to the first refused field (`aria-invalid`). Leave `disabled` unbound and the user
-  can keep typing: an edit during the save stays touched and goes with the next one.
+  moves it to the first refused field in DOM order (`aria-invalid`). Leave `disabled` unbound
+  and the user can keep typing: an edit during the save stays touched and goes with the next one.
+- A refused field's error clears when the user leaves it (`focusout`) with another value than
+  the refused one (`form.settle`), once the press that took the focus away has ended: the line
+  going away must not move Save from under the pointer. The control's `name` must be the server's
+  field name.
+- The leave guard is `useLiveForm`'s, not this card's: the form state can outlive the card (a
+  settings tab), and so does the guard. A query-only navigation does not ask, two dirty forms
+  ask twice, the unload prompt is unreliable on iOS Safari; `leaveGuard: false` on `useLiveForm`
+  for a form whose edits may be dropped.
 - A refusal with field errors shows only at the fields (`saveError` stays empty). A field the
   page did not render never shows its error, so render every field the call validates.

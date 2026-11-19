@@ -12,8 +12,8 @@ laws: [doherty-threshold, goal-gradient-effect, paradox-of-the-active-user]
 
 A dropzone and the list of files being uploaded and uploaded. The dropzone is a `<label>` around
 the native file input, so a click, Enter and a drop all work. Each file shows its name, size,
-a progress bar, a status Badge and a remove button. Size and count limits are said inline.
-Uploads go through the pair's `Client.upload`.
+a progress bar with the percent sent, a status Badge and a remove button; a failed upload offers
+Retry. Size and count limits are said inline. Uploads go through the pair's `Client.upload`.
 
 ## Load
 
@@ -51,7 +51,12 @@ Do not load:
 
 The directory holds three parts: `FileUpload.vue` (limits, uploads, the list),
 `FileDropzone.vue` (the label around the file input, drag and drop) and `fileUpload.ts` (how
-local uploads and live rows merge, tested in `fileUpload.test.ts`).
+local uploads and live rows merge, the room left and the steps of one upload, tested in
+`fileUpload.test.ts`).
+
+A row: the file icon, the name, the size with the percent sent while the runtime reports it
+(nothing while the bar is indeterminate) and the server's reason of a refusal, the bar while it
+uploads, the status Badge, then Retry (a failed upload the server did not refuse) and remove.
 
 ## Slots
 
@@ -76,17 +81,37 @@ does. Use it for a paste handler or an agent tool.
   Node, with `ClientOptions.credentials: 'omit'`, and with an application `ClientOptions.fetch`
   (the demo's fake engine is one, so the demo shows the indeterminate bar).
 - A file being uploaded shows as a local row until the answer is in, then as the list's row of
-  the answer's `id`. The server pushes that row before its answer arrives; until then a row that
-  joined the list after the upload started, with the file's name and size, stays hidden behind
-  the local row, so the file never shows twice.
+  the answer's `id`, in the same place. The server pushes that row before its answer arrives;
+  until then a row that joined the list after the upload started, with the file's name and size,
+  stays hidden behind the local row, so the file never shows twice.
+- This page's uploads stay on top, newest pick first, done or failed, for as long as the piece is
+  mounted: a row never moves under the pointer or away from focus when an answer or a push comes.
+  The other rows follow in the server's order (`files` and its sort); a reload shows every file
+  in that order.
 - `remove` runs over the socket (`connection.call(remove, { id })`), so a `Removes` effect hides
-  the row at once.
+  the row at once. A refused remove says the server's message, or `ui.removeFailed` without one.
+- Retry (D99) sends the kept file again through `Client.upload`, on the row it failed in. A
+  refusal with field errors (`ApiError.fields`, "must be one of ...") offers no Retry: the same
+  bytes would be refused again. No answer, or a refusal without field errors (a server error),
+  offers it.
+- Every try of one upload sends the same Idempotency-Key, so a file whose answer was lost is not
+  stored twice, on a server that keeps the keys of uploads (the demo's fake engine keeps none). A
+  new pick of the same file is a new upload with a new key.
 
 ## Agent
 
 The file input carries `name`; the visual driver sets files on it (Playwright `setInputFiles`).
 A remove button of an uploaded file carries `data-action` = the remove call's name and the
-accessible name "Remove {file}".
+accessible name "Remove {file}". Retry carries `data-action` = the upload's name (`uploadFile`)
+and the accessible name "Retry {file}". Retry goes while its file uploads, so a pressed Retry
+moves focus to the file's row (`tabindex="-1"`), where the Badge says how it went. The row keeps
+its element and its place when the answer comes, also when the server's row takes the upload's
+place, so focus stays on it.
+
+## Messages
+
+`ui.dropFiles`, `ui.browse`, `ui.maxFileSize`, `ui.fileTooLarge`, `ui.tooManyFiles`,
+`ui.uploading`, `ui.ready`, `ui.failed`, `ui.removeFile`, `ui.removeFailed`, `ui.retryFile`.
 
 ## Gotchas
 
@@ -95,8 +120,14 @@ accessible name "Remove {file}".
 - With `maxFiles` 1 a new pick replaces the finished file: the new one goes up first, and only
   once it is in, the old one goes, through `remove` when given, else only from the list (the
   server keeps it; an endpoint that replaces by itself needs no `remove`). A failed upload keeps
-  the old file. No replacement while the file still uploads, or when the list (an unfiltered
-  `files`) holds more than one file: then the pick is refused as too many.
+  the old file, and its retry still replaces it: the old file goes only once the new one is in.
+  No replacement while the file still uploads, or when the list (an unfiltered `files`) holds
+  more than one file: then the pick is refused as too many.
+- Retry counts like a new pick: a failed row takes no slot, so when the list filled up since, the
+  retry is refused with `ui.tooManyFiles` and the row stays failed, with Retry.
+- A retry starts from byte 0: there is no resumable upload.
+- A failed upload keeps its bytes in memory until it is retried or removed; a refused one and a
+  finished one let them go.
 - An upload cannot be cancelled once started; its row has no remove button until it finished
   or failed.
 - A multipart part is read into memory on the server up to the upload's `MaximumBytes`; fine for

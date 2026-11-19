@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Menu: a dropdown list of actions on Popover (role menu): Popover opens, places, follows and
-// closes it; Menu renders the items and moves focus with the arrow keys. A '-' item is a divider.
+// closes it; Menu renders the items and moves focus with the arrow keys and by first letter. A '-'
+// item is a divider.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
@@ -51,6 +52,18 @@ function onKeydown(event: KeyboardEvent) {
     const items = enabledItems()
     const next = move(items.indexOf(document.activeElement as HTMLElement), items.length)
     items[(next + items.length) % items.length]?.focus()
+  } else if (event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    // Type-ahead (APG Menu pattern): the next enabled item whose text starts with the key, wrapping; no buffer.
+    const items = enabledItems()
+    const start = items.indexOf(document.activeElement as HTMLElement)
+    const key = event.key.toLowerCase()
+    for (let step = 1; step <= items.length; step++) {
+      const item = items[(start + step) % items.length]
+      if (item?.textContent?.trim().toLowerCase().startsWith(key)) {
+        item.focus()
+        break
+      }
+    }
   } else if (event.key === ' ' && event.target instanceof HTMLAnchorElement) {
     // Space activates a link item like a button item (Enter already does).
     event.preventDefault()
@@ -135,8 +148,10 @@ defineExpose({ toggle: () => popover.value?.toggle() })
   text-decoration: none;
   white-space: nowrap;
 }
-.ui-menu__item:hover:not(:disabled), .ui-menu__item:focus-visible { background: var(--ui-surface-2); }
-.ui-menu__item:focus-visible { outline-offset: calc(var(--ui-border-width) * -2); }
+@media (hover: hover) {
+  .ui-menu__item:hover:not(:disabled) { background: var(--ui-surface-2); }
+}
+.ui-menu__item:focus-visible { background: var(--ui-surface-2); outline-offset: calc(var(--ui-border-width) * -2); }
 .ui-menu__item[data-variant="danger"] { color: var(--ui-danger); }
 .ui-menu__item:disabled { color: var(--ui-disabled-ink); cursor: not-allowed; }
 

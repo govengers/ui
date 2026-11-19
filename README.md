@@ -23,7 +23,7 @@ copying again; the header line in each copied file says where it came from.
 
 | Tier | What | Livewire |
 |------|------|----------|
-| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent`, `changelog` | no |
+| primitive | Icon, Button, Field, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Badge, Card, Skeleton, EmptyState, Avatar, Tabs, Dialog, Sheet, Toast, Menu, Popover, Tooltip, Table, Pagination, Spotlight, AgentCursor; modules `format`, `theme`, `agent`, `changelog` | no |
 | layout | AppShell, Page, PageHeader, ActionBar, Banner | no |
 | block | SearchTable, FacetFilter, RangePicker, ColumnsPicker, DetailDrawer, ConnectionBanner, LiveForm (`useLiveForm`), DetailForm, LoginForm, DevLogin, ImpersonationBanner, ApiKeyManager, FileUpload, Stepper, WorkflowStatus, JobProgress, StatusTile, WhatsNew, UpdateHint, NotificationInbox, FeedbackCapture, AgentDock, Board, Markdown, CommandPalette; module `session` | yes |
 | page | ListPage, DetailPage, SettingsPage, LoginPage, Dashboard, Changelog | yes |
@@ -35,10 +35,12 @@ generated [livewire](https://github.com/govengers/livewire) client.
 ## Working on the collection
 
 ```sh
-bun install
+bun install        # Bun 1.4.4 or later (`just test` runs `bun test --parallel`; older releases not tried)
 just demo          # the demonstrator on http://localhost:5173
-just ci            # type-check, index drift, contrast, lint, tests, build
+just test          # the tests in four workers, the edit loop (D103)
+just ci            # type-check, index drift, contrast, lint, tests as CI runs them (scripts/tokens.test.ts among them), build
 just screenshots   # re-render screenshots/ (local, uses Chrome)
+just touch-probe   # every control of every demo under 44 by 44 px on touch (local, uses Chrome)
 ```
 
 Licence: Apache 2.0. Icons: a subset of [Lucide](https://lucide.dev), ISC.

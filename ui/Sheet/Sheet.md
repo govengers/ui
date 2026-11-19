@@ -40,7 +40,7 @@ Do not load:
 | `side` | `right \| left` | `right` | desktop only; phones (up to 48rem) always get a bottom sheet |
 | `width` | `string` | `28rem` | any CSS length, desktop only; never wider than the viewport |
 | `persistent` | `boolean` | `false` | removes the X and ignores Escape and backdrop clicks |
-| `inline` | `boolean` | `false` | open in the page flow without `showModal()`, no backdrop; docs and previews only |
+| `inline` | `boolean` | `false` | open in the page flow without `showModal()`, no backdrop, no slide; docs and previews only |
 
 ## Slots
 

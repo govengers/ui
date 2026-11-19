@@ -64,6 +64,32 @@ export function matchActions(actions: readonly BoundAction[], text: string): Bou
     })
 }
 
+/**
+ * The label in runs, `match` on every case-insensitive occurrence of each typed word; overlapping
+ * occurrences merge into one run. Text, never HTML: the palette renders the runs as text nodes.
+ */
+export function highlight(label: string, query: string): { text: string; match: boolean }[] {
+  const marked = new Array<boolean>(label.length).fill(false)
+  for (const word of query.split(/\s+/).filter(Boolean)) {
+    const pattern = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    // A search from every position, so overlapping hits count ("aa" marks all of "aaa"); `at` only
+    // grows, so the loop ends whatever index the engine answers.
+    for (let at = 0; at < label.length; at++) {
+      pattern.lastIndex = at
+      const hit = pattern.exec(label)
+      if (hit === null) break
+      marked.fill(true, hit.index, hit.index + hit[0].length)
+      at = Math.max(at, hit.index)
+    }
+  }
+  const runs: { text: string; match: boolean }[] = []
+  for (let start = 0, end = 0; start < label.length; start = end) {
+    while (end < label.length && marked[end] === marked[start]) end++
+    runs.push({ text: label.slice(start, end), match: marked[start] === true })
+  }
+  return runs
+}
+
 /** The recent picks with `pick` first, without duplicates, at most `max`. */
 export function addRecent(recent: readonly RecentPick[], pick: RecentPick, max = 6): RecentPick[] {
   return [pick, ...recent.filter((entry) => entry.group !== pick.group || entry.id !== pick.id)].slice(0, max)

@@ -101,5 +101,8 @@ defineExpose({ open: () => popover.value?.open() })
   border-radius: var(--ui-radius-sm);
   font-size: var(--ui-text-sm);
 }
-.ui-columns-picker__reset:hover, .ui-columns-picker__reset:focus-visible { background: var(--ui-surface-2); }
+@media (hover: hover) {
+  .ui-columns-picker__reset:hover { background: var(--ui-surface-2); }
+}
+.ui-columns-picker__reset:focus-visible { background: var(--ui-surface-2); }
 </style>

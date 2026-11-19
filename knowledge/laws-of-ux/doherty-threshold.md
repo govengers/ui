@@ -26,6 +26,8 @@ feedback, a layout that does not jump, and visible progress for long work.
   `patterns/file-uploads-and-jobs.md`); FileUpload shows progress per file.
 - A dropped socket keeps the data under a muted stale line, and ConnectionBanner says what
   happens next.
+- Which loader fits which wait, and when a change may show before the server answers:
+  `patterns/showing-live-data.md`, "Which loader".
 
 ## Review questions
 

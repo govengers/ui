@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Popover: a panel anchored to its trigger, on the native popover attribute (D9): light dismiss,
-// Escape and focus return come from the platform. Script places it (below if it fits, above if
-// only that fits, else the roomier side, scrolling) and follows the trigger every frame while
-// open. Menu and every block with a custom dropdown (filters, pickers) build on it.
+// Escape and focus return come from the platform. Script places it with place.ts (below if it
+// fits, above if only that fits, else the roomier side, scrolling) and follows the trigger every
+// frame while open. Menu and every block with a custom dropdown (filters, pickers) build on it.
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { place as placePanel } from './place'
 
 const props = withDefaults(defineProps<{
   placement?: 'auto' | 'bottom' | 'top' | undefined
@@ -71,31 +72,12 @@ onMounted(() => {
   if (open.value) show()
 })
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(value, max))
-}
-
-// The anchor is the trigger slot's root element (the wrapper is display: contents). Inline style
-// straight on the element: placing every frame must not re-render the component.
+// The anchor is the trigger slot's root element (the wrapper is display: contents).
 function place() {
   const anchor = root.value?.firstElementChild
   const element = panel.value
   if (!anchor || !element || anchor === element) return
-  const box = anchor.getBoundingClientRect()
-  if (props.matchWidth) element.style.minWidth = `${box.width}px`
-  const size = element.getBoundingClientRect()
-  const { clientWidth: width, clientHeight: height } = document.documentElement
-  const roomBelow = height - box.bottom - 2 * gap
-  const roomAbove = box.top - 2 * gap
-  // auto: below if it fits, above if only that fits, else the roomier side with a scrolling panel.
-  const below = props.placement === 'bottom'
-    || (props.placement === 'auto' && (size.height <= roomBelow || roomBelow >= roomAbove))
-  const room = below ? roomBelow : roomAbove
-  const left = props.align === 'end' ? box.right - size.width : box.left
-  element.dataset.placement = below ? 'bottom' : 'top'
-  element.style.maxHeight = `${room}px`
-  element.style.top = `${below ? box.bottom + gap : box.top - gap - Math.min(size.height, room)}px`
-  element.style.left = `${clamp(left, gap, width - size.width - gap)}px`
+  placePanel(anchor, element, { placement: props.placement, align: props.align, matchWidth: props.matchWidth, gap })
 }
 
 // While open, re-place every frame: covers scroll (of any container), resize, and a live update

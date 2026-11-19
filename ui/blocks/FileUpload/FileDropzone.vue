@@ -70,7 +70,9 @@ function onLeave(event: DragEvent): void {
   cursor: pointer;
   transition: border-color var(--ui-duration-fast) var(--ui-ease), background-color var(--ui-duration-fast) var(--ui-ease);
 }
-.ui-file-dropzone:hover { border-color: var(--ui-accent); }
+@media (hover: hover) {
+  .ui-file-dropzone:hover { border-color: var(--ui-accent); }
+}
 .ui-file-dropzone[data-state="over"] { border-color: var(--ui-accent); background: var(--ui-accent-soft); color: var(--ui-on-accent-soft); }
 .ui-file-dropzone:focus-within { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 .ui-file-dropzone__input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); }

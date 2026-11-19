@@ -61,7 +61,9 @@ const day = (date: string): string => formatDate(`${date}T12:00:00`, locale.valu
 .changelog__release + .changelog__release { margin-top: var(--ui-space-5); padding-top: var(--ui-space-5); border-top: var(--ui-border-width) solid var(--ui-border); }
 .changelog__version { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ui-space-3); font-size: var(--ui-text-md); }
 .changelog__version a { color: inherit; text-decoration: none; }
-.changelog__version a:hover { text-decoration: underline; }
+@media (hover: hover) {
+  .changelog__version a:hover { text-decoration: underline; }
+}
 .changelog__date { font-size: var(--ui-text-sm); font-weight: var(--ui-weight-normal); color: var(--ui-muted); }
 .changelog__group { margin-top: var(--ui-space-3); font-size: var(--ui-text-sm); font-weight: var(--ui-weight-medium); color: var(--ui-muted); }
 .changelog__items { display: flex; flex-direction: column; gap: var(--ui-space-1); margin: var(--ui-space-1) 0 0; padding-inline-start: var(--ui-space-5); }

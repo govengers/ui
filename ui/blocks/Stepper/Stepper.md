@@ -38,7 +38,7 @@ Do not load:
 |------|------|---------|-------|
 | `steps` | `StepItem[]` | required | `{ key, title, description?, optional?, action? }`, from `stepper.ts` |
 | `modelValue` | `string` | required | the current step's key, `v-model` |
-| `canContinue` | `boolean` | `true` | the page's verdict on the current step; Continue, Finish and forward jumps wait for it (the one boolean defaulting to true: the page validates, the frame trusts) |
+| `canContinue` | `boolean` | `true` | the page's verdict on the current step. Continue stays enabled; a click with false emits `blocked`. Forward jumps in the list wait for it (the one boolean defaulting to true: the page validates, the frame trusts) |
 | `busy` | `boolean` | `false` | a save runs: Continue and Finish spin, Back and the list are inert |
 | `finishLabel` | `string` | `ui.finish` | the last step's button |
 | `finishAction` | `string` | none | `data-action` of Finish: the livewire call the finish runs |
@@ -60,6 +60,7 @@ A step's `action` is the `data-action` Continue carries while that step is curre
 | `update:modelValue` | `key` | Continue, Back, or a click in the list |
 | `finish` | none | Continue on the last step (Enter in a field included) |
 | `enter` | `key` | a step became current, the first one on mount included |
+| `blocked` | none | Continue or Finish (Enter in a field included) while `canContinue` is false; then the frame focuses the first `[aria-invalid="true"]` in the step |
 
 ## With livewire
 
@@ -91,6 +92,8 @@ Continue is `data-action="continue"`, or the step's `action` when Continue saves
 `finishAction`. The current list item has `aria-current="step"`; the content panel is a region
 named by the step's title and takes focus on every step change, so a screen reader hears the new
 step and Tab reaches its first field. The frame is a `<form>`: Enter in a field continues.
+Continue is never disabled, so an agent's click on a refused step ends in `blocked` and the
+step's field error, as a user's does.
 
 ## Messages
 
@@ -98,11 +101,14 @@ step and Tab reaches its first field. The frame is a `<form>`: Enter in a field 
 
 ## Gotchas
 
-- The page validates; `canContinue` only disables. Show why next to the field, not in a toast.
-- Native constraint validation runs on Enter and Continue (`required`, `type="email"`), before
-  `canContinue` is asked; a field that should not block needs no such attribute.
+- Show why next to the field on `blocked`, not in a toast; native constraints are reported by
+  the browser first. Two layers refuse a step: the frame is a native `<form>`, so a field with a
+  native constraint (`required`, `pattern`, `type="email"`) makes the browser refuse the submit,
+  focus the field and show its message before the frame sees it; `blocked` fires for what only
+  `canContinue` knows. A field that should not block needs no such attribute.
 - Do not nest another `<form>` in a step: the frame is one.
-- `furthest` is remembered by the frame: a stepper mounted on step 3 (a resumed draft) counts
-  steps 1 and 2 as done.
+- The frame keeps nothing across mounts: the page saves each step's data when Continue leaves
+  it. A resumed draft mounts on the step to resume, and the frame counts the steps before it as
+  done.
 - The narrow layout follows the container (`@container`), not the viewport: a stepper in a
   drawer goes vertical on a desktop too.

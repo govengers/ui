@@ -72,8 +72,10 @@ other images keep their alt text, without a source. A link to another origin get
 Attributes (`aria-label`, `data-*`) land on the textarea, `class` and `style` on the wrapper;
 inside a `Field` the label and hint reach the textarea.
 
-Keys: Ctrl or Cmd+B and +I format; with suggestions open, arrows move, Enter or Tab inserts,
-Escape closes. Ctrl or Cmd+K is left to the command palette.
+Keys: Ctrl or Cmd+B and +I format; the two tools name their key in the label ("Bold (Ctrl+B)",
+`ui.keyCtrl` in the locale's word, "Bold (⌘B)" on Apple platforms)
+and in `aria-keyshortcuts` (`Control+B Meta+B`). With suggestions open, arrows move, Enter or Tab
+inserts, Escape closes. Ctrl or Cmd+K is left to the command palette.
 
 ## With livewire
 
@@ -87,7 +89,7 @@ list.
 
 ## Agent
 
-The textarea is the field named by `name`; toolbar buttons are named ("Bold", "Insert image");
+The textarea is the field named by `name`; toolbar buttons are named ("Bold (Ctrl+B)", "Insert image");
 the Write and Preview switch is a tab list named "Editor mode".
 
 ## Gotchas
@@ -99,5 +101,10 @@ the Write and Preview switch is a tab list named "Editor mode".
   `markdown.ts` takes any window, or none).
 - A page that saves while an upload is in flight saves the placeholder and the image is lost:
   follow the `uploading` event.
+- Paragraphs, lists and quotes stop at `--ui-measure` (65ch, about 70 characters), so a view as
+  wide as the page keeps lines readable; headings, code and tables take the full width. Markdown
+  puts an image inside a paragraph, so a paragraph that holds an image takes the full width too
+  (a screenshot or a diagram is not squeezed to the measure; text beside the image runs as wide).
+  A narrower container wins as before.
 - Test sanitising under jsdom, not happy-dom: happy-dom let `javascript:` links through
   DOMPurify in this repository's first test run.

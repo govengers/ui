@@ -2,17 +2,18 @@
 // FileUpload: the dropzone (FileDropzone) and the list of files, through the pair's
 // Client.upload (D17, multipart with the file name). The bar shows the bytes sent (onProgress,
 // livewire D79), indeterminate where the platform cannot tell; with `files` the server's live
-// rows follow once answered. fileUpload.ts merges the two lists.
+// rows follow once answered; a failed upload offers Retry (D99). fileUpload.ts merges the two
+// lists and holds the steps of one upload.
 import { computed, reactive, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ApiError, type ListResponse, type LiveTarget, type MutationTarget, type UploadTarget } from '@/api/runtime'
+import { ApiError, idempotencyKey, type ListResponse, type LiveTarget, type MutationTarget, type UploadTarget } from '@/api/runtime'
 import { useLiveList, useLivePair, type UseLiveListOptions } from '@/api/vue'
 import Badge from '../../Badge/Badge.vue'
 import Button from '../../Button/Button.vue'
 import Icon from '../../Icon/Icon.vue'
-import { formatBytes } from '../../format'
+import { formatBytes, formatPercent } from '../../format'
 import FileDropzone from './FileDropzone.vue'
-import { entriesOf, percent, replaceable, type Entry, type Upload, type UploadRow } from './fileUpload'
+import { entriesOf, fail, percent, replaceable, restart, room, succeed, type Entry, type Upload, type UploadRow } from './fileUpload'
 
 const props = defineProps<{
   /** The upload descriptor, e.g. `uploads.uploadFile`; its content types are the picker's `accept`. */
@@ -61,54 +62,78 @@ function add(chosen: Iterable<File>): void {
   const found: string[] = []
   // One file only: a new pick replaces the finished one, which goes once the new one is in.
   const replacing = replaceable(entries.value, props.maxFiles)
-  let room = props.maxFiles === undefined
-    ? Infinity
-    : props.maxFiles - entries.value.filter((entry) => entry.status !== 'failed').length + (replacing === undefined ? 0 : 1)
+  let left = room(entries.value, props.maxFiles, replacing)
   for (const file of chosen) {
     if (props.maxSize !== undefined && file.size > props.maxSize) {
       found.push(t('ui.fileTooLarge', { name: file.name, max: bytes(props.maxSize) }))
-    } else if (room <= 0) {
+    } else if (left <= 0) {
       found.push(t('ui.tooManyFiles', { max: props.maxFiles ?? 0 }))
       break
     } else {
-      room -= 1
-      void send(file, replacing)
+      left -= 1
+      const upload = reactive<Upload>({
+        key: ++lastKey, name: file.name, size: file.size, state: 'uploading', progress: undefined, before: new Set(),
+        id: undefined, error: undefined, file, retryable: false, replaces: replacing, idempotencyKey: idempotencyKey(),
+      })
+      uploads.unshift(upload)
+      void send(upload)
     }
   }
   problems.value = found
 }
 
-async function send(file: File, replacing: Entry | undefined): Promise<void> {
-  const before = new Set((list?.items.value ?? []).map((row) => row.id))
-  const upload = reactive<Upload>({ key: ++lastKey, name: file.name, size: file.size, state: 'uploading', progress: undefined, before, id: undefined, error: undefined })
-  uploads.unshift(upload)
+/**
+ * Sends a failed upload again from byte 0 when it still fits. Room and the file it replaces are
+ * read as for a new pick while the row still counts as failed, so it takes no slot of its own.
+ * Focus moves from Retry, which goes, to the file's row.
+ */
+function retry(upload: Upload, event: Event): void {
+  if (upload.state !== 'failed') return
+  const replacing = replaceable(entries.value, props.maxFiles)
+  if (room(entries.value, props.maxFiles, replacing) <= 0) {
+    problems.value = [t('ui.tooManyFiles', { max: props.maxFiles ?? 0 })]
+    return
+  }
+  problems.value = []
+  upload.replaces = replacing
+  ;(event.currentTarget as Element).closest<HTMLElement>('.ui-file-upload__row')?.focus()
+  void send(upload)
+}
+
+/** Runs one try of an upload; the row it replaces goes only once the file is in. */
+async function send(upload: Upload): Promise<void> {
+  const file = upload.file
+  if (file === undefined) return
+  restart(upload, (list?.items.value ?? []).map((row) => row.id))
   try {
     const response = await pair.value.client.upload(props.upload, props.params ?? ({} as Params), file, {
-      multipart: true, filename: file.name, onProgress: (loaded, total) => (upload.progress = percent(loaded, total)),
+      multipart: true, filename: file.name, idempotencyKey: upload.idempotencyKey, onProgress: (loaded, total) => (upload.progress = percent(loaded, total)),
     })
-    const id = (response as { id?: unknown } | null)?.id
-    upload.id = typeof id === 'string' || typeof id === 'number' ? String(id) : undefined
-    upload.state = 'done'
+    const replaced = upload.replaces
+    succeed(upload, response)
     emit('uploaded', response)
-    if (replacing !== undefined) await removeEntry(replacing)
+    if (replaced !== undefined) await removeEntry(replaced)
   } catch (failure) {
-    upload.state = 'failed'
-    upload.error = failure instanceof ApiError ? (Object.values(failure.fields)[0] ?? failure.message) : undefined
+    fail(upload, failure)
   }
 }
 
 const removable = (entry: Entry): boolean => entry.status === 'failed' || (props.remove !== undefined && entry.id !== undefined && entry.status !== 'uploading')
 
 async function removeEntry(entry: Entry): Promise<void> {
+  // The rendered entry may be older than the upload: a retry started in the same task.
+  if (entry.upload?.state === 'uploading') return
   if (entry.status !== 'failed' && props.remove !== undefined && entry.id !== undefined) {
     try {
       await pair.value.connection.call(props.remove, { id: entry.id }, undefined)
     } catch (failure) {
-      problems.value = [failure instanceof ApiError ? failure.message : t('ui.failed')]
+      problems.value = [failure instanceof ApiError ? failure.message : t('ui.removeFailed', { name: entry.name })]
       return
     }
   }
-  if (entry.upload !== undefined) uploads.splice(uploads.indexOf(entry.upload), 1)
+  // Removed twice (a second click, a replacement racing a click): -1 would drop the last upload.
+  const index = entry.upload === undefined ? -1 : uploads.indexOf(entry.upload)
+  if (index >= 0) uploads.splice(index, 1)
   if (entry.id !== undefined) hidden.add(entry.id)
 }
 
@@ -129,12 +154,14 @@ defineExpose({ add })
       <p v-for="problem in problems" :key="problem">{{ problem }}</p>
     </div>
     <ul v-if="entries.length > 0" class="ui-file-upload__list">
-      <li v-for="entry in entries" :key="entry.key" class="ui-file-upload__row">
+      <li v-for="entry in entries" :key="entry.key" class="ui-file-upload__row" tabindex="-1">
         <Icon name="file" class="ui-file-upload__icon" />
         <div class="ui-file-upload__file">
           <span :id="`${uid}-${entry.key}`" class="ui-file-upload__name">{{ entry.name }}</span>
           <span class="ui-file-upload__meta">
-            {{ bytes(entry.size) }}<span v-if="entry.error" class="ui-file-upload__error">{{ entry.error }}</span>
+            {{ bytes(entry.size) }}
+            <span v-if="entry.progress !== undefined">{{ formatPercent(entry.progress / 100, locale) }}</span>
+            <span v-if="entry.error" class="ui-file-upload__error">{{ entry.error }}</span>
           </span>
           <progress
             v-if="entry.status === 'uploading'"
@@ -145,6 +172,16 @@ defineExpose({ add })
           />
         </div>
         <Badge :variant="badge(entry.status).variant" size="sm">{{ badge(entry.status).label }}</Badge>
+        <Button
+          v-if="entry.status === 'failed' && entry.upload?.retryable"
+          variant="ghost"
+          size="sm"
+          :label="t('ui.retryFile', { file: entry.name })"
+          :data-action="upload.name"
+          @click="(event: MouseEvent) => entry.upload && retry(entry.upload, event)"
+        >
+          <template #icon><Icon name="refresh" /></template>
+        </Button>
         <Button
           v-if="removable(entry)"
           variant="ghost"

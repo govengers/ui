@@ -67,3 +67,10 @@ tab by its label and the count is part of its name ("Open 12").
   is active), ArrowLeft and ArrowRight move and select with wrap-around, Home and End jump to the
   ends, disabled tabs are skipped.
 - A disabled routed item is an `a` without `href`: shown, not focusable, not followed.
+- Tabs wider than their box scroll sideways inside the strip (in a `PageHeader` too). The active
+  tab is scrolled into the strip on mount and whenever `modelValue` changes; a change of the items
+  (counts that arrive later widen the tabs, also when changed in place) or of the strip's size (a
+  rotation, a narrower window) places it again unless the user has scrolled the strip since the
+  active tab last changed: a wheel, a swipe, a press on the strip itself (its scrollbar), or the
+  arrow, Home and End keys in a nav of links. A tap on a tab or the Tab key is no scroll. Only the
+  strip scrolls, never the page. Nothing but the tab cut at the edge shows that more follow.

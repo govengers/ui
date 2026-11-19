@@ -13,7 +13,8 @@ laws: [hicks-law, jakobs-law, paradox-of-the-active-user, serial-position-effect
 The Cmd/Ctrl+K dialog: empty, it offers the recent picks and the quick actions of the agent
 action registry; typing searches every group (one livewire list query each, the newest answer
 wins) and filters the actions, listed under the results. Arrows, Home, End, Enter and Escape run it; the result list is a
-listbox the input points into with `aria-activedescendant`.
+listbox the input points into with `aria-activedescendant`. The typed words are marked in every
+label; a text nothing matches stays in the input with a hint what to try.
 
 ## Load
 
@@ -41,6 +42,10 @@ Do not load:
 | `storageKey` | `string` | `'ui.palette.recent'` | localStorage key prefix of the last 6 picks; the pair's identity is appended (`ui.palette.recent:<identity>`), so a pick never shows to the next account on the browser; removed when the identity's connection ends; `''` keeps none |
 | `placeholder` | `string \| undefined` | `ui.paletteSearch` | |
 | `inline` | `boolean` | `false` | open in the page flow without `showModal()`; docs and previews only |
+
+`highlight(label, query)` (in `palette.ts`) splits a label into `{ text, match }` runs, `match`
+on every case-insensitive occurrence of each typed word; the palette renders a match as
+`<mark class="ui-command-palette__match">` (heavier weight, no background, the option's colour).
 
 `searchGroup({ key, label, target, result, where?, limit? })` (in `palette.ts`) turns a list
 read whose resource has a searchable field into a group: each search is
@@ -89,3 +94,13 @@ results are `role="option"` with their label as text.
 - Home and End move the active option only while the input is empty; otherwise they move the
   caret.
 - Mount it once, in the shell: two palettes would both answer the hotkey.
+- A shortcut alone is invisible: put a visible opener in the shell's `actions`, a ghost `Button`
+  with the `search` icon and `ui.paletteOpen`, bound to `v-model:open`, with
+  `aria-keyshortcuts="Control+K Meta+K"`, `label` set to the same word, and a `<kbd>` hint
+  (`Ctrl K` with `ui.keyCtrl`, the command sign on Apple platforms) hidden under `(pointer: coarse)`. On a phone
+  (under 48rem) the word and the hint leave the default slot (`<template v-if="!phone" #default>`
+  on a `matchMedia` ref, not CSS), so Button sees an icon-only button that `label` names; the
+  starter does the same for its other top-bar buttons, so the bar keeps room for its title. The
+  starter's `App.vue` has it.
+- Labels and hints are text, never HTML: a result label holding markup shows the markup as
+  characters. Under "No results" the palette says `ui.paletteNoResultsHint`.

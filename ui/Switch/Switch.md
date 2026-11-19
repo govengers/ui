@@ -37,7 +37,7 @@ Do not load:
 | `modelValue` | `boolean` | `false` | `aria-checked` |
 | `label` | `string` | none | the default slot overrides it |
 | `disabled` | `boolean` | `false` | |
-| `size` | `sm \| md` | `md` | the track only; the target stays 44 px |
+| `size` | `sm \| md` | `md` | the track only; the target is a control's height, 44 px on coarse pointers |
 | `name` | `string` | none | renders a hidden input posting `true` or `false` |
 
 ## Slots

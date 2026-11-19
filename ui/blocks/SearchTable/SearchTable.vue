@@ -1,20 +1,23 @@
 <script setup lang="ts" generic="Item extends object, Query extends ListQuery">
 // SearchTable: the live list of the ListPage recipe (D32) over one livewire list read: search,
 // a toolbar and chip slot for the page's filter kit, the Table with sort, selection and row
-// menus, and the pager. The facet filter is a sibling block; the page passes its document in as
-// `filter`. The state logic is in searchTable.ts; this file wires it to useLiveList.
-import { computed, onScopeDispose, ref, watch } from 'vue'
+// menus, and the pager. When the Table turns into cards, a sort row stands in for its hidden
+// header. The facet filter is a sibling block; the page passes its document in as `filter`.
+// The state logic is in searchTable.ts; this file wires it to useLiveList.
+import { computed, onScopeDispose, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 import type { ListQuery, ListResponse, LiveTarget } from '@/api/runtime'
 import { useLiveList, useLiveStatus } from '@/api/vue'
 import Banner from '../../Banner/Banner.vue'
 import Button from '../../Button/Button.vue'
+import Checkbox from '../../Checkbox/Checkbox.vue'
 import EmptyState from '../../EmptyState/EmptyState.vue'
 import Icon from '../../Icon/Icon.vue'
 import Input from '../../Input/Input.vue'
 import Menu, { type MenuItem } from '../../Menu/Menu.vue'
 import Pagination from '../../Pagination/Pagination.vue'
+import Select from '../../Select/Select.vue'
 import Table, { type TableColumn, type TableKey, type TableSort } from '../../Table/Table.vue'
 import { composeFilter, cursorWindow, errorKey, needsMore, readQuery, sortTerms, writeQuery } from './searchTable'
 
@@ -32,6 +35,8 @@ const props = withDefaults(defineProps<{
   selectable?: boolean | undefined
   rowActions?: ((row: Item) => MenuItem[]) | undefined
   searchable?: boolean | undefined
+  /** Name and placeholder of the search box, e.g. "Search customers". */
+  searchLabel?: string | undefined
   /** Reads sort, page and search from the URL once and writes them back on change. */
   syncQuery?: boolean | undefined
   emptyTitle?: string | undefined
@@ -51,7 +56,8 @@ const slots = defineSlots<{
   toolbar?: () => unknown
   chips?: () => unknown
   bulk?: (props: { selected: TableKey[] }) => unknown
-  empty?: (props: { search: string }) => unknown
+  /** `stale`: the rows and total on screen are not known to be the current query's (livewire D76). */
+  empty?: (props: { search: string; stale: boolean }) => unknown
 }>()
 
 const { t } = useI18n()
@@ -79,6 +85,8 @@ function clearSearch() {
   typed.value = ''
   search.value = ''
 }
+// A page that clears its filters clears the search through this, so text still in the debounce goes too.
+defineExpose({ clearSearch })
 
 const list = useLiveList(props.target, {
   filter: composeFilter(props.filter, search.value) as Query['filter'],
@@ -109,7 +117,10 @@ function next() {
 
 const rows = computed(() => (cursor ? window.value.rows : items.value))
 watch(rows, (value) => emit('rows', value), { immediate: true })
-const loading = computed(() => !error.value && (list.loading.value || (cursor && rows.value.length === 0 && list.stale.value)))
+// Offset mode: an empty page of a list that has rows lies past the last page and is about to step
+// back (below); it shows placeholders, not an empty state for a query nobody asked (D101).
+const pastEnd = computed(() => !cursor && rows.value.length === 0 && (total.value ?? 0) > 0)
+const loading = computed(() => !error.value && (list.loading.value || pastEnd.value || (cursor && rows.value.length === 0 && list.stale.value)))
 const stale = computed(() => !props.hideStale && status.value !== 'open' && items.value.length > 0)
 const errorText = computed(() => {
   const failure = error.value
@@ -120,6 +131,17 @@ const errorText = computed(() => {
 // Null until the first page.
 const shownTotal = computed(() => total.value ?? null)
 watch(shownTotal, (value) => emit('total', value), { immediate: true })
+// A page whose rows all left (deletes, live changes) steps back to the last page instead of standing
+// empty past the end ("Page 5 of 4"). Only a page that is empty: a total under a cap is a lower bound
+// (livewire D14), so a page that has rows is never past the end. A query that still loads shows the
+// rows before it (D76) or has no total yet, so this never acts on an old answer.
+if (!cursor) {
+  watch([shownTotal, size, page, () => items.value.length], ([count, perPage, at, shown]) => {
+    if (count === null || shown > 0) return
+    const last = Math.max(1, Math.ceil(count / perPage))
+    if (at > last) page.value = last
+  })
+}
 
 if (route && router) {
   watch(
@@ -132,12 +154,25 @@ if (route && router) {
 
 const cellSlots = () => Object.keys(slots).filter((name): name is `cell-${string}` => name.startsWith('cell-'))
 const nameOf = (row: Item) => String((row as Record<string, unknown>)[props.columns[0]?.key ?? ''] ?? '')
+
+// The sort row of card mode: the Table's header (sort buttons, Select all) is hidden there.
+const table = useTemplateRef('table')
+const sortOptions = computed(() => props.columns.filter((column) => column.sortable).map((column) => ({ value: column.key, label: column.label })))
+// A sort on a column without an option (hidden, or only in the URL) shows "Sort by", never another column.
+const sortValue = computed(() => sortOptions.value.find((option) => option.value === sort.value?.key)?.value ?? null)
+function sortKey(key: string | number) {
+  sort.value = { key: String(key), direction: sort.value?.direction ?? 'asc' }
+}
+function flip() {
+  if (sort.value) sort.value = { ...sort.value, direction: sort.value.direction === 'asc' ? 'desc' : 'asc' }
+}
 </script>
 
 <template>
   <div class="ui-search-table">
     <div v-if="searchable || $slots.toolbar" class="ui-search-table__toolbar">
-      <Input v-if="searchable" v-model="typed" type="search" name="search" class="ui-search-table__search" :placeholder="t('ui.search')" :aria-label="t('ui.search')">
+      <Input v-if="searchable" v-model="typed" type="search" name="search" class="ui-search-table__search" :placeholder="searchLabel ?? t('ui.search')"
+        :aria-label="searchLabel ?? t('ui.search')">
         <template #prefix><Icon name="search" /></template>
       </Input>
       <slot name="toolbar" />
@@ -149,13 +184,24 @@ const nameOf = (row: Item) => String((row as Record<string, unknown>)[props.colu
     </Banner>
     <p v-else-if="stale" class="ui-search-table__stale" role="status"><Icon name="clock" size="sm" />{{ t('ui.stale') }}</p>
     <template v-if="!(error && rows.length === 0)">
-      <Table v-model:sort="sort" v-model:selected="selected" :columns="columns" :rows="rows" :row-key="rowKey" :selectable="selectable"
-        :loading="loading" :caption="caption" :on-row-click="onRowClick">
+      <div v-if="sortOptions.length > 0 || selectable" class="ui-search-table__sort">
+        <Checkbox v-if="selectable" :model-value="table?.allChosen" :indeterminate="table?.someChosen" :disabled="rows.length === 0 || loading"
+          :label="t('ui.selectAll')" class="ui-search-table__all" @update:model-value="table?.toggleAll()" />
+        <template v-if="sortOptions.length > 0">
+          <Select :model-value="sortValue" :options="sortOptions" name="sort" :placeholder="t('ui.sortBy')" :aria-label="t('ui.sortBy')"
+            @update:model-value="sortKey" />
+          <Button :label="sort?.direction === 'desc' ? t('ui.sortDescending') : t('ui.sortAscending')" :disabled="!sort" @click="flip">
+            <template #icon><Icon :name="sort?.direction === 'desc' ? 'arrow-down' : 'arrow-up'" /></template>
+          </Button>
+        </template>
+      </div>
+      <Table ref="table" v-model:sort="sort" v-model:selected="selected" :columns="columns" :rows="rows" :row-key="rowKey" :selectable="selectable"
+        :loading="loading" :loading-rows="size" :caption="caption" :on-row-click="onRowClick">
         <template v-for="name in cellSlots()" :key="name" #[name]="scope"><slot :name="name" v-bind="scope" /></template>
         <template v-if="rowActions" #actions="{ row }"><Menu :items="rowActions(row)" :label="t('ui.actionsFor', { row: nameOf(row) })" /></template>
         <template v-if="$slots.bulk" #bulk="scope"><slot name="bulk" v-bind="scope" /></template>
         <template #empty>
-          <slot name="empty" :search="search">
+          <slot name="empty" :search="search" :stale="list.stale.value">
             <EmptyState :title="emptyTitle ?? t('ui.noResults')">
               <template v-if="search" #action><Button @click="clearSearch">{{ t('ui.clearSearch') }}</Button></template>
             </EmptyState>
@@ -169,9 +215,20 @@ const nameOf = (row: Item) => String((row as Record<string, unknown>)[props.colu
 </template>
 
 <style scoped>
-.ui-search-table { display: flex; flex-direction: column; gap: var(--ui-space-3); min-width: 0; }
+.ui-search-table { container-type: inline-size; display: flex; flex-direction: column; gap: var(--ui-space-3); min-width: 0; }
 .ui-search-table__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); }
 .ui-search-table__search { flex: 1 1 16rem; max-width: 24rem; }
 .ui-search-table__error { border-radius: var(--ui-radius-card); }
 .ui-search-table__stale { display: flex; align-items: center; gap: var(--ui-space-2); color: var(--ui-muted); font-size: var(--ui-text-sm); }
+/* The same edge as Table's card mode; both containers have the same width. */
+.ui-search-table__sort { display: none; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); }
+/* Select all stands over the row boxes of Table's cards (border, padding, the 44 px cell centring the
+   box); the sort pair goes to the end. */
+.ui-search-table__all {
+  margin-inline-end: auto;
+  padding-inline-start: calc(var(--ui-border-width) + var(--ui-space-3) + (var(--ui-touch-min) - var(--ui-space-5)) / 2);
+}
+@container (max-width: 48rem) {
+  .ui-search-table__sort { display: flex; }
+}
 </style>

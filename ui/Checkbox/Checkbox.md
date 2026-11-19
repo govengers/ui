@@ -12,7 +12,7 @@ laws: [fittss-law, law-of-proximity, mental-model]
 
 The native checkbox, drawn with CSS, with its own label and an optional muted description. Binds a
 boolean, or toggles `value` in an array like Vue's `v-model` on native checkboxes. The whole row
-is the click target, at least 44 px tall.
+is the click target, a control's height (`--ui-control-h`), 44 px on coarse pointers (D49).
 
 ## Load
 

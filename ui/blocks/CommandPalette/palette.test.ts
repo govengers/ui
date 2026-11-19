@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { LiveConnection } from '@/api/runtime'
 import { live } from '@/fake/api'
 import type { BoundAction } from '../../agent/registry'
-import { addRecent, humanize, matchActions, moveActive, readRecent, recentKey, searchGroup, writeRecent } from './palette'
+import { addRecent, highlight, humanize, matchActions, moveActive, readRecent, recentKey, searchGroup, writeRecent } from './palette'
 
 const action = (name: string, description: string, params?: Record<string, string>): BoundAction =>
   ({ name, description, page: 'demo.page', run: () => undefined, ...(params ? { params } : {}) })
@@ -17,6 +17,28 @@ test('matchActions needs every word and no params', () => {
   expect(matchActions(actions, '').map((found) => found.name)).toEqual(['createCustomer', 'exportCustomers'])
   expect(matchActions(actions, 'cust csv').map((found) => found.name)).toEqual(['exportCustomers'])
   expect(matchActions(actions, 'delete')).toEqual([])
+})
+
+describe('highlight', () => {
+  const marks = (label: string, query: string): string => highlight(label, query).map((run) => (run.match ? `[${run.text}]` : run.text)).join('')
+  test.each([
+    ['no query', 'Fix login', '', 'Fix login'],
+    ['blank query', 'Fix login', '   ', 'Fix login'],
+    ['every occurrence, any case', 'Fix the FIX', 'fix', '[Fix] the [FIX]'],
+    ['each typed word', 'Fix login page', 'page fix', '[Fix] login [page]'],
+    ['overlapping words merge', 'Invoice', 'voi oic', 'In[voic]e'],
+    ['overlapping hits of one word', 'aaab', 'aa', '[aaa]b'],
+    ['adjacent words merge', 'Login', 'log in', '[Login]'],
+    ['regex characters are text', 'a.b (c) a+b', '. (c) +', 'a[.]b [(c)] a[+]b'],
+    ['no hit', 'Fix login', 'zebra', 'Fix login'],
+    ['empty label', '', 'fix', ''],
+    ['astral characters, overlapping hits', '😀😀 a', '😀', '[😀😀] a'],
+  ])('%s', (_, label, query, expected) => {
+    expect(marks(label, query)).toBe(expected)
+  })
+  test('runs alternate and keep every character', () => {
+    expect(highlight('Fix the fix', 'fix')).toEqual([{ text: 'Fix', match: true }, { text: ' the ', match: false }, { text: 'fix', match: true }])
+  })
 })
 
 describe('recent picks', () => {

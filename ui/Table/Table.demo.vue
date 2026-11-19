@@ -38,8 +38,8 @@ const euro = new Intl.NumberFormat('en', { style: 'currency', currency: 'EUR', m
 </script>
 
 <template>
-  <section>
-    <h2>Sorted, selectable, custom cell, row actions</h2>
+  <section class="under-top-bar">
+    <h2>Sorted, selectable, sticky header, custom cell, row actions</h2>
     <Table
       v-model:sort="sort"
       v-model:selected="selected"
@@ -47,6 +47,7 @@ const euro = new Intl.NumberFormat('en', { style: 'currency', currency: 'EUR', m
       :rows="sorted"
       row-key="id"
       selectable
+      sticky-header
       caption="Customers"
       @row-click="row => (clicked = row.name)"
     >
@@ -75,8 +76,8 @@ const euro = new Intl.NumberFormat('en', { style: 'currency', currency: 'EUR', m
     </div>
   </section>
   <section>
-    <h2>Loading</h2>
-    <Table :columns="columns" :rows="[]" row-key="id" loading />
+    <h2>Loading: three placeholder rows</h2>
+    <Table :columns="columns" :rows="[]" row-key="id" loading :loading-rows="3" />
   </section>
   <section>
     <h2>Empty</h2>
@@ -85,6 +86,8 @@ const euro = new Intl.NumberFormat('en', { style: 'currency', currency: 'EUR', m
 </template>
 
 <style scoped>
+/* The demonstrator's top bar stands in for the shell's, which sets this itself. */
+.under-top-bar { --ui-sticky-top: var(--ui-topbar-h); }
 .muted { margin-top: var(--ui-space-2); color: var(--ui-muted); font-size: var(--ui-text-sm); }
 .narrow { max-width: 24rem; }
 .status { display: inline-block; padding: 0 var(--ui-space-2); border-radius: var(--ui-radius-pill); font-size: var(--ui-text-xs); font-weight: var(--ui-weight-medium); }

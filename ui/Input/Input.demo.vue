@@ -35,6 +35,6 @@ const date = ref('2026-11-02')
 
 <style scoped>
 .stack { display: flex; flex-direction: column; gap: var(--ui-space-3); max-width: 28rem; }
-.row { display: flex; gap: var(--ui-space-3); }
+.row { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); }
 .muted { color: var(--ui-muted); font-size: var(--ui-text-sm); }
 </style>

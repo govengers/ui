@@ -35,3 +35,5 @@ Do not load:
 
 - Always pass the app locale; never format with a hard-coded one in a component.
 - `formatAge` takes `now` as a parameter so tests and clock-driven views stay deterministic.
+- `formatCurrency` takes `Intl.NumberFormatOptions` last; `{ signDisplay: 'exceptZero' }` signs a
+  change in money (+€12.50); `style` and `currency` in them are ignored.

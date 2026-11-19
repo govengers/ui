@@ -68,3 +68,6 @@ Last, the select "Rows per page". Paging is navigation, not a mutation: no `data
   the read's params and the URL query, so a reload and the agent land on the same page.
 - `total` of `0` shows "0-0 of 0" and disables every arrow; show the Table's empty state above it.
 - In cursor mode `page`, `pageSize` and `total` are ignored.
+- On a narrow screen the page group (first, previous, the page text, next, last: about 280 px)
+  wraps, right-aligned, instead of overflowing; first and previous, next and last stay together
+  as pairs, and every button keeps its 44 px target on touch.

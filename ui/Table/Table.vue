@@ -20,6 +20,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from '../Button/Button.vue'
 import Icon from '../Icon/Icon.vue'
+import Skeleton from '../Skeleton/Skeleton.vue'
 
 const props = withDefaults(defineProps<{
   columns: TableColumn[]
@@ -29,6 +30,8 @@ const props = withDefaults(defineProps<{
   selectable?: boolean | undefined
   selected?: TableKey[] | undefined
   loading?: boolean | undefined
+  /** Placeholder rows while loading; a list passes its page size. */
+  loadingRows?: number | undefined
   /** Visually hidden caption, read by assistive technology. */
   caption?: string | undefined
   stickyHeader?: boolean | undefined
@@ -36,7 +39,7 @@ const props = withDefaults(defineProps<{
   frameless?: boolean | undefined
   /** Bound by `@row-click`; declared as a prop so the rows know to look and act clickable. */
   onRowClick?: ((row: Row) => void) | undefined
-}>(), { sort: null, selected: () => [] })
+}>(), { sort: null, selected: () => [], loadingRows: 5 })
 
 const emit = defineEmits<{
   'update:sort': [sort: TableSort]
@@ -69,6 +72,9 @@ function toggleAll() {
   const rest = props.selected.filter(key => !visible.value.includes(key))
   emit('update:selected', allChosen.value ? rest : [...rest, ...visible.value])
 }
+
+// For a list's own Select all in card mode, where the header is hidden.
+defineExpose({ toggleAll, allChosen, someChosen })
 
 function toggle(row: Row) {
   const key = keyOf(row)
@@ -119,9 +125,11 @@ function click(row: Row, event: MouseEvent) {
             <th v-if="$slots.actions" class="ui-table__actions" role="columnheader" scope="col"><span class="ui-visually-hidden">{{ t('ui.actions') }}</span></th>
           </tr>
         </thead>
-        <tbody v-if="loading" role="rowgroup" aria-hidden="true">
-          <tr v-for="line in 5" :key="line" role="row">
-            <td v-for="cell in span" :key="cell" role="cell"><div class="ui-table__shimmer" /></td>
+        <tbody v-if="loading" class="ui-table__loading" role="rowgroup" aria-hidden="true">
+          <tr v-for="line in loadingRows" :key="line" role="row">
+            <td v-if="selectable" class="ui-table__select" role="cell" />
+            <td v-for="column in columns" :key="column.key" role="cell" :data-hide-on-phone="column.hideOnPhone || undefined"><Skeleton width="100%" /></td>
+            <td v-if="$slots.actions" class="ui-table__actions" role="cell" />
           </tr>
         </tbody>
         <tbody v-else-if="rows.length === 0" role="rowgroup">
@@ -129,7 +137,7 @@ function click(row: Row, event: MouseEvent) {
         </tbody>
         <tbody v-else role="rowgroup">
           <tr v-for="row in rows" :key="keyOf(row)" class="ui-table__row" role="row" :data-state="chosen.has(keyOf(row)) ? 'selected' : undefined"
-            :tabindex="onRowClick ? 0 : undefined" @click="click(row, $event)" @keydown.enter.self="onRowClick?.(row)">
+            :tabindex="onRowClick ? 0 : undefined" @click="click(row, $event)" @keydown.enter.self.prevent="!$event.repeat && onRowClick?.(row)">
             <td v-if="selectable" class="ui-table__select" role="cell"><label class="ui-table__check">
               <input type="checkbox" :checked="chosen.has(keyOf(row))" :aria-label="t('ui.selectRow', { row: nameOf(row) })" @change="toggle(row)">
             </label></td>
@@ -186,7 +194,7 @@ function click(row: Row, event: MouseEvent) {
 }
 .ui-table__head th:first-child { border-start-start-radius: calc(var(--ui-radius-card) - var(--ui-border-width)); }
 .ui-table__head th:last-child { border-start-end-radius: calc(var(--ui-radius-card) - var(--ui-border-width)); }
-.ui-table[data-sticky] .ui-table__head th { position: sticky; top: 0; z-index: var(--ui-z-sticky); }
+.ui-table[data-sticky] .ui-table__head th { position: sticky; top: var(--ui-sticky-top, 0); z-index: var(--ui-z-sticky); }
 .ui-table__sort {
   display: inline-flex;
   align-items: center;
@@ -198,34 +206,41 @@ function click(row: Row, event: MouseEvent) {
   letter-spacing: inherit;
   text-transform: inherit;
 }
-.ui-table__sort:hover, [aria-sort] > .ui-table__sort { color: var(--ui-ink); }
+@media (hover: hover) {
+  .ui-table__sort:hover { color: var(--ui-ink); }
+}
+[aria-sort] > .ui-table__sort { color: var(--ui-ink); }
 
 .ui-table__table td { padding: var(--ui-row-py) var(--ui-space-3); border-bottom: var(--ui-border-width) solid var(--ui-divider); }
 .ui-table__table tbody tr:last-child td { border-bottom: 0; }
 .ui-table__table [data-align="end"] { text-align: end; }
 .ui-table__table .ui-table__select, .ui-table__table .ui-table__actions { width: 1%; padding-block: 0; white-space: nowrap; }
-.ui-table__table .ui-table__select { padding-inline: 0; }
+/* The height holds a placeholder row's select cell as tall as the 44 px checkbox of a data row. */
+.ui-table__table .ui-table__select { height: var(--ui-touch-min); padding-inline: 0; }
 .ui-table__table .ui-table__actions { padding-inline-start: 0; text-align: end; }
 .ui-table__check { display: inline-flex; align-items: center; justify-content: center; min-width: var(--ui-touch-min); min-height: var(--ui-touch-min); cursor: pointer; }
 .ui-table__check input { margin: 0; accent-color: var(--ui-accent); cursor: inherit; }
 
 /* Columns end on pixel fractions; a same-colour shadow fills the anti-aliased seam between cells. */
-.ui-table__row:hover > td { background: var(--ui-surface-2); }
-.ui-table__row:hover > td + td { box-shadow: -1px 0 var(--ui-surface-2); }
+@media (hover: hover) {
+  .ui-table__row:hover > td { background: var(--ui-surface-2); }
+  .ui-table__row:hover > td + td { box-shadow: -1px 0 var(--ui-surface-2); }
+}
 .ui-table__row[data-state="selected"] > td { background: var(--ui-accent-soft); }
 .ui-table__row[data-state="selected"] > td + td { box-shadow: -1px 0 var(--ui-accent-soft); }
 .ui-table[data-clickable] .ui-table__row { cursor: pointer; }
 .ui-table__row:focus-visible { outline-offset: -2px; }
 
 .ui-table__table .ui-table__empty { padding: var(--ui-space-10) var(--ui-space-4); color: var(--ui-muted); text-align: center; }
-.ui-table__shimmer {
-  height: var(--ui-space-3);
-  margin-block: var(--ui-space-1);
-  border-radius: var(--ui-radius-sm);
-  background: linear-gradient(90deg, var(--ui-skeleton) 25%, var(--ui-skeleton-shine) 50%, var(--ui-skeleton) 75%) 0 0 / 200% 100%;
-  animation: ui-table-shimmer 1.4s linear infinite;
-}
-@keyframes ui-table-shimmer { to { background-position: -200% 0; } }
+/* Placeholder rows (card frames, row lines) wait for --ui-loading-delay like the Skeletons inside
+   them, their space held, so a fast read shows no blank frames. Collapsed borders are painted by
+   the table, not by the hidden cells, so the lines wait through their colour. */
+.ui-table__loading { animation: ui-table-appear 0s var(--ui-loading-delay) backwards; }
+.ui-table__loading td { animation: ui-table-lines 0s var(--ui-loading-delay) backwards; }
+/* An empty actions cell as tall as a row menu's button, so a placeholder card matches a data card. */
+.ui-table__loading .ui-table__actions { height: var(--ui-control-h); }
+@keyframes ui-table-appear { from { visibility: hidden; } }
+@keyframes ui-table-lines { from { border-color: transparent; } }
 </style>
 
 <style scoped src="./Table.phone.css"></style>

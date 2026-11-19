@@ -48,6 +48,8 @@
   --ui-bg: light-dark(var(--ui-gray-50), var(--ui-gray-950));
   --ui-surface: light-dark(var(--ui-gray-0), var(--ui-gray-900));
   --ui-surface-2: light-dark(var(--ui-gray-100), var(--ui-gray-800));
+  /* The pressed ground of secondary and ghost Buttons: a step past --ui-surface-2, toward the ink (D104). */
+  --ui-surface-3: color-mix(in srgb, var(--ui-surface-2) 92%, var(--ui-ink));
   --ui-sunk: light-dark(var(--ui-gray-100), var(--ui-gray-950));
   --ui-chrome: light-dark(var(--ui-gray-900), var(--ui-gray-900));
   --ui-on-chrome: light-dark(var(--ui-gray-50), var(--ui-gray-50));
@@ -56,20 +58,23 @@
   --ui-skeleton-shine: light-dark(var(--ui-gray-100), var(--ui-gray-700));
 
   /* ---- semantic: ink ---- */
+  /* Ink tokens are solid per theme, never alpha tiers: contrast.ts can only measure a solid value (P7). */
   --ui-ink: light-dark(var(--ui-gray-900), var(--ui-gray-50));
   --ui-ink-2: light-dark(var(--ui-gray-700), var(--ui-gray-300));
   --ui-muted: light-dark(var(--ui-gray-600), var(--ui-gray-400));
   --ui-placeholder: light-dark(var(--ui-gray-500), #8f8f98);
   --ui-disabled-ink: light-dark(var(--ui-gray-400), var(--ui-gray-600));
 
-  /* ---- semantic: lines (border-strong is the 3:1 boundary of inputs and buttons) ---- */
+  /* ---- semantic: lines (border-strong is the 3:1 boundary of inputs and buttons, measured on bg, surface and surface-2) ---- */
   --ui-border: light-dark(var(--ui-gray-200), var(--ui-gray-700));
-  --ui-border-strong: light-dark(#8a8a93, #6c6c76);
+  --ui-border-strong: light-dark(#8a8a93, #72727b);
   --ui-divider: light-dark(var(--ui-gray-200), var(--ui-gray-800));
 
   /* ---- semantic: accent (buttons, links, state, focus; never a region fill, D36) ---- */
   --ui-accent: light-dark(var(--ui-blue-500), var(--ui-blue-400));
   --ui-accent-hover: light-dark(var(--ui-blue-600), var(--ui-blue-300));
+  /* Pressed: a step past hover, toward the ink, so a preset needs no edit (D104). */
+  --ui-accent-active: color-mix(in srgb, var(--ui-accent-hover) 85%, var(--ui-ink));
   --ui-on-accent: light-dark(var(--ui-gray-0), var(--ui-gray-950));
   --ui-accent-soft: light-dark(var(--ui-blue-100), var(--ui-blue-900));
   --ui-on-accent-soft: light-dark(var(--ui-blue-900), var(--ui-blue-100));
@@ -78,6 +83,7 @@
   /* ---- semantic: states ---- */
   --ui-danger: light-dark(var(--ui-red-600), var(--ui-red-500));
   --ui-danger-hover: light-dark(#b91c1c, #f87171);
+  --ui-danger-active: color-mix(in srgb, var(--ui-danger-hover) 85%, var(--ui-ink));
   --ui-on-danger: light-dark(var(--ui-gray-0), var(--ui-gray-950));
   --ui-danger-soft: light-dark(var(--ui-red-100), var(--ui-red-900));
   --ui-on-danger-soft: light-dark(var(--ui-red-900), var(--ui-red-100));
@@ -94,6 +100,13 @@
   /* ---- typography ---- */
   --ui-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --ui-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  /* The steps are hand-tuned, not a ratio. What each one is for:
+     xs   metadata: timestamps, counts, file sizes, keyboard keys, hints under a control
+     sm   secondary text: small controls, table cells, notes, messages, badges, captions
+     md   body text, the size of the page (compact density sets 15px)
+     lg   titles of cards, dialogs, sheets and drawers; large controls
+     xl   page titles on phones, the sign-in title, markdown h1
+     2xl  page titles, the value of a status tile */
   --ui-text-xs: 0.75rem;
   --ui-text-sm: 0.875rem;
   --ui-text-md: 1rem;
@@ -106,6 +119,8 @@
   --ui-weight-medium: 500;
   --ui-weight-semibold: 600;
   --ui-tracking-caps: 0.04em;
+  /* About 70 characters of running text in a system font, under the 80 of WCAG 2.2 SC 1.4.8. */
+  --ui-measure: 65ch;
 
   /* ---- spacing (4px base) ---- */
   --ui-space-1: 0.25rem;
@@ -120,6 +135,8 @@
   --ui-space-16: 4rem;
 
   /* ---- shape ---- */
+  /* A radius nested inside another is max(0px, calc(<parent radius> - <inset>)), the inset
+     counting the parent's border width, so the two curves stay concentric. */
   --ui-radius-sm: 4px;
   --ui-radius-control: 6px;
   --ui-radius-card: 10px;
@@ -132,6 +149,8 @@
   --ui-control-h-lg: 3rem;
   --ui-control-px: var(--ui-space-3);
   --ui-touch-min: 44px;
+  /* The least font size of the text in Input, Select and Textarea: 1rem on touch screens (D84). */
+  --ui-field-text-min: 0px;
   --ui-row-py: var(--ui-space-3);
   --ui-card-p: var(--ui-space-5);
   --ui-page-p: var(--ui-space-6);
@@ -139,14 +158,23 @@
   --ui-content-max: 48rem;
 
   /* ---- elevation ---- */
+  /* sm: resting surfaces (Card, a Board card, the Switch thumb).
+     md: anchored overlays and hover (Popover, Toast, the mention list, a hovered Card, a lifted
+         Board card, an inline Sheet).
+     lg: modal and docked overlays (Dialog, Sheet, CommandPalette, Spotlight, the AppShell dock,
+         the Board drag ghost).
+     No piece casts another shadow; a ring or hairline drawn with box-shadow is not elevation. */
   --ui-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
   --ui-shadow-md: 0 4px 12px rgb(0 0 0 / 0.10);
   --ui-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.18);
 
   /* ---- motion ---- */
+  /* duration-fast: feedback and exits. duration: entrances of panels, dialogs and toasts.
+     Nothing above 400ms in product UI (NN/g, "Animation duration"). loading-delay: how long a
+     placeholder or a spinner waits before it shows, so a fast answer shows nothing. */
   --ui-duration-fast: 120ms;
   --ui-duration: 200ms;
-  --ui-duration-slow: 320ms;
+  --ui-loading-delay: 400ms;
   --ui-ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* ---- layers ---- */
@@ -161,11 +189,13 @@
   --ui-sidebar-rail-w: 4rem;
   --ui-topbar-h: 3.5rem;
   --ui-dock-w: 24rem;
-}
-
-/* Touch screens: every control reaches the 44px target (D9); density stays as set. */
-@media (pointer: coarse) {
-  :root { --ui-control-h: var(--ui-touch-min); --ui-control-h-sm: 2.25rem; }
+  /* Where a sticky header stops: 0 outside a shell; AppShell sets the top bar's height. */
+  --ui-sticky-top: 0px;
+  /* The phone bar's height (AppShell under 48rem), in rem so it grows with the text. */
+  --ui-tabbar-h: 3.375rem;
+  /* Where a sticky footer stops: 0 outside a shell; AppShell sets the phone bar's height on phones. */
+  --ui-sticky-bottom: 0px;
+  --ui-tooltip-w: 16rem;
 }
 
 :root[data-theme="light"] { color-scheme: light; }
@@ -179,4 +209,19 @@
   --ui-card-p: var(--ui-space-4);
   --ui-page-p: var(--ui-space-4);
   --ui-text-md: 0.9375rem;
+}
+
+/* Touch screens: every control size in every density reaches the 44px target (D9, D49, D84). */
+@media (pointer: coarse) {
+  :root {
+    --ui-control-h: max(2.5rem, var(--ui-touch-min));
+    --ui-control-h-sm: max(2rem, var(--ui-touch-min));
+    --ui-control-h-lg: max(3rem, var(--ui-touch-min));
+    --ui-field-text-min: 1rem;
+  }
+  :root[data-density="compact"] {
+    --ui-control-h: max(2rem, var(--ui-touch-min));
+    --ui-control-h-sm: max(1.75rem, var(--ui-touch-min));
+    --ui-control-h-lg: max(2.5rem, var(--ui-touch-min));
+  }
 }

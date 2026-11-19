@@ -67,3 +67,5 @@ control itself. The driver fills it like any text field.
 - The max height is `--ui-control-h` times 8, so it follows density. A preset that needs another
   value needs a token, not an override.
 - `maxlength` is the native limit; no counter is shown.
+- On touch screens the text is at least 16 px (`--ui-field-text-min`, D84), whatever the
+  density: phone browsers zoom the page when a focused field's text is smaller.

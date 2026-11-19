@@ -16,10 +16,13 @@ the neighbour of Save is sometimes Delete.
 
 ## In this collection
 
-- 44 px targets on touch screens through the tokens, not per component: `@media (pointer:
-  coarse)` sets `--ui-control-h` to `--ui-touch-min` in `ui/tokens.css` (D9, D49).
-- Checkbox makes the whole row the click target, at least 44 px tall; FileUpload's dropzone is a
-  `<label>` around the file input, so the whole area takes a click or a drop.
+- 44 px targets on touch screens through the tokens, not per component (WCAG 2.2 SC 2.5.5):
+  under `@media (pointer: coarse)` `ui/tokens.css` lifts `--ui-control-h`, `-sm` and `-lg` to at
+  least `--ui-touch-min` in both densities, so `sm` and compact controls reach 44 px too (D9,
+  D49, D84).
+- Checkbox makes the whole row the click target, a control's height, 44 px on coarse pointers;
+  FileUpload's dropzone is a `<label>` around the file input, so the whole area takes a click or
+  a drop.
 - The page's actions sit on the right of the PageHeader; the row menu is the Table's last
   column, on the row it acts on.
 - Dialog's footer is right-aligned with the primary last; ActionBar sticks to the bottom while a

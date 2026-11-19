@@ -60,8 +60,9 @@ export function formatNumber(value: number, locale: string, options: Intl.Number
   return new Intl.NumberFormat(locale, options).format(value)
 }
 
-export function formatCurrency(value: number, locale: string, currency: string): string {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value)
+/** `options` cannot change the style or the currency: `{ signDisplay: 'exceptZero' }` for a change. */
+export function formatCurrency(value: number, locale: string, currency: string, options: Intl.NumberFormatOptions = {}): string {
+  return new Intl.NumberFormat(locale, { ...options, style: 'currency', currency }).format(value)
 }
 
 export function formatPercent(fraction: number, locale: string, digits = 0): string {

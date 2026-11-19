@@ -62,9 +62,13 @@ function track(change: number): void {
 const textarea = (): HTMLTextAreaElement | null => (area.value?.$el as HTMLTextAreaElement | undefined) ?? null
 const passed = computed(() => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style')))
 
-const tools: { format: Format; icon: IconName; label: string }[] = [
-  { format: 'bold', icon: 'bold', label: 'ui.bold' },
-  { format: 'italic', icon: 'italic', label: 'ui.italic' },
+const apple = /Mac|iPhone|iPad/.test(navigator.userAgent)
+/** The shortcut as the keyboard labels it: the command sign on Apple platforms, else Ctrl in the locale's word. */
+const shortcut = (key: string): string => (apple ? `⌘${key}` : `${t('ui.keyCtrl')}+${key}`)
+/** `key`: the letter that formats with Ctrl or Cmd (onKeydown), named in the label and in aria-keyshortcuts. */
+const tools: { format: Format; icon: IconName; label: string; key?: string }[] = [
+  { format: 'bold', icon: 'bold', label: 'ui.bold', key: 'B' },
+  { format: 'italic', icon: 'italic', label: 'ui.italic', key: 'I' },
   { format: 'heading', icon: 'heading', label: 'ui.heading' },
   { format: 'link', icon: 'link', label: 'ui.link' },
   { format: 'code', icon: 'code', label: 'ui.code' },
@@ -152,10 +156,11 @@ function onKeydown(event: KeyboardEvent): void {
     }
     return
   }
-  const mod = event.metaKey || event.ctrlKey
-  if (mod && !event.shiftKey && !event.altKey && (event.key === 'b' || event.key === 'i')) {
+  if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return
+  const tool = tools.find((candidate) => candidate.key?.toLowerCase() === event.key.toLowerCase())
+  if (tool) {
     event.preventDefault()
-    applyFormat(event.key === 'b' ? 'bold' : 'italic')
+    applyFormat(tool.format)
   }
 }
 
@@ -246,7 +251,17 @@ const modes = computed(() => [{ value: 'write', label: t('ui.write') }, { value:
     <div class="ui-markdown-editor__bar">
       <Tabs :model-value="mode" :items="modes" size="sm" :label="t('ui.editorMode')" @update:model-value="(value) => (mode = value as 'write' | 'preview')" />
       <div v-show="mode === 'write'" role="group" class="ui-markdown-editor__tools" :aria-label="t('ui.formatting')">
-        <Button v-for="tool in tools" :key="tool.format" variant="ghost" size="sm" :label="t(tool.label)" :disabled="disabled" @mousedown.prevent @click="applyFormat(tool.format)">
+        <Button
+          v-for="tool in tools"
+          :key="tool.format"
+          variant="ghost"
+          size="sm"
+          :label="tool.key ? `${t(tool.label)} (${shortcut(tool.key)})` : t(tool.label)"
+          :aria-keyshortcuts="tool.key ? `Control+${tool.key} Meta+${tool.key}` : undefined"
+          :disabled="disabled"
+          @mousedown.prevent
+          @click="applyFormat(tool.format)"
+        >
           <template #icon><Icon :name="tool.icon" /></template>
         </Button>
         <template v-if="upload && imageTypes.length > 0">

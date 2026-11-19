@@ -17,6 +17,8 @@ const props = defineProps<{
   unit?: string | undefined
   /** The change in percent: 12.5 shows +12.5 %; 0 is neutral. */
   delta?: number | undefined
+  /** What the delta compares against, "vs last month": muted text after it. */
+  period?: string | undefined
   /** A rise is bad (errors, churn): up turns danger, down success. */
   invert?: boolean | undefined
   state?: 'ok' | 'warning' | 'danger' | 'neutral' | undefined
@@ -52,8 +54,9 @@ const change = computed(() =>
     <div v-else class="ui-status-tile__value">
       {{ shown }}<span v-if="unit" class="ui-status-tile__unit">{{ unit }}</span>
     </div>
-    <div v-if="delta !== undefined && !loading" class="ui-status-tile__delta" :data-tone="tone">
-      <Icon :name="arrow" size="sm" />{{ change }}
+    <div v-if="delta !== undefined && !loading" class="ui-status-tile__change">
+      <span class="ui-status-tile__delta" :data-tone="tone"><Icon :name="arrow" size="sm" />{{ change }}</span>
+      <span v-if="period" class="ui-status-tile__period">{{ period }}</span>
     </div>
     <div v-if="$slots.default" class="ui-status-tile__extra"><slot /></div>
   </Card>
@@ -70,9 +73,9 @@ const change = computed(() =>
 .ui-status-tile__value { font-size: var(--ui-text-2xl); font-weight: var(--ui-weight-semibold); line-height: var(--ui-leading-tight); color: var(--ui-ink); }
 .ui-status-tile__unit { margin-inline-start: var(--ui-space-1); font-size: var(--ui-text-md); font-weight: var(--ui-weight-medium); color: var(--ui-muted); }
 
+.ui-status-tile__change { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); }
 .ui-status-tile__delta {
   display: inline-flex;
-  align-self: flex-start;
   align-items: center;
   gap: var(--ui-space-1);
   padding: 0 var(--ui-space-2);
@@ -84,6 +87,8 @@ const change = computed(() =>
 .ui-status-tile__delta[data-tone="success"] { background: var(--ui-success-soft); color: var(--ui-on-success-soft); }
 .ui-status-tile__delta[data-tone="danger"] { background: var(--ui-danger-soft); color: var(--ui-on-danger-soft); }
 .ui-status-tile__delta[data-tone="neutral"] { background: var(--ui-surface-2); color: var(--ui-ink-2); }
+
+.ui-status-tile__period { font-size: var(--ui-text-xs); color: var(--ui-muted); }
 
 .ui-status-tile__extra { font-size: var(--ui-text-sm); color: var(--ui-muted); }
 </style>

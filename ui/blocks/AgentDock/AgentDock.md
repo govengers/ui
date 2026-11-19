@@ -1,7 +1,7 @@
 ---
 name: AgentDock
 tier: block
-intent: [agent dock, assistant, chat panel, chatbot, in-app agent, ask the assistant, guide mode, drive mode, take over]
+intent: [agent dock, assistant, chat panel, chatbot, in-app agent, ask the assistant, guide mode, drive mode, take over, stop the answer, streaming reply]
 uses: [AgentCursor, Spotlight, Avatar, Banner, Button, Icon, Skeleton, Textarea, agent, format]
 livewire: true
 status: ready
@@ -13,7 +13,9 @@ laws: [cognitive-bias, paradox-of-the-active-user]
 The in-app agent's panel for the AppShell's `dock` slot (D25, D26): the conversation, a composer,
 and a mode switch (Chat, Guide, Drive). An agent message with a plan gets "Show me", which walks
 it with the Spotlight while the user clicks, and "Do it", which runs it with the AgentCursor while
-the user watches. A Take over button stops a running plan.
+the user watches. A Take over button stops a running plan. The log follows a streamed answer only
+while the reader is at its bottom (D98), and with a `cancel` call Stop replaces Send while the agent
+answers.
 
 ## Load
 
@@ -21,6 +23,7 @@ the user watches. A Take over button stops a running plan.
 |------|------|-----|
 | this card | always | the contract |
 | `AgentDock.vue`, `dock.ts` | to use it: skim; to change it: read | the behaviour |
+| `follow.ts`, `composer.ts` | to change the log's scrolling or the composer | the follow wiring; Send, Stop and their focus |
 | the cards of `AgentCursor`, `Spotlight`, `Avatar`, `Banner`, `Button`, `Icon`, `Skeleton`, `Textarea`, `agent`, `format` | when their props show up here | what the composed pieces do |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 | `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
@@ -39,13 +42,15 @@ Do not load:
 |------|------|---------|-------|
 | `conversation` | `LiveTarget<never, ListResponse<ChatMessage>>` | required | the thread, e.g. `live.conversation`; read without parameters, shown oldest first |
 | `send` | `MutationTarget<NoParameters, { text, mode }, unknown>` | required | e.g. `calls.sendMessage` |
+| `cancel` | `MutationTarget<NoParameters, undefined, unknown>` | none | stops the answer being written, e.g. `calls.cancelAnswer`; while the agent answers, Stop replaces Send. Without it the composer never shows Stop |
 | `planOf` | `(message) => DrivePlan \| undefined` | none | the plan attached to an agent message |
 | `mode` | `chat \| guide \| drive` | `chat` | `v-model:mode`; sent with every message; Guide shows only "Show me", Drive only "Do it" |
 | `unattended` | `string[]` | none | passed to `AgentCursor` (D27, D52) |
 | `title` | `string` | `ui.agent` | header and accessible name |
 | `avatar` | `string` | none | the agent's picture; a bot icon without one |
 
-`ChatMessage` (`dock.ts`): `{ id, role: 'user' | 'agent', text, createdAt }`.
+`ChatMessage` (`dock.ts`): `{ id, role: 'user' | 'agent', text, createdAt, streaming? }`; `streaming`
+is true while the agent still writes that message.
 
 ## Slots
 
@@ -66,7 +71,7 @@ None.
   <RouterView />
   <template v-if="dockOpen" #dock>
     <AgentDock v-model:mode="mode" :conversation="live.conversation" :send="calls.sendMessage"
-      :plan-of="message => message.plan" :unattended="design.unattended"
+      :cancel="calls.cancelAnswer" :plan-of="message => message.plan" :unattended="design.unattended"
       @navigate="router.push($event)" @running="running = $event" @close="dockOpen = false" />
   </template>
 </AppShell>
@@ -74,8 +79,13 @@ None.
 
 The thread is one `useLiveList`; the agent's reply arrives as a push (streamed tokens as further
 pushes, D26), so the dock never inserts its own messages. "Thinking" shows while the newest
-message is the user's. A failed read shows one danger Banner with Retry; a failed send keeps the
-draft and shows the field error (`fields.text`) or the message.
+message is the user's. The agent is answering while it is thinking or its newest message has
+`streaming: true`; with a `cancel` call the composer's button is then Stop (`type="button"`, icon
+`square`, `ui.stop`), which calls `cancel`, and the form, the button and Enter send nothing: the
+draft stays and the composer stays editable. An accepted cancel keeps Stop busy until the answer
+ends. A failed read shows one danger Banner with Retry; a
+failed send or a refused cancel keeps the draft and shows the field error (`fields.text`) or the
+message.
 
 ## Agent
 
@@ -83,14 +93,15 @@ The dock is the client side of the agent: the server runs aikido inside the app'
 (D26) and answers on the conversation resource. Its client-side tools are `navigate` (the dock
 emits it), `spotlight` (guide plans, `Spotlight`) and `drive` (drive plans, `AgentCursor`), all
 in the `DrivePlan` format of `ui/agent/types.ts` targeting `data-action`, `name` and `data-page`
-(D23, D48). The send button is `data-action="sendMessage"`; the dock's root is
+(D23, D48). The composer's button carries the call's name as `data-action`: the send call's
+(`sendMessage`) or, while Stop shows, the cancel call's (`cancelAnswer`). The dock's root is
 `data-agent-ui`, so pressing its controls never counts as the user taking over.
 
 ## Messages
 
 `ui.agent`, `ui.chat`, `ui.guide`, `ui.drive`, `ui.showMe`, `ui.doIt`, `ui.stop`, `ui.takeOver`,
-`ui.askAgent`, `ui.send`, `ui.thinking`, `ui.next`, `ui.done`, `ui.close`, `ui.retry`,
-`ui.planFailed` (a drive plan hit a missing target).
+`ui.askAgent`, `ui.send`, `ui.thinking`, `ui.jumpToLatest`, `ui.next`, `ui.done`, `ui.close`,
+`ui.retry`, `ui.planFailed` (a drive plan hit a missing target).
 
 ## Gotchas
 
@@ -98,7 +109,26 @@ in the `DrivePlan` format of `ui/agent/types.ts` targeting `data-action`, `name`
   `<template #dock>`, not on the dock. Closing the dock unmounts it and stops a running plan.
 - The dock must live in the shell, outside the `RouterView`: a plan that navigates unmounts
   whatever the route renders.
-- Enter sends, Shift+Enter is a new line, Enter while an IME composes does nothing.
+- Enter sends, Shift+Enter is a new line, Enter while an IME composes does nothing, and Enter while
+  Stop shows sends nothing and keeps the draft.
+- The log scrolls to new text only while the reader is within about one line of its bottom; a
+  reader who scrolled up stays where they are and gets "Jump to latest" floating over the log's
+  bottom edge (the log keeps its height), which scrolls down and puts focus on the log. The log is
+  a tab stop named `ui.conversation` (not the dock's heading, which names the region around it),
+  so the arrow keys scroll it. Any scroll up, even 1 px,
+  stops the following at once; scrolling back down to the bottom resumes it. When the log's box
+  changes size (the dock, the window, a draft over several lines) a `ResizeObserver` keeps a
+  following reader at the bottom and leaves a reader who scrolled up where they are. A message the
+  user sends always scrolls. The log reads only the count, the thinking state and the newest message's
+  text, so an edit further up never moves it.
+- When the answer ends, Stop turns back into Send, which a blank draft disables. Focus on the
+  button then, or focus lost after Stop was pressed, moves to the composer's field instead of
+  dropping to the page. A press on the button within `switchGuard` (500 ms, `dock.ts`) of the end
+  sends nothing: the second click of a double click on Stop, or a press meant for Stop as the
+  answer ends by itself, would else send the draft.
+- After a cancel the server ends the answer: it clears `streaming` on the partial message, or,
+  when nothing was written yet, adds an agent message (a short "Stopped."). While the newest message
+  is the user's the agent counts as thinking, so without that message Stop stays.
 - The whole thread is one list read without a limit: fine for an assistant thread, not for a
   chat history of thousands (that wants cursor pages, see `patterns/showing-live-data.md`).
 - On tablets and phones the shell's dock covers the page. Bind `running` to AppShell's

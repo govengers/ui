@@ -2,7 +2,7 @@
 name: ApiKeyManager
 tier: block
 intent: [api keys, api tokens, personal access tokens, create api key, revoke key, machine access, agent access, key scopes, key expiry]
-uses: [Badge, Banner, Button, Checkbox, Dialog, EmptyState, Field, Icon, Input, Select, Table, format]
+uses: [Badge, Banner, Button, Checkbox, Dialog, EmptyState, Field, Icon, Input, Select, Table, Toast, format]
 livewire: true
 status: ready
 laws: [peak-end-rule, cognitive-load]
@@ -22,7 +22,7 @@ permissions, optional expiry, last use); the app declares the three livewire ope
 |------|------|-----|
 | this card | always | the contract |
 | `ApiKeyManager.vue`, `ApiKeyCreate.vue`, `apiKeys.ts` | to use it: skim; to change it: read | the behaviour |
-| the cards of `Badge`, `Banner`, `Button`, `Checkbox`, `Dialog`, `EmptyState`, `Field`, `Icon`, `Input`, `Select`, `Table`, `format` | when their props show up here | what the composed pieces do |
+| the cards of `Badge`, `Banner`, `Button`, `Checkbox`, `Dialog`, `EmptyState`, `Field`, `Icon`, `Input`, `Select`, `Table`, `Toast`, `format` | when their props show up here | what the composed pieces do |
 | `ui/tokens.css` | only when changing the look | the tokens it reads |
 | `@/api/runtime`, `@/api/vue` types named under "With livewire" | when wiring it | the descriptor props |
 
@@ -75,9 +75,13 @@ drive mode pauses on both (D52); an agent never creates its own credentials.
   forgets it, and so does a new connection (another identity: logout, user switch,
   impersonation) or the end of the current one (a 4401 while `/auth/me` cannot be read keeps
   the ended pair), which also closes both dialogs (`forgetWhenGone`). A create that answers after either is dropped
-  (`attempts`). Nothing writes it to storage.
-- Copy uses `navigator.clipboard` (secure contexts only); without it the read-only field stays
-  selectable by hand.
+  (`attempts`). Nothing writes it to storage. While the closed dialog fades out it keeps the
+  secret's layout with the field emptied, not the create form (D94).
+- Copy uses `navigator.clipboard` (secure contexts only). A write that worked toasts `ui.copied`
+  (the app mounts the Toast host once) and the button says Copied for 2 s; a refused one (no
+  clipboard, denied) turns the button back to Copy and shows `ui.copyFailed` under the field,
+  which stays selectable by hand. A write that settles after a newer copy, a close or the unmount
+  does nothing.
 - Expiry is computed on the client from the chosen days (`expiresAtFor`); the server validates
   it like any other input and may cap it.
 - Rows are sorted newest first on the client; the list is read whole (a user has a handful).

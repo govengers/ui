@@ -35,7 +35,7 @@ Do not load:
 
 | Prop | Type | Default | Notes |
 |------|------|---------|-------|
-| `preview` | `ToastOptions[]` | none | renders these in the page flow instead of the queue, without timers; docs and previews only |
+| `preview` | `ToastOptions[]` | none | renders all of these in the page flow instead of the queue, without timers and without focus moves; docs and previews only |
 
 ## toast.ts
 
@@ -46,11 +46,36 @@ Do not load:
 | `toasts` | `ToastItem[]` (shallow reactive) | the queue, oldest first; read it, do not push to it |
 
 `ToastOptions`: `message` (required), `variant` (`neutral | success | danger`, default `neutral`),
-`duration` (ms, default 5000, danger 8000, `Infinity` until closed), `action` (`{ label, run }`,
-one follow-up such as Undo; running it closes the toast).
+`duration` (ms; 5000 by default, a danger toast or one with an `action` stays until closed, any
+number overrides, `Infinity` included), `action` (`{ label, run }`, one follow-up such as Undo;
+running it closes the toast). The rule (D93):
+`duration ?? (action || variant === 'danger' ? Infinity : 5000)`, because an error or a follow-up
+must not time out before it is read (WCAG 2.2 SC 2.2.1).
 
-Three are visible at a time, newest at the bottom; later ones wait. Hovering or focusing any
-toast pauses every timer. Fixed bottom right, bottom centre on phones.
+Each live region shows three at a time, newest at the bottom; later ones of that region wait, so
+an error never waits behind follow-ups. Hovering or focusing any toast pauses every timer;
+hovering only where the pointer can hover (`(hover: hover)`), because a touch screen keeps
+`:hover` on the last element tapped and a tap on a toast's text would hold it.
+Fixed bottom right, bottom centre on phones. A toast fades in, fades out in `--ui-duration-fast`
+while the others slide into its place; reduced motion cuts both (`base.css`). A leaving toast is
+inert: a second press on Undo does nothing. Closing the toast that holds focus by keyboard moves
+focus to the next toast itself (a group named by its message, so a second press closes nothing),
+else back to where focus was before it entered the toasts, scrolled into view. An Enter held
+through the close repeats nothing: repeats are dropped until the key comes up or another key is
+pressed. A pointer close only gives focus back, without scrolling the page, so the paused timers
+run again.
+
+## Which surface
+
+| The message is | Use |
+|----------------|-----|
+| the result of the user's own action | `Toast` |
+| about one field | `Field` `error` |
+| an ongoing state (offline, maintenance, impersonation) | a shell `Banner` |
+| a decision needed before going on | `Dialog` |
+| something that waits for the user | `NotificationInbox` or a `Badge` count |
+
+After NN/g, "Indicators, Validations, and Notifications: Pick the Correct Communication Option".
 
 ## Slots
 
@@ -72,7 +97,10 @@ button in a toast is a convenience; never make it the only way to do something.
   whatever its age.
 - A toast fired while a modal `Dialog` or `Sheet` is open sits behind it and is inert: close the
   dialog, then toast.
-- Field errors belong in the form (`Field` `error`), live connection trouble in the shell banner;
-  a toast is for the result of an action, not for validation.
+- Three toasts that stay hold their region's queue: three with an action hold later neutral and
+  success toasts, three danger toasts hold later errors; that is intended. Close a danger toast
+  with `dismiss(id)` once its cause is gone.
+- Name the object and the outcome (`Invoice 2026-0042 sent`), not `Done`; an error says what
+  failed and what to do.
 - The message comes from the page's `messages.ts` (`t('customers.saved')`); `toast.ts` translates
   nothing.

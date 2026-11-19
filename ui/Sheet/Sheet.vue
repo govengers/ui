@@ -133,9 +133,10 @@ function onClick(event: MouseEvent) {
     overlay var(--ui-duration) allow-discrete;
 }
 .ui-sheet[open]::backdrop { opacity: 1; }
-/* After the [open] rules: starting styles win by order, not by specificity. */
+/* After the [open] rules: starting styles win by order, not by specificity. An inline preview sits
+   in the page and does not slide: its start off to the side would widen the page meanwhile. */
 @starting-style {
-  .ui-sheet[open] { translate: var(--ui-sheet-from); }
+  .ui-sheet[open]:not([data-inline]) { translate: var(--ui-sheet-from); }
   .ui-sheet[open]::backdrop { opacity: 0; }
 }
 .ui-sheet[data-inline] {
@@ -157,6 +158,10 @@ function onClick(event: MouseEvent) {
 .ui-sheet__heading { flex: 1; min-width: 0; }
 .ui-sheet__title { font-size: var(--ui-text-lg); }
 .ui-sheet__body {
+  /* Its own scroll box: a sticky header or footer in it sits flush with its edges, not at the
+     shell's bars and not at its padding. */
+  --ui-sticky-top: calc(-1 * var(--ui-card-p));
+  --ui-sticky-bottom: calc(-1 * var(--ui-card-p));
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;

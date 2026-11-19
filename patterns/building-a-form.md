@@ -2,7 +2,7 @@
 name: Building a form
 tier: pattern
 intent: [edit form, create form, validation, save changes, inline edit, field errors]
-uses: [DetailForm, LiveForm, Field, Input, Select, Textarea, Checkbox, Switch, ActionBar, Dialog]
+uses: [DetailForm, LiveForm, Field, Input, Select, RadioGroup, Textarea, Checkbox, Switch, ActionBar, Dialog]
 livewire: true
 status: ready
 ---
@@ -33,3 +33,7 @@ Fields' `error` props; close on success. No local insert: the push renders the n
 - One primary action per form; `danger` only for destructive ones, behind a confirm `Dialog`.
 - The `ActionBar` comes after the fields in DOM order, or it does not stick.
 - Never disable the submit button while invalid; let the user click and see the errors.
+- One choice from up to about five short options is a `RadioGroup` in a `Field group`, with a
+  default selected; more options, or long labels, a `Select`.
+- A form with Save uses `Checkbox`; `Switch` only for a setting that applies at once (NN/g,
+  toggle switch guidelines).

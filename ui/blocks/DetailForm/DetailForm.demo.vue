@@ -12,7 +12,8 @@ const customer = engine.store.tables.customers[1] as Customer
 const pick = (item: Customer): UpdateCustomer => ({ name: item.name, email: item.email, status: item.status, country: item.country })
 const statuses = [{ value: 'active', label: 'Active' }, { value: 'onHold', label: 'On hold' }, { value: 'churned', label: 'Churned' }]
 
-const form = useLiveForm({ target: live['customers.item'], params: { id: customer.id }, call: calls.updateCustomer, pick })
+// The scripted edit below is not the visitor's: no leave guard here (the DetailPage demo shows it).
+const form = useLiveForm({ target: live['customers.item'], params: { id: customer.id }, call: calls.updateCustomer, pick, leaveGuard: false })
 const missing = useLiveForm({ target: live['customers.item'], params: { id: 'cus-missing' }, call: calls.updateCustomer, pick })
 
 // The scripted visit: once the record is there, empty the name and save; the fake refuses it.

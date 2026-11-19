@@ -72,7 +72,9 @@ Do not load:
 - The orders card is a `SearchTable` in cursor mode (orders have no total) on `live.orders`
   filtered by `customerId`, newest first, five per page. "All orders" links to
   `orders.list?customerId=<id>`, which an orders `ListPage` with a `customerId` facet reads.
-- Delete calls `deleteCustomer`, toasts and goes back to the list.
+- Delete calls `deleteCustomer`, toasts, resets the form and goes back to the list. A page that
+  leaves on purpose after it discarded the record resets the form first, else the leave guard of
+  `useLiveForm` asks about edits to a record that is gone (D96).
 
 ## States
 
@@ -101,8 +103,6 @@ both calls for the record on screen; the page binds them with `useAgentAction`.
   real history when the API has one.
 - The orders `SearchTable` shows its own stale line under the page's stale Banner while the
   socket is down.
-- `DetailForm` emits `saved` also when nothing was touched; the toast then says "Changes saved"
-  for no change.
 - Width `page`, not `content`: a `Table` below 48rem of its own width shows its rows as cards,
   and a card inside a 48rem column is always below that. A detail page without a related list
   can take `content`.

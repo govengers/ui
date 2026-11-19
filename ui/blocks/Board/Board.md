@@ -1,7 +1,7 @@
 ---
 name: Board
 tier: block
-intent: [kanban board, task board, board with columns, drag and drop cards, move card, reorder cards, swimlane, work in progress limit, status columns, trello board]
+intent: [kanban board, task board, board with columns, drag and drop cards, move card, reorder cards, work in progress limit, status columns, trello board]
 uses: [Badge, Banner, Button, Icon, Menu, Skeleton]
 livewire: true
 status: ready
@@ -115,4 +115,6 @@ move never cancels the lift.
   flight then neither announces nor emits `moved` or `move-error`.
 - Two boards on one page over the same read and pair show each other's optimistic card until the
   push; give a second board a pair of its own.
+- No swim lanes: for rows by team or priority, render one Board per lane with its own `filter`
+  and its own pair.
 - `columnField` values must be the column `key`s; a card whose value has no column is invisible.

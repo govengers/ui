@@ -2,7 +2,7 @@
 // WorkflowStatus: a business object's lifecycle (D33). The states as a track, the transitions the
 // page allows now as buttons that call livewire (confirmed first where they say so), and an
 // optional timeline. The live item's push moves `current`; the block holds no state of its own.
-import { computed, shallowReactive } from 'vue'
+import { computed, shallowReactive, shallowRef, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLiveConnection } from '@/api/vue'
 import Badge from '../../Badge/Badge.vue'
@@ -28,6 +28,13 @@ const { t, locale } = useI18n()
 const connection = useLiveConnection()
 // Shallow: a transition (and its descriptor) passes to the call as the page gave it, never as a proxy.
 const flow = shallowReactive<TransitionFlow>({ asking: undefined, saving: undefined, error: undefined })
+// What the confirm shows follows the flow while it asks and stays as it was while the dialog
+// leaves, so its title, sentence, tone, error and running call (spinner, no X) do not change during
+// the exit (D94). A press on its button then runs nothing: only the flow's open question confirms.
+const confirmView = shallowRef<{ transition: WorkflowTransition; error: string | undefined; saving: boolean }>()
+watchEffect(() => {
+  if (flow.asking !== undefined) confirmView.value = { transition: flow.asking, error: flow.error, saving: flow.saving !== undefined }
+})
 
 const track = computed(() => {
   const standing = standings(props.states, props.current, props.history)
@@ -94,24 +101,24 @@ function dismiss(open: boolean): void {
     <Dialog
       :model-value="flow.asking !== undefined"
       size="sm"
-      :variant="flow.asking?.danger ? 'danger' : 'default'"
-      :title="flow.asking?.label ?? ''"
-      :description="flow.asking?.confirm"
-      :persistent="flow.saving !== undefined"
+      :variant="confirmView?.transition.danger ? 'danger' : 'default'"
+      :title="confirmView?.transition.label ?? ''"
+      :description="confirmView?.transition.confirm"
+      :persistent="confirmView?.saving"
       @update:model-value="dismiss"
     >
-      <Banner v-if="flow.error" variant="danger">{{ flow.error }}</Banner>
+      <Banner v-if="confirmView?.error" variant="danger">{{ confirmView.error }}</Banner>
       <template #actions>
-        <Button :disabled="flow.saving !== undefined" @click="dismiss(false)">{{ t('ui.cancel') }}</Button>
+        <Button :disabled="confirmView?.saving" @click="dismiss(false)">{{ t('ui.cancel') }}</Button>
         <Button
-          v-if="flow.asking"
-          :variant="flow.asking.danger ? 'danger' : 'primary'"
-          :loading="flow.saving !== undefined"
-          :data-action="flow.asking.call.name"
-          :data-transition="flow.asking.to"
-          @click="run(flow.asking, true)"
+          v-if="confirmView"
+          :variant="confirmView.transition.danger ? 'danger' : 'primary'"
+          :loading="confirmView.saving"
+          :data-action="confirmView.transition.call.name"
+          :data-transition="confirmView.transition.to"
+          @click="flow.asking && run(flow.asking, true)"
         >
-          {{ flow.asking.label }}
+          {{ confirmView.transition.label }}
         </Button>
       </template>
     </Dialog>

@@ -132,6 +132,8 @@ if (props.syncQuery) {
 .ui-facet-filter__op[aria-pressed="true"] { margin-block: var(--ui-space-1); background: var(--ui-danger-soft); color: var(--ui-on-danger-soft); font-weight: var(--ui-weight-medium); }
 .ui-facet-filter__values { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: var(--ui-control-h-sm); }
 .ui-facet-filter__remove { padding-inline: var(--ui-space-2); }
-.ui-facet-filter__op:hover, .ui-facet-filter__values:hover, .ui-facet-filter__remove:hover { background: var(--ui-surface-2); }
+@media (hover: hover) {
+  .ui-facet-filter__op:hover, .ui-facet-filter__values:hover, .ui-facet-filter__remove:hover { background: var(--ui-surface-2); }
+}
 .ui-facet-filter__op:focus-visible, .ui-facet-filter__values:focus-visible, .ui-facet-filter__remove:focus-visible { outline-offset: calc(var(--ui-border-width) * -2); }
 </style>

@@ -45,7 +45,17 @@ Do not load:
 
 ## Gotchas
 
-- Put the ActionBar after the form fields in DOM order. `position: sticky; bottom: 0` only
-  engages with preceding scrollable content in the same container; a bar rendered before the
-  fields never sticks.
+- Put the ActionBar after the form fields in DOM order. `position: sticky` only engages with
+  preceding scrollable content in the same container; a bar rendered before the fields never
+  sticks.
+- A sticky bar stops at `--ui-sticky-bottom`: 0 outside a shell, the phone bar's height inside
+  `AppShell` on phones, so the two stack instead of the ActionBar covering the tabs. A scroll box
+  that is not the page (a `Sheet` body) sets the token again on itself.
+- While a sticky bar is on the page, the page's `scroll-padding-bottom` is the bar's height plus
+  what it stands on, so a field focused by the browser (a refused `required`), by script
+  (`DetailForm` after a refused save, `Stepper` after `blocked`) or by Tab scrolls clear of it
+  (WCAG 2.2 SC 2.4.11). A bar in the body of a `Dialog` or a `Sheet` pads that body instead, and a
+  bar in a popover pads nothing. A bar in another scroll box of the page's own pads the page, not
+  its box: that box sets `scroll-padding-bottom` itself. A bar that wraps to a second row is taller
+  than the padding.
 - The submit `Button` carries `type="submit"` and `data-action`; `ui-lint` checks the latter.
